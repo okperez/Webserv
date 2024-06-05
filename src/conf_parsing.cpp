@@ -5,45 +5,22 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/03 14:00:28 by operez            #+#    #+#             */
-/*   Updated: 2024/06/04 14:00:24 by operez           ###   ########.fr       */
+/*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
+/*   Updated: 2024/06/05 18:14:27 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <cstring>
-#include <algorithm>
-#include <map>
-#include <sstream>
-#include <list>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include "../server.hpp"
 
-typedef struct s_conf
+std::string extract_conf(std::string & buff)
 {
-  std::vector<std::string>  ipv4_port;
-  std::vector<std::string>  ipv6_port;
-  std::string               server_name;
-  std::vector<std::string>  root_dir;
-  std::vector<std::string>  default_files;
-  std::vector<std::string>  location;
-}t_conf;
-
-std::string extract_conf(std::string buff)
-{
-  int end = buff.find(' ');
-  buff.erase(0, end + 1);
-  end = buff.find(';');
-  std::string tmp (buff.substr(0, end));
-  buff.erase(0, end + 2);
-  return (tmp);
+    unsigned long pos = buff.find(' ');
+    buff.erase(0, pos + 1);
+    pos = buff.find(';');
+    if (pos == buff.npos)
+        throw ConfFileException("Error: expected ';' at end of declaration");
+    std::string tmp (buff.substr(0, pos));
+    return (tmp);
 }
 
 int     print_error(char const *str)
@@ -51,17 +28,31 @@ int     print_error(char const *str)
     std::cerr << "Error: " << str << std::endl; 
     return (-1);
 }
-// void    init_conf_file(char *argv, t_conf & conf)
-// {
-//   conf.port = extract_conf(buff, ';');                   // a gerer plus efficacement
-//   conf.server_name = extract_conf(buff, ';');
-//   conf.root_dir = extract_conf(buff, ';');
-//   conf.default_files = extract_conf(buff, ';');
-// }
 
-void    set_conf_struct(std::list<std::string> const & cnf_file)
+void    set_conf_struct(std::list<std::string> & cnf_file, t_conf conf)
 {
-    
+
+    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    {
+        if ((*it).find("listen "))
+        {
+            if ((*it).find("[..]"))
+                 conf.ipv6_port = extract_conf(*it);
+            else
+                 conf.ipv4_port = extract_conf(*it);
+        }
+        else
+            throw ConfFileException ("Error: missing port number");       
+        if ((*it).find("root "))
+            conf.root_dir = extract_conf(*it);
+        else
+            throw ConfFileException ("Error: missing root directory");       
+        if ((*it).find("index "))
+            conf.files = extract_conf(*it);
+        if ((*it).find("server_name "))
+            conf.server_name = extract_conf(*it);
+        //checker if root or listen or location is null, missing
+    }
 }
 
 bool    is_white_space(char c, char d)
@@ -91,7 +82,7 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
     }
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end();)
     {
-        std::unique((*it).begin(), (*it).end(), is_white_space);      //delete duplicate
+        std::unique((*it).begin(), (*it).end(), is_white_space);
         if ((*it).find('#') == 0)
         {
             it = cnf_file.erase(it);
@@ -101,29 +92,40 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
     }
 }
 
+void    set_to_null(t_conf & conf)
+{
+    conf.ipv4_port = "";
+    conf.ipv6_port = "";
+    conf.server_name = "";
+    conf.root_dir = "";
+    conf.files = "";
+    conf.location = "";
+}
+
 int     parse_conf_file(char *argv)
 {
     std::ifstream               file;
     std::string                 buff;
     std::list<std::string>      cnf_file;
+    t_conf                      conf;
 
+    set_to_null(conf);
     clear_file(cnf_file, argv);
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         std::cout << *it << std::endl;
     }
-    set_conf_struct(cnf_file);
+    try
+    {
+        set_conf_struct(cnf_file, conf);
+    }
+    catch(const std::exception & e)
+    {
+        std::cerr << e.what() << '\n';
+        return (-1);
+    }
+    
     // if (buff.empty())
         // return (print_error("Configuration file empty"));
-    return (0);
-}
-
-int main(int argc, char **argv)
-{
-    if (argc == 2)
-    {
-        if (parse_conf_file(argv[1]) == -1)
-            return (1);
-    }
     return (0);
 }
