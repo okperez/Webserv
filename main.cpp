@@ -12,6 +12,8 @@
 
 #include "server.hpp"
 
+// GARENCE: si tu souhaites executer le projet, lance le avec un argument random 
+
 int main(int argc, char **argv) 
 {
     if (argc == 2)
@@ -68,7 +70,8 @@ int main(int argc, char **argv)
     	handle_request(socket_fd, request);
     	close(server_fd);
     	close(socket_fd);
+  		return (0);
 	}
     std::cerr << "Error: Missing configuration file: ./webserv [configuration file]\n";
-  	return (0);
+	return (1);
 }

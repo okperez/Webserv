@@ -44,6 +44,8 @@ void        init_request_struct(t_request & request, char const *buffer)
   request.media = extract_header(buff);
 }
 
+//  parse request from client and send back response 
+
 int  handle_request(int socket_fd, t_request & request)
 {
   const char *response_true = "HTTP/1.1 200 OK\r\n\r\n";

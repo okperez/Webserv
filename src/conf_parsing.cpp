@@ -51,7 +51,7 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf conf)
             conf.files = extract_conf(*it);
         if ((*it).find("server_name "))
             conf.server_name = extract_conf(*it);
-        //checker if root or listen or location is null, missing
+        //checker if root or listen or location is null
     }
 }
 
