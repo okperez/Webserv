@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/11 13:48:49 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/11 15:26:16 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,7 @@ int main(int argc, char **argv)
     if (argc == 2)
     {
     	if (parse_conf_file(argv[1]) == -1)
-			std::cout  << "a" << std::endl;				
-    		// return (1);
+    		return (1);
 		
     	t_request request;
     	t_conf    conf;
