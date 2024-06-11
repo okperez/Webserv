@@ -6,11 +6,29 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/05 18:14:27 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/11 13:48:20 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../server.hpp"
+
+// char*        get_ip_address(void)
+// {
+    // char hostname[256];
+    // if (gethostname(hostname, sizeof(hostname)) == -1) {
+        // std::cerr << "Error getting hostname" << std::endl;
+    // }
+// 
+    // struct hostent *host_entry = gethostbyname(hostname);
+    // if (host_entry == nullptr) {
+        // std::cerr << "Error getting host entry" << std::endl;
+    // }
+// 
+    // char *ip = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0]));
+    // std::cout << "Hostname: " << hostname << std::endl;
+    // std::cout << "IP Address: " << ip << std::endl;
+    // return (ip);
+// }
 
 std::string extract_conf(std::string & buff)
 {
@@ -18,7 +36,10 @@ std::string extract_conf(std::string & buff)
     buff.erase(0, pos + 1);
     pos = buff.find(';');
     if (pos == buff.npos)
-        throw ConfFileException("Error: expected ';' at end of declaration");
+    {
+        if (buff.find_first_of("{}") == buff.npos)
+            throw ConfFileException("Error: expected ';' at end of declaration");
+    }
     std::string tmp (buff.substr(0, pos));
     return (tmp);
 }
@@ -29,7 +50,7 @@ int     print_error(char const *str)
     return (-1);
 }
 
-void    set_conf_struct(std::list<std::string> & cnf_file, t_conf conf)
+void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
 {
 
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
@@ -41,17 +62,29 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf conf)
             else
                  conf.ipv4_port = extract_conf(*it);
         }
-        else
-            throw ConfFileException ("Error: missing port number");       
         if ((*it).find("root "))
             conf.root_dir = extract_conf(*it);
-        else
-            throw ConfFileException ("Error: missing root directory");       
         if ((*it).find("index "))
             conf.files = extract_conf(*it);
         if ((*it).find("server_name "))
             conf.server_name = extract_conf(*it);
-        //checker if root or listen or location is null
+    }
+}
+void    check_if_missing(t_conf & conf)
+{
+    if (conf.ipv4_port == "" && conf.ipv6_port == "")
+        throw ConfFileException ("Error: missing port number");  
+    if (conf.root_dir == "")
+        throw ConfFileException ("Error: missing root directory");
+    if (conf.files == "")
+    {
+        std::cout << "No default file has been set-up, default file will be set to index.html" << std::endl;
+        conf.files = "index.html";
+    }
+    if (conf.server_name == "")
+    {
+        std::cout << "No server_name has been set-up, server_name will be set to IP adress" << std::endl;
+        // conf.server_name = get_ip_address();
     }
 }
 

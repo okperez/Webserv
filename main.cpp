@@ -6,21 +6,19 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/05 18:26:59 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/11 13:48:49 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
 
-// GARENCE: si tu souhaites executer le projet, lance le avec un argument random 
-
 int main(int argc, char **argv) 
 {
     if (argc == 2)
     {
-		(void) argv;
-    	// if (parse_conf_file(argv[1]) == -1)						
-    	//     return (1);
+    	if (parse_conf_file(argv[1]) == -1)
+			std::cout  << "a" << std::endl;				
+    		// return (1);
 		
     	t_request request;
     	t_conf    conf;
@@ -30,7 +28,7 @@ int main(int argc, char **argv)
     	 return 1;
     	}
     	struct sockaddr_in server_addr;
-    	server_addr.sin_family = AF_INET;           // address family
+    	server_addr.sin_family = AF_INET;          // address family
     	server_addr.sin_addr.s_addr = INADDR_ANY;   //The address for this socket. This is just your machine’s IP address
     	server_addr.sin_port = htons(4221);         //The port number (the transport address)
     	if (bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) != 0) { // assigning a transport address to the socket
