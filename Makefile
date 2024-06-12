@@ -1,8 +1,9 @@
 NAME = webserv
 
 SRC = 	src/main.cpp \
+		src/request.cpp \
 	    src/server.cpp \
-		src/conf_parsing.cpp \
+		src/conf_parsing.cpp
 
 OBJ = $(SRC:.c=.o)
 #HEADERS = server.hpp \

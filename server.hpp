@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/11 15:55:28 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/12 17:08:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@
 # include <netdb.h>
 #include <poll.h>
 #include <fcntl.h>
+
+#define MAX_CONNECTION	20
 
 typedef struct s_conf
 {
@@ -73,8 +75,10 @@ typedef struct s_request
 
 }t_request;
 
-void    init_request_struct(t_request & request, char const *buffer);
-int     handle_request(int socket_fd, t_request & request);
-int     parse_conf_file(char *argv);
+void    		init_request_struct(t_request & request, char const *buffer);
+int     		handle_request(int socket_fd, t_request & request);
+int     		parse_conf_file(char *argv);
+struct pollfd 	*create_fds(int server_fd);
+int				launch_server(struct pollfd *fds, int server_fd);
 
 #endif
