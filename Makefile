@@ -1,6 +1,6 @@
 NAME = webserv
 
-SRC = main.cpp \
+SRC = 	src/main.cpp \
 	    src/server.cpp \
 		src/conf_parsing.cpp \
 
