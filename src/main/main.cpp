@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 		{
 			signal(SIGINT, sighandler);
 			if (parse_conf_file(argv[1]) == -1)
-				std::cout  << "a" << std::endl;				
+				;
 				// return (1);
 			
 			t_conf    conf;

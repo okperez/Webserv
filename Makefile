@@ -8,7 +8,8 @@ MAIN_DIR		=	main/
 MAIN_SRCS		=	main.cpp
 
 CONF_DIR		=	configuration_file/
-CONF_SRCS		=	conf_parsing.cpp 
+CONF_SRCS		=	conf_parsing.cpp \
+					check_syntax.cpp \
 
 SERV_DIR		=	server/
 SERV_SRCS		=	server.cpp \

@@ -81,6 +81,8 @@ typedef struct s_request
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
 int     		parse_conf_file(char *argv);
+void        check_bracket(std::list<std::string> & cnf_file);
+void        check_syntax(std::list<std::string> & cnf_file);
 
 /* ****************************** server.cpp ******************************** */
 struct pollfd 	*create_fds(int server_fd);

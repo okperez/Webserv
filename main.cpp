@@ -17,8 +17,7 @@ int main(int argc, char **argv)
     if (argc == 2)
     {
     	if (parse_conf_file(argv[1]) == -1)
-			std::cout  << "a" << std::endl;				
-    		// return (1);
+    		return (1);
 		
     	t_request request;
     	t_conf    conf;
