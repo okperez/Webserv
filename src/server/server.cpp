@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/12 16:56:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/13 16:55:19 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 17:34:59 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../server.hpp"
+#include "../../include/server.hpp"
 
 struct pollfd *create_fds(int server_fd) {
 	

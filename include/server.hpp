@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/13 16:55:32 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 17:35:59 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include "src/ServerException.hpp"
+#include "ServerException.hpp"
 
 #define MAX_CONNECTION	20
 

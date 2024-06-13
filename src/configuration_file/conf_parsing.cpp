@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   conf_parsing.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/11 13:48:20 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/13 17:34:15 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../server.hpp"
+#include "../../include/server.hpp"
 
 // char*        get_ip_address(void)
 // {

@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/13 16:52:39 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 17:34:30 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../server.hpp"
+#include "../../include/server.hpp"
 
 // void	save_fds(struct pollfd *fds, int max) {
 // 	static	struct pollfd *fds_save;

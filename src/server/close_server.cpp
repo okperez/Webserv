@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/13 16:52:44 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 17:34:43 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../server.hpp"
+#include "../../include/server.hpp"
 
 void	close_fds(struct pollfd *fds, int nb) {
 	for (int i = 0; i < nb; i++) {

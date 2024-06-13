@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/12 16:56:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 17:34:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../server.hpp"
+#include "../../include/server.hpp"
 
 std::string extract_line(std::string & buff, char delim)
 {

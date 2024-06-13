@@ -1,31 +1,70 @@
-NAME = webserv
+NAME 			= 	webserv
+CXX 			= 	c++
+CXXFLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
 
-SRC = 	src/main.cpp \
-		src/request.cpp \
-	    src/server.cpp \
-		src/conf_parsing.cpp \
-		src/ServerException.cpp \
-		src/close_server.cpp
+################################### SOURCES ###################################
 
-OBJ = $(SRC:.c=.o)
-#HEADERS = server.hpp \
+MAIN_DIR		=	main/
+MAIN_SRCS		=	main.cpp
 
-CXXFLAGS = -Wall -Wextra -Werror -g3 -std=c++98
-CXX = c++
+CONF_DIR		=	configuration_file/
+CONF_SRCS		=	conf_parsing.cpp 
 
-all: $(NAME)
+SERV_DIR		=	server/
+SERV_SRCS		=	server.cpp \
+					close_server.cpp
 
-$(NAME): $(OBJ) #$(HEADERS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ)
+EXCEPTION_DIR	=	exception/
+EXCEPTION_SRCS	=	ServerException.cpp
+					
+REQUEST_DIR		=	request/
+REQUEST_SRCS	=	request.cpp
 
-obj/%.o: %.cpp #$(HEADERS)
+############################# HANDLE DIRECTORIES ##############################
+
+SRCS_DIR 		= 	src/
+
+SRCS			=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
+					$(addprefix $(CONF_DIR), $(CONF_SRCS)) \
+					$(addprefix $(SERV_DIR), $(SERV_SRCS)) \
+					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
+					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
+					
+SRCS_BONUS		=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
+					$(addprefix $(CONF_DIR), $(CONF_SRCS)) \
+					$(addprefix $(SERV_DIR), $(SERV_SRCS)) \
+					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
+					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
+
+OBJS_DIR 		= 	.objs/
+
+OBJS_NAMES 		= 	$(SRCS:.cpp=.o)
+
+OBJS			= 	$(addprefix $(OBJS_DIR), $(OBJS_NAMES))
+
+DEPS 		:= $(OBJS:.o=.d)
+
+#################################### RULES ####################################
+
+all : $(NAME)
+
+$(NAME) : $(OBJS)
+	$(CXX) $(CXX_FLAGS) $(OBJS) -o $@
+
+$(OBJS_DIR)%.o:$(SRCS_DIR)%.cpp
 	mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ $(MLX_FLAGS)
 
-clean:
-	@rm -rf obj
+-include $(DEPS)
 
-fclean: clean
-	@rm -rf $(NAME)
+clean :
+	rm -rf $(OBJS_DIR)
+	rm -f $(DEPS)
 
-re: fclean all
+fclean : clean
+	rm -f $(NAME)
+
+re : fclean
+	make all
+
+.PHONY : all clean fclean re
