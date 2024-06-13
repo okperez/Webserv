@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/12 17:08:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/13 16:55:32 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,9 @@
 # include <netdb.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <signal.h>
+
+#include "src/ServerException.hpp"
 
 #define MAX_CONNECTION	20
 
@@ -78,7 +81,15 @@ typedef struct s_request
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
 int     		parse_conf_file(char *argv);
+
+/* ****************************** server.cpp ******************************** */
 struct pollfd 	*create_fds(int server_fd);
 int				launch_server(struct pollfd *fds, int server_fd);
+
+/* *************************** close_server.cpp ***************************** */
+void			close_connection(struct pollfd *fds, int i);
+void			close_fds(struct pollfd *fds, int nb);
+void			save_fds(struct pollfd *fds, int max);
+void 			sighandler(int signal);
 
 #endif
