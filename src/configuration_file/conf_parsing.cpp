@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/11 17:53:15 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 15:31:11 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,39 +39,7 @@ char*        get_ip_address(void)
     return (ip);
 }
 
-std::string extract_conf(std::string buff)
-{
-    unsigned long pos = buff.find(' ');
-    buff.erase(0, pos + 1);
-    pos = buff.find(';');
-    if (pos == buff.npos)
-    {
-        if (buff.find_first_of("{}") == buff.npos)
-            throw ConfFileException("Error: expected ';' at end of declaration");
-    }
-    std::string tmp (buff.substr(0, pos));
-    return (tmp);
-}
 
-void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
-{
-    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    {
-        if ((*it).find("listen "))
-        {
-            if ((*it).find("[..]"))
-                 conf.ipv6_port = extract_conf(*it);
-            else
-                 conf.ipv4_port = extract_conf(*it);
-        }
-        if ((*it).find("root ")!= (*it).npos)
-            conf.root_dir = extract_conf(*it);
-        if ((*it).find("index ")!= (*it).npos)
-            conf.files = extract_conf(*it);
-        if ((*it).find("server_name ") != (*it).npos)
-            conf.server_name = extract_conf(*it);
-    }
-}
 
 void    check_if_missing(t_conf & conf)
 {
@@ -134,7 +102,6 @@ void    set_to_null(t_conf & conf)
     conf.server_name = "";
     conf.root_dir = "";
     conf.files = "";
-    conf.location = "";
 }
 
 int     parse_conf_file(char *argv)

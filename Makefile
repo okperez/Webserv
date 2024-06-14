@@ -10,6 +10,7 @@ MAIN_SRCS		=	main.cpp
 CONF_DIR		=	configuration_file/
 CONF_SRCS		=	conf_parsing.cpp \
 					check_syntax.cpp \
+					init_conf_struct.cpp \
 
 SERV_DIR		=	server/
 SERV_SRCS		=	server.cpp \

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   conf_parsing.cpp                                   :+:      :+:    :+:   */
+/*   check_syntax.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/11 17:53:15 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 15:09:46 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,9 +70,9 @@ void	check_outside_bracket(std::string str)
 			break ;
 		std::string extract = str.substr(0, str.find('{'));
 		erase_content(str, '{');
-		std::cout << "Extracted sequence =\n" << extract << std::endl;
+		// std::cout << "Extracted sequence =\n" << extract << std::endl;
 		if (extract == "" || extract == "events" || extract == "http" || extract == "server"
-					|| extract == "location/")
+			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos)
 			;
 		else
 			throw ConfFileException("unknown directive");
@@ -142,7 +142,7 @@ void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
 	it = std::remove_if(str.begin(), str.end(), is_white_space);
 	*it = '\0';
 	str = str.substr(0, str.find('\0'));
-	check_order(str);
+	// check_order(str);
 }
 
 void	check_syntax(std::list<std::string> & cnf_file)

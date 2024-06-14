@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/13 17:35:59 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/14 15:31:29 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include <list>
 # include <sstream>
 # include <vector>
+#include <utility>
 # include <unistd.h>
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -38,12 +39,12 @@
 
 typedef struct s_conf
 {
-  std::string               ipv4_port;
-  std::string               ipv6_port;
-  std::string               server_name;
-  std::string               root_dir;
-  std::string               files;
-  std::string               location;
+  std::string                                                             ipv4_port;
+  std::string                                                             ipv6_port;
+  std::string                                                             server_name;
+  std::string                                                             root_dir;
+  std::string                                                             files;
+  std::map<std::string, std::map<std::string, std::string>>               location;
 }t_conf;
 
 class   ConfFileException : public std::exception
@@ -83,6 +84,7 @@ int     		handle_request(int socket_fd, t_request & request);
 int     		parse_conf_file(char *argv);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
+void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 
 /* ****************************** server.cpp ******************************** */
 struct pollfd 	*create_fds(int server_fd);

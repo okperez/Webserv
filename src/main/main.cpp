@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/13 17:34:30 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/14 15:30:29 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,12 @@ int main(int argc, char **argv)
 	try {
 		if (argc == 2)
 		{
+			t_conf    conf;
 			signal(SIGINT, sighandler);
 			if (parse_conf_file(argv[1]) == -1)
 				;
 				// return (1);
 			
-			t_conf    conf;
 			int server_fd = socket(AF_INET, SOCK_STREAM, 0);    //socket set up for listening is used only for accepting connections, not for exchanging data
 			if (server_fd < 0) {
 			std::cerr << "Failed to create server socket\n";
