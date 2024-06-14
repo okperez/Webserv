@@ -14,7 +14,8 @@ CONF_SRCS		=	conf_parsing.cpp \
 
 SERV_DIR		=	server/
 SERV_SRCS		=	server.cpp \
-					close_server.cpp
+					close_server.cpp \
+					handle_gate.cpp
 
 EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp

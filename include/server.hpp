@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:11:23 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:24:58 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include <string>
 # include <cstring>
 # include <algorithm>
+# include <vector>
 # include <map>
 # include <list>
 # include <sstream>
@@ -89,13 +90,32 @@ std::string clear_str(std::list<std::string> cnf_file);
 
 
 /* ****************************** server.cpp ******************************** */
-struct pollfd 	*create_fds(int server_fd);
-int				launch_server(struct pollfd *fds, int server_fd);
+void	open_listen_socket(t_conf &conf, std::vector<int> &server_fd);
+
+// struct pollfd 		*create_fds(int server_fd);
+// void				create_fds(std::vector<int> server_fd, std::vector<struct pollfd> &fds);
+struct pollfd 		*create_fds(std::vector<int> server_fd);
+// int					launch_server(struct pollfd *fds, int server_fd);
+void				launch_server(struct pollfd *fds, std::vector<int> &server_fd);
 
 /* *************************** close_server.cpp ***************************** */
-void			close_connection(struct pollfd *fds, int i);
-void			close_fds(struct pollfd *fds, int nb);
-void			save_fds(struct pollfd *fds, int max);
-void 			sighandler(int signal);
+
+void				close_connection(struct pollfd *fds, int i);
+// void				close_connection(struct pollfd *fds);
+void				close_fds(struct pollfd *fds, int nb);
+// void				close_fds(std::vector<struct pollfd *> &fds);
+void				save_fds(struct pollfd *fds, int max);
+// void				save_fds(int rule, std::vector<struct pollfd> *fds);
+struct pollfd 		*create_fds(std::vector<int> server_fd);
+void 				sighandler(int signal);
+
+/* ************************************************************************** */
+/* ********************************** ENUM ********************************** */
+/* ************************************************************************** */
+
+enum	e_rule {
+	SAVE,
+	CLOSE,
+};
 
 #endif
