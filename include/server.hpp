@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 17:52:33 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/14 18:10:29 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ typedef struct s_conf
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
 typedef struct s_conftest
 {
-  std::vector<int>          ipv4_port;
+  std::vector<std::string>          ipv4_port;
   std::string               ipv6_port; // vecteur
   std::string               server_name;
   std::string               root_dir;
@@ -80,6 +80,7 @@ typedef struct s_request
 
   // HEADER section
   std::string   host;     // Header that specifies the server's host and port
+  std::string   port;     // Header that describes the pport used
   std::string   agent;    // Header that describes the client's user agent
   std::string   media;    // Header that specifies which media types the client can accept
 

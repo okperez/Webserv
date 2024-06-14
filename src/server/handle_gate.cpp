@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/14 17:49:21 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/14 18:05:52 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,20 +59,25 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 	(void) conf;
 	/* QUI SERA REMPLACE PAR LES ELEMENTS DE CONF :*/	
 	std::vector<t_conftest> conf_test(2);
-	std::vector<int> ipv4_port;
 	conf_test[0].ipv4_port.reserve(4);
 	conf_test[1].ipv4_port.reserve(4);
-	for (int i = 8080; i < 8084; i++)
-		conf_test[0].ipv4_port.push_back(i);
-	for (int i = 8082; i < 8086; i++)
-		conf_test[1].ipv4_port.push_back(i);
+	conf_test[0].ipv4_port.push_back("8080");
+	conf_test[0].ipv4_port.push_back("8081");
+	conf_test[0].ipv4_port.push_back("8082");
+	conf_test[0].ipv4_port.push_back("8083");
+	conf_test[1].ipv4_port.push_back("8084");
+	conf_test[1].ipv4_port.push_back("8085");
+	conf_test[1].ipv4_port.push_back("8086");
 	// std::vector<int> ipv6_port; => A gerer peut etre?
 	
 	// A REMPLACER : CONF_TEST PAR CONF
 	/* QUI RESTE :*/
 	for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
-		for(std::vector<int>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
-			if (check_port_binding(server_fd, *jt))
+		for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
+			int port;
+			std::istringstream ss(*jt);
+			ss >> port;
+			if (check_port_binding(server_fd, port))
 				continue;
 			t_listen new_socket;
 			new_socket.fd = socket(AF_INET, SOCK_STREAM, 0);   //socket set up for listening is used only for accepting connections, not for exchanging data
@@ -82,10 +87,10 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 			struct sockaddr_in server_addr;
 			server_addr.sin_family = AF_INET;          			// address family
 			server_addr.sin_addr.s_addr = INADDR_ANY;   		//The address for this socket. This is just your machine’s IP address
-			server_addr.sin_port = htons(*jt);         			//The port number (the transport address)
-			bind_socket(&new_socket, server_addr, server_fd, *jt);
-			listen_socket(&new_socket, server_fd, *jt);
-			new_socket.port = *jt;
+			server_addr.sin_port = htons(port);         			//The port number (the transport address)
+			bind_socket(&new_socket, server_addr, server_fd, port);
+			listen_socket(&new_socket, server_fd, port);
+			new_socket.port = port;
 			server_fd.push_back(new_socket);
 		}
 	}
