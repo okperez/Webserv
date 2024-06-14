@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 15:25:37 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 17:28:45 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,5 +130,4 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
     }
     parse_locations(cnf_file, conf);
     // print_locations(conf);
-
 }

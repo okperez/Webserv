@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 15:30:29 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:11:13 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,9 @@ int main(int argc, char **argv)
 	try {
 		if (argc == 2)
 		{
-			t_conf    conf;
+			std::vector<t_conf>	conf;
 			signal(SIGINT, sighandler);
-			if (parse_conf_file(argv[1]) == -1)
+			if (parse_conf_file(argv[1], conf) == -1)
 				;
 				// return (1);
 			

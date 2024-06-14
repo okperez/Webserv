@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 15:31:11 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:13:29 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ void    check_if_missing(t_conf & conf)
     if (conf.server_name.empty())
     {
         conf.server_name = get_ip_address();
-        std::cout << "No server_name has been set-up, server_name will be set to IP adress: ";
-        std::cout << conf.server_name << std::endl;
+        // std::cout << "No server_name has been set-up, server_name will be set to IP adress: ";
+        // std::cout << conf.server_name << std::endl;
     }
 }
 
@@ -104,24 +104,44 @@ void    set_to_null(t_conf & conf)
     conf.files = "";
 }
 
-int     parse_conf_file(char *argv)
+int     count_server(std::list<std::string> & cnf_file)
+{
+    std::string str = clear_str(cnf_file);
+    int count = 0;
+    
+    std::string::size_type pos = 0;
+    std::string target = "server{";
+    while ((pos = str.find(target, pos )) != std::string::npos)
+    {
+           ++ count;
+           pos += target.length();
+    }
+    return (count);
+}   
+
+int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
 {
     std::ifstream               file;
     std::string                 buff;
     std::list<std::string>      cnf_file;
-    t_conf                      conf;
+    int                         server_nbr;
 
     try
     {
-        set_to_null(conf);
         clear_file(cnf_file, argv);
         // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
         // {
             // std::cout << *it << std::endl;
         // }
 		check_syntax(cnf_file);
-        set_conf_struct(cnf_file, conf);
-        check_if_missing(conf);
+        server_nbr = count_server(cnf_file);
+        // std::cout << "Nbr server = " << server_nbr << std::endl;
+        conf.resize(server_nbr);
+        for (int i = 0; i < server_nbr; i++)
+        {
+            set_conf_struct(cnf_file, conf[i]);
+            check_if_missing(conf[i]);
+        }
     }
     catch(const std::exception & e)
     {

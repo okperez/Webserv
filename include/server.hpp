@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 15:31:29 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:11:23 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,10 +81,12 @@ typedef struct s_request
 
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
-int     		parse_conf_file(char *argv);
+int         parse_conf_file(char *argv, std::vector<t_conf> & conf);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
+std::string clear_str(std::list<std::string> cnf_file);
+
 
 /* ****************************** server.cpp ******************************** */
 struct pollfd 	*create_fds(int server_fd);

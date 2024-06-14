@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 15:09:46 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 17:02:31 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,21 +44,10 @@ void	check_bracket(std::list<std::string> & cnf_file)
     }
 }
 
-// void	extract_and_check(std::string & str, int l_bracket, int r_bracket)
-// {
-	// if (r_bracket == l_bracket + 1)
-        // throw ConfFileException ("Error: empty bracket");
-	// 
-	// std::string sub = str.substr(l_bracket, r_bracket);
-	// std::cout << "Display of the extracted string:\n" << sub << std::endl;	
-// }
-
 void	erase_content(std::string & str, char c)
 {
-	// std::cout << "string before erase\n" << str << "\n\n";
 	const size_t pos = str.find(c) + 1;
 	str.erase(0, pos);
-	// std::cout << "string after erase\n" << str << "\n\n";
 }
 
 void	check_outside_bracket(std::string str)
@@ -131,9 +120,11 @@ void	check_order(std::string str)
 	
 }
 
-void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
+std::string	clear_str(std::list<std::string> cnf_file)
 {
+	std::string	str = "";
 	std::string::iterator it;
+	
 	for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
 	{
 		str += *it;
@@ -142,14 +133,21 @@ void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
 	it = std::remove_if(str.begin(), str.end(), is_white_space);
 	*it = '\0';
 	str = str.substr(0, str.find('\0'));
-	// check_order(str);
+	return (str);
+}
+
+void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
+{
+
 }
 
 void	check_syntax(std::list<std::string> & cnf_file)
 {
-	std::string	str = "";
+	std::string	str;
 
 	check_bracket(cnf_file);
+	str = clear_str(cnf_file);
 	check_bracket_content(cnf_file, str);
+	// check_order(str);
 	check_outside_bracket(str);
 }
