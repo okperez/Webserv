@@ -6,20 +6,20 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/12 16:56:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/14 12:24:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/14 17:39:16 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/server.hpp"
 
-struct pollfd *create_fds(std::vector<int> server_fd) {
+struct pollfd *create_fds(std::vector<t_listen> &server_fd) {
 	
 	struct pollfd *fds;
 	int i = 0;
 	
 	fds = new pollfd[MAX_CONNECTION + server_fd.size()];
-	for (std::vector<int>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-		fds[i].fd = *it;
+	for (std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+		fds[i].fd = it->fd;
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
 		i++;
 	}
@@ -79,7 +79,7 @@ void	do_request(struct pollfd *fds, int i, char *buffer) {
 }
 
 /* Called if there something to be read and handled in one of the fds */
-void	pollin_happen(struct pollfd *fds, std::vector<int> &server_fd) {
+void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd) {
 	
 	for (int i = 0; i < MAX_CONNECTION; i++)
 	{
@@ -87,9 +87,9 @@ void	pollin_happen(struct pollfd *fds, std::vector<int> &server_fd) {
 		if (pollin_happen)
 		{
 			/* pollin_happen sur socket listening for clients */
-			for (std::vector<int>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-				if (*it == fds[i].fd) {
-					new_connection(fds, *it);
+			for (std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+				if (it->fd == fds[i].fd) {
+					new_connection(fds, it->fd);
 					return ;
 				}
 			}
@@ -105,16 +105,15 @@ void	pollin_happen(struct pollfd *fds, std::vector<int> &server_fd) {
 	}
 }
 
-void	launch_server(struct pollfd *fds, std::vector<int> &server_fd) {
+void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket) {
 	
-	int		nb_max = server_fd.size() + MAX_CONNECTION;
 	while (1)
 	{
 		std::cout << "Waiting...\n";
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
-		int ret = poll(fds, nb_max, -1);
+		int ret = poll(fds, max_socket, -1);
 		if (ret < 0) { //verifier leak + leak de fd
-			close_fds(fds, nb_max);
+			close_fds(fds, max_socket);
 			throw(ServerException("Failed to poll."));
 		}
 		pollin_happen(fds, server_fd);
