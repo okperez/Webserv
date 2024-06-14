@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:21:55 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:28:43 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,13 +23,13 @@ int main(int argc, char **argv)
 				;
 				// return (1);
 			
-			std::vector<int> server_fd;
-
-			open_listen_socket(conf, server_fd);
+			std::vector<t_listen> server_fd;
 			
+			/* Il va falloir qu on sache pour chaque fd quel serveur */
+			open_listen_socket(conf, server_fd);
 			struct pollfd *fds = create_fds(server_fd); //tableau de struct
-			save_fds(fds, MAX_CONNECTION);
-			launch_server(fds, server_fd);
+			save_fds(fds, server_fd.size() + MAX_CONNECTION);
+			launch_server(fds, server_fd, server_fd.size() + MAX_CONNECTION);
 			// for () => A IMPLEMENTER : boucle pour fermer les sockets */
 			return (0);
 		}

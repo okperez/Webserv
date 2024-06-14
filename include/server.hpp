@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:24:58 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/14 18:30:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,13 +48,24 @@ typedef struct s_conf
   std::map<std::string, std::map<std::string, std::string>>               location;
 }t_conf;
 
+// A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
+typedef struct s_conftest
+{
+  std::vector<std::string>          ipv4_port;
+  std::string               ipv6_port; // vecteur
+  std::string               server_name;
+  std::string               root_dir;
+  std::string               files;
+  std::string               location; // map<string, map<string(root, index, method, nom page), string >>
+}t_conftest;
+
 class   ConfFileException : public std::exception
 {
     public:
     
     char const * s;
     ConfFileException(char const* str) : s(str) {}
-    virtual const char* what() const throw()
+    virtual const char* what() const throw() // Attention def fonction dans .hpp
     {
         return (s);
     }
@@ -70,6 +81,7 @@ typedef struct s_request
 
   // HEADER section
   std::string   host;     // Header that specifies the server's host and port
+  std::string   port;     // Header that describes the pport used
   std::string   agent;    // Header that describes the client's user agent
   std::string   media;    // Header that specifies which media types the client can accept
 
@@ -78,7 +90,14 @@ typedef struct s_request
   std::string   content_type;
   size_t        lenght;
 
-}t_request;
+} t_request;
+
+typedef struct s_listen
+{
+	int			fd;
+	int			port;
+	
+} t_listen;
 
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
@@ -90,23 +109,15 @@ std::string clear_str(std::list<std::string> cnf_file);
 
 
 /* ****************************** server.cpp ******************************** */
-void	open_listen_socket(t_conf &conf, std::vector<int> &server_fd);
-
-// struct pollfd 		*create_fds(int server_fd);
-// void				create_fds(std::vector<int> server_fd, std::vector<struct pollfd> &fds);
-struct pollfd 		*create_fds(std::vector<int> server_fd);
-// int					launch_server(struct pollfd *fds, int server_fd);
-void				launch_server(struct pollfd *fds, std::vector<int> &server_fd);
+void				open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
+struct pollfd 		*create_fds(std::vector<t_listen> &server_fd);
+void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket);
 
 /* *************************** close_server.cpp ***************************** */
 
 void				close_connection(struct pollfd *fds, int i);
-// void				close_connection(struct pollfd *fds);
 void				close_fds(struct pollfd *fds, int nb);
-// void				close_fds(std::vector<struct pollfd *> &fds);
 void				save_fds(struct pollfd *fds, int max);
-// void				save_fds(int rule, std::vector<struct pollfd> *fds);
-struct pollfd 		*create_fds(std::vector<int> server_fd);
 void 				sighandler(int signal);
 
 /* ************************************************************************** */
