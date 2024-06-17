@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_gate.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/14 18:05:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/15 07:52:57 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,8 +75,8 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 	for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
 		for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 			int port;
-			std::istringstream ss(*jt);
-			ss >> port;
+			std::istringstream iss(*jt);
+			iss >> port;
 			if (check_port_binding(server_fd, port))
 				continue;
 			t_listen new_socket;

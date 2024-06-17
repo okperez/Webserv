@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:14:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/15 08:50:42 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,9 @@ void        init_request_struct(t_request & request, char const *buffer)
 
 //  parse request from client and send back response 
 
-int  handle_request(int socket_fd, t_request & request)
+int  handle_request(int socket_fd, t_request & request, t_conf & conf)
 {
+	(void) conf; // A EFFACER UNE FOIS CONFF INCLUS
   const char *response_true = "HTTP/1.1 200 OK\r\n\r\n";
   const char *response_false = "HTTP/1.1 404 Not Found\r\n\r\n";
 
@@ -104,4 +105,44 @@ int  handle_request(int socket_fd, t_request & request)
   }
   write(socket_fd, response_false, strlen(response_false));
   return (0);
+}
+
+// TEST OK
+/* Si plusieurs serveurs, retourne l index du fichier conf correspondant au server, sinon 0 par default */
+int  choose_server(t_request & request, std::vector<t_conf> & conf) {
+  
+  std::istringstream	iss(request.host);
+  std::string         	host;
+  int					i = 0;
+
+  std::getline(iss, host, ':');
+  for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+	if (host == it->server_name)
+		return (i);
+	i++;  
+  }
+  return (0);
+}
+
+/*
+The normal procedure for parsing an HTTP message is to read the start-line
+into a structure, read each header field line into a hash table by field name
+until the empty line, and then use the parsed data to determine if a message
+body is expected. If a message body has been indicated, then it is read as a
+stream until an amount of octets equal to the message body length is read or the
+connection is closed.
+*/
+void	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf) {
+
+	t_request 	request;
+	int			i_conf = 0;
+	
+	for (int j = 0; j < 1024; j++)
+		std::cout << buffer[j];
+	std::cout << std::endl;
+	init_request_struct(request, buffer);
+  	print_request(request);
+	if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
+		i_conf = choose_server(request, conf);
+	handle_request(fds[i].fd, request, conf[i_conf]);
 }

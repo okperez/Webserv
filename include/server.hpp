@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:30:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/15 08:36:29 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,19 +99,23 @@ typedef struct s_listen
 	
 } t_listen;
 
-void    		init_request_struct(t_request & request, char const *buffer);
-int     		handle_request(int socket_fd, t_request & request);
 int         parse_conf_file(char *argv, std::vector<t_conf> & conf);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 std::string clear_str(std::list<std::string> cnf_file);
 
+/* ****************************** request.cpp ******************************** */
+
+void	      do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf);
+int     		handle_request(int socket_fd, t_request & request, t_conf & conf);
+void    		init_request_struct(t_request & request, char const *buffer);
 
 /* ****************************** server.cpp ******************************** */
+
 void				open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
 struct pollfd 		*create_fds(std::vector<t_listen> &server_fd);
-void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket);
+void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
 
 /* *************************** close_server.cpp ***************************** */
 
@@ -120,6 +124,10 @@ void				close_fds(struct pollfd *fds, int nb);
 void				save_fds(struct pollfd *fds, int max);
 void 				sighandler(int signal);
 
+/* *************************** A_EFFACER ***************************** */
+
+void    print_request(t_request & request);
+void    print_location(std::vector<t_conf> &conf);
 /* ************************************************************************** */
 /* ********************************** ENUM ********************************** */
 /* ************************************************************************** */

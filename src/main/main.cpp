@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:28:43 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/15 08:49:15 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,18 @@ int main(int argc, char **argv)
 			std::vector<t_conf>	conf;
 			signal(SIGINT, sighandler);
 			if (parse_conf_file(argv[1], conf) == -1)
-				;
-				// return (1);
+				std::cout << "ERROR";
+			print_location(conf);
+
+			/* ********** A EFFACER ************ */
+			t_conf		test;
+
+			test.server_name = "test";
+			conf.push_back(test);
+			
+			/* ********************************* */
+			
+			// return (1);
 			
 			std::vector<t_listen> server_fd;
 			
@@ -29,7 +39,7 @@ int main(int argc, char **argv)
 			open_listen_socket(conf, server_fd);
 			struct pollfd *fds = create_fds(server_fd); //tableau de struct
 			save_fds(fds, server_fd.size() + MAX_CONNECTION);
-			launch_server(fds, server_fd, server_fd.size() + MAX_CONNECTION);
+			launch_server(fds, server_fd, server_fd.size() + MAX_CONNECTION, conf);
 			// for () => A IMPLEMENTER : boucle pour fermer les sockets */
 			return (0);
 		}
