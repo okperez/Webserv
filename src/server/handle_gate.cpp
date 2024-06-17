@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_gate.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/15 07:52:57 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/17 16:53:45 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ void	listen_socket(t_listen *new_socket, std::vector<t_listen> &server_fd, int p
 void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd) {
 	
 	(void) conf;
+	int opt = 1;
 	/* QUI SERA REMPLACE PAR LES ELEMENTS DE CONF :*/	
 	std::vector<t_conftest> conf_test(2);
 	conf_test[0].ipv4_port.reserve(4);
@@ -77,13 +78,20 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 			int port;
 			std::istringstream iss(*jt);
 			iss >> port;
-			if (check_port_binding(server_fd, port))
+			if (check_port_binding(server_fd, port)) // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
 				continue;
 			t_listen new_socket;
 			new_socket.fd = socket(AF_INET, SOCK_STREAM, 0);   //socket set up for listening is used only for accepting connections, not for exchanging data
 			if (new_socket.fd < 0)
 				throw (ServerException("Failed to create server socket"));
-		
+			/*
+			Le flag SO_REUSEADDR permet d'assigner la socket a un port meme si ce dernier est en TIME_WAIT
+			ce qui peut arriver quand le serveur est quitte via un CTRL+C.
+			Comme ca permet d'autoriser la réutilisation des adresses locales, il faut faire attention
+			a son utillisation car cela pourrait engendrer des fqilles de securite. 
+			*/
+			if (setsockopt(new_socket.fd, SOL_SOCKET, SO_REUSEADDR, &opt, 4))
+				throw (ServerException("Failed to create server socket"));
 			struct sockaddr_in server_addr;
 			server_addr.sin_family = AF_INET;          			// address family
 			server_addr.sin_addr.s_addr = INADDR_ANY;   		//The address for this socket. This is just your machine’s IP address

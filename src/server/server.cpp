@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/12 16:56:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/15 07:46:15 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/17 12:20:43 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@ struct pollfd *create_fds(std::vector<t_listen> &server_fd) {
 	int i = 0;
 	
 	fds = new pollfd[MAX_CONNECTION + server_fd.size()];
+	// ou max de co par serveur ? 
+	// fds = new pollfd[MAX_CONNECTION * server_fd.size() + server_fd.size()];
 	for (std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->fd;
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
