@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 13:50:50 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 14:07:16 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,10 @@ char*        get_ip_address(void)
 
 void    check_if_missing(t_conf & conf)
 {
+    for (std::vector<std::string>::iterator it = conf.ipv4_port.begin(); it != conf.ipv4_port.end(); it++)
+    {
+        
+    }
     // if (conf.ipv4_port.size() == 0)
         // throw ConfFileException ("Error: missing port number");
     // if (conf.root_dir == "")
@@ -190,6 +194,6 @@ int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
         std::cerr << e.what() << '\n';
         return (-1);
     }
-    // print_all_struct(conf, server_nbr);
+    print_all_struct(conf, server_nbr);
     return (0);
 }

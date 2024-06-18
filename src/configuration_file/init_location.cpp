@@ -6,19 +6,16 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 13:49:45 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 14:10:40 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/server.hpp"
 
-void    clear_type(std::string type)
+void    clear_type(std::string & type)
 {
-    for (std::string::iterator it = type.begin(); it != type.end(); it++)
-    {
-        if (*it == ' ')
-            type.erase(*it);
-    }
+    std::string::iterator it = std::remove_if(type.begin(), type.end(), isspace);
+    *it = '\0';
 
 }
 
@@ -44,7 +41,8 @@ void    init_conf_location(std::list<std::string> & location, t_conf & conf)
     std::map<std::string, std::string>  path;
     std::string                         type;
 
-    type = extract_type(*(location.begin()));    
+    type = extract_type(*(location.begin()));
+    clear_type(type);
     for (std::list<std::string>::iterator it = ++location.begin(); it != location.end(); it++)
     {
         if (*it == "{" || *it == "}")
