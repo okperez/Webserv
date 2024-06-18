@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:28:43 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/18 16:31:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,7 @@ int main(int argc, char **argv)
 			std::vector<t_conf>	conf;
 			signal(SIGINT, sighandler);
 			if (parse_conf_file(argv[1], conf) == -1)
-				;
-				// return (1);
+				return (1);
 			
 			std::vector<t_listen> server_fd;
 			

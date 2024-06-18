@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 14:07:16 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 18:31:52 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,18 +39,39 @@ char*        get_ip_address(void)
     return (ip);
 }
 
-
+void    check_for_root(std::map<std::string, std::map<std::string, std::string>> & location)
+{
+    // std::cout << "INSIDE CHECK ROOT" << std::endl;
+    // for (std::map<std::string, std::map<std::string, std::string>>::iterator it = location.begin(); it != location.end(); it++)
+    // {
+        // for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+            // std::cout << (*its).first << " | " << (*its).second << std::endl;
+    // }
+    int flag;
+    for (std::map<std::string, std::map<std::string, std::string>>::iterator it = location.begin(); it != location.end(); it++)
+    {
+        // std::cout << "\n";
+        flag = 0;
+        // std::cout << (*it).first << std::endl;
+        for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+        {
+            // std::cout << (*its).first << " | " << (*its).second << std::endl;
+            if ((*its).first == "root" && !(*its).second.empty())
+                flag = 1;
+            else if ((*its).first == "return" && !(*its).second.empty())
+                flag = 1;
+        }
+        if (flag == 0)
+            throw ConfFileException("Error: missing root directory");
+    }
+}
 
 void    check_if_missing(t_conf & conf)
 {
-    for (std::vector<std::string>::iterator it = conf.ipv4_port.begin(); it != conf.ipv4_port.end(); it++)
-    {
-        
-    }
-    // if (conf.ipv4_port.size() == 0)
-        // throw ConfFileException ("Error: missing port number");
-    // if (conf.root_dir == "")
-        // throw ConfFileException ("Error: missing root directory");
+    if (conf.ipv4_port.size() == 0)
+        throw ConfFileException ("Error: missing port number");
+    if (conf.root_dir.empty())
+        check_for_root(conf.location);
     if (conf.files == "")
     {
         std::cout << "No default file has been set-up, default file will be set to index.html" << std::endl;
@@ -99,13 +120,6 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
     }
 }
 
-void    set_to_null(t_conf & conf)
-{
-    conf.server_name = "";
-    conf.root_dir = "";
-    conf.files = "";
-}
-
 int     count_server(std::list<std::string> & cnf_file)
 {
     std::string str = clear_str(cnf_file);
@@ -151,16 +165,20 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
 void    remove_server_part(std::list<std::string> & cnf_file)
 {
     std::list<std::string>::iterator begin = cnf_file.begin();
-    std::list<std::string>::iterator end;
+    std::list<std::string>::iterator end = cnf_file.end();
     for (std::list<std::string>::iterator it = ++begin; it != cnf_file.end(); it++)
     {
         if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos|| (*it).find("server\0") != (*it).npos)
         {
-            end = it;
+            end = ++it;
             break ;
         }
     }
     cnf_file.erase(begin, end);
+    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    // {
+        // std::cout << *it << std::endl;
+    // }
 }
 
 int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
@@ -185,15 +203,20 @@ int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
         {
             set_conf_struct(cnf_file, conf[i]);
             check_if_missing(conf[i]);
-            // verifier dans check if missing si lorsque root est pas mentionne qu'il l'est dans chaque block location
             remove_server_part(cnf_file);
+            // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+            // {
+                // std::cout << *it << std::endl;
+            // }
+            // std::cout << "||||||||||||||||||||||||||||||||||||||||||||||\n";
         }
     }
+    // compare_server(conf);
     catch(const std::exception & e)
     {
         std::cerr << e.what() << '\n';
         return (-1);
     }
-    print_all_struct(conf, server_nbr);
+    // print_all_struct(conf, server_nbr);
     return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 11:36:53 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 16:47:51 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,22 +26,19 @@ void	check_bracket(std::list<std::string> & cnf_file)
 	
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
-		for (std::string::iterator its = (*it).begin(); its != (*it).end(); its++)
+		if ((*it).find('{') != (*it).npos)
 		{
-			if (*its == '{')
-			{
-				sign += 1;
-				b += 1;
-			}
-			else if (*its == '}')
-			{
-				sign -= 1;
-				b += 1;
-			}
-			if (sign == -1)
-        		throw ConfFileException ("Error: missing bracket");
+			sign += 1;
+			b += 1;
 		}
-    }
+		else if ((*it).find('}') != (*it).npos)
+		{
+			sign -= 1;
+			b += 1;
+		}
+		if (sign == -1)
+        	throw ConfFileException ("Error: missing bracket");
+		}
 }
 
 void	erase_content(std::string & str, char c)
@@ -60,7 +57,7 @@ void	check_outside_bracket(std::string str)
 		std::string extract = str.substr(0, str.find('{'));
 		erase_content(str, '{');
 		// std::cout << "Extracted sequence =\n" << extract << std::endl;
-		if (extract == "" || extract == "events" || extract == "http" || extract == "server"
+		if (extract == "" || extract == "events" || extract == "http" || extract.find("server") != extract.npos
 			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos
 			|| extract.find("location=") != extract.npos)
 			;
@@ -117,8 +114,6 @@ void	check_order(std::string str)
 	if (!(pos_events < pos_http && pos_http < pos_server))
         throw ConfFileException ("Error: contexts declared in wrong order");
 	check_events_content(str);
-	
-	
 }
 
 std::string	clear_str(std::list<std::string> cnf_file)
@@ -127,12 +122,9 @@ std::string	clear_str(std::list<std::string> cnf_file)
 	std::string::iterator it;
 	
 	for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-	{
 		str += *it;
-	}
+	clear_space(str);
 	// std::cout << "Here is the string:\n" << str << "\n\n";
-	it = std::remove_if(str.begin(), str.end(), is_white_space);
-	*it = '\0';
 	str = str.substr(0, str.find('\0'));
 	return (str);
 }

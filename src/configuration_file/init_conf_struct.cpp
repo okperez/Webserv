@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 12:07:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 17:56:25 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,10 @@ std::string extract_conf(std::string buff, char c)
 
 void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
 {
+    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    // {
+        // std::cout << *it << std::endl;
+    // }
     int i = 0;
     int flag_loc = 0;                  // check if whether we are inside location or not (matter for root setting)
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)

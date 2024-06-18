@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 11:16:50 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 14:22:10 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,8 @@ void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 std::string clear_str(std::list<std::string> cnf_file);
 std::string extract_conf(std::string buff, char c);
 void        parse_locations(std::list<std::string> & cnf_file, t_conf & conf);
+void        clear_space(std::string & type);
+
 
 
 
