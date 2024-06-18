@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 09:06:16 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/18 19:22:55 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 			if (parse_conf_file(argv[1], conf) == -1)
 				std::cout << "ERROR";
 			print_location(conf);
+			// std::cout << "conf.root_dir " << conf[0].root_dir << std::endl;
 
 			/* ********** A EFFACER ************ */
 			t_conf		test;

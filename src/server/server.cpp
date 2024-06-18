@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/12 16:56:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/17 12:20:43 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/18 18:40:38 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ void	new_connection(struct pollfd *fds, int server_fd) {
 }
 
 /* Called if there something to be read and handled in one of the fds */
-void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd, std::vector<t_conf> & conf) {
+void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error) {
 	
 	for (int i = 0; i < MAX_CONNECTION; i++)
 	{
@@ -82,7 +82,7 @@ void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd, std::ve
 			if (!n_bytes)
 				close_connection(fds, i);
 			else
-				do_request(fds, i, buffer, conf);
+				do_request(fds, i, buffer, conf, map_error);
 			return ;
 		}
 	}
@@ -90,6 +90,9 @@ void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd, std::ve
 
 void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf) {
 	
+	/* Est ce qu on ne ferait pas une struct avec map_error et vector_server ?*/
+	std::map<std::string, std::string> map_error;
+	create_map_error(map_error);
 	while (1)
 	{
 		std::cout << "Waiting...\n";
@@ -99,6 +102,6 @@ void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max
 			close_fds(fds, max_socket);
 			throw(ServerException("Failed to poll."));
 		}
-		pollin_happen(fds, server_fd, conf);
+		pollin_happen(fds, server_fd, conf, map_error);
 	}
 }
