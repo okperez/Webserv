@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 17:02:31 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 11:36:53 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,8 @@ void	check_outside_bracket(std::string str)
 		erase_content(str, '{');
 		// std::cout << "Extracted sequence =\n" << extract << std::endl;
 		if (extract == "" || extract == "events" || extract == "http" || extract == "server"
-			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos)
+			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos
+			|| extract.find("location=") != extract.npos)
 			;
 		else
 			throw ConfFileException("unknown directive");

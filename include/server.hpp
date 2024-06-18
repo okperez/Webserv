@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/14 18:30:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/18 11:16:50 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,18 +40,19 @@
 
 typedef struct s_conf
 {
-  std::string                                                             ipv4_port;
-  std::string                                                             ipv6_port;
-  std::string                                                             server_name;
-  std::string                                                             root_dir;
-  std::string                                                             files;
-  std::map<std::string, std::map<std::string, std::string>>               location;
+  std::vector<std::string>                                          ipv4_port;
+  std::vector<std::string>                                          ipv6_port;
+  std::string														                            max_body_size;
+  std::string                                                       server_name;
+  std::string                                                       root_dir;
+  std::string                                                       files;
+  std::map<std::string, std::map<std::string, std::string>>         location;
 }t_conf;
 
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
 typedef struct s_conftest
 {
-  std::vector<std::string>          ipv4_port;
+  std::vector<std::string>  ipv4_port;
   std::string               ipv6_port; // vecteur
   std::string               server_name;
   std::string               root_dir;
@@ -106,6 +107,10 @@ void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 std::string clear_str(std::list<std::string> cnf_file);
+std::string extract_conf(std::string buff, char c);
+void        parse_locations(std::list<std::string> & cnf_file, t_conf & conf);
+
+
 
 
 /* ****************************** server.cpp ******************************** */
