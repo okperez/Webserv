@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 12:39:09 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 13:50:50 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,8 +191,5 @@ int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
         return (-1);
     }
     // print_all_struct(conf, server_nbr);
-
-    // if (buff.empty())
-        // return (print_error("Configuration file empty"));
     return (0);
 }

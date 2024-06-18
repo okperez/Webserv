@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 12:28:22 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 13:49:45 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,12 @@
 
 void    clear_type(std::string type)
 {
-    if (type.npos - 1 == ' ')
-        type.erase(type.npos - 1);
+    for (std::string::iterator it = type.begin(); it != type.end(); it++)
+    {
+        if (*it == ' ')
+            type.erase(*it);
+    }
+
 }
 
 std::string extract_type(std::string buff)
@@ -35,17 +39,19 @@ std::string extract_index(std::string buff)
 
 void    init_conf_location(std::list<std::string> & location, t_conf & conf)
 {
-    int         size = location.size();
+    int                                 size = location.size();
     std::pair<std::string, std::string> pair;
     std::map<std::string, std::string>  path;
     std::string                         type;
 
-    type = extract_type(*(location.begin()));
-    clear_type(type);
-    
+    type = extract_type(*(location.begin()));    
     for (std::list<std::string>::iterator it = ++location.begin(); it != location.end(); it++)
     {
-        // std::cout << "Before add to pair = " << *it << std::endl;
+        if (*it == "{" || *it == "}")
+        {
+            it++;
+            continue ;
+        }
         pair.first = extract_index(*it);
         pair.second = extract_conf(*it, ';');
         path[pair.first] = pair.second;
@@ -56,7 +62,6 @@ void    init_conf_location(std::list<std::string> & location, t_conf & conf)
         // std::cout << "Map content = " << (*it).first << " | "  << (*it).second << std::endl;
     // }
     // std::cout << std::endl;
-    // conf.location[type] = path;
     conf.location.insert(make_pair(type, path));
 }
 
@@ -76,7 +81,7 @@ std::list<std::string>  extract_location(std::list<std::string> & cnf_file, std:
         it++;
     }
     location.insert(location.end(), begin, end);
-    // std::cout << "Bloc notation =\n";
+    // std::cout << "Bloc location =\n";
     // for (std::list<std::string>::iterator it = location.begin(); it != location.end(); it++)
     // {
         // std::cout << *it << std::endl;
