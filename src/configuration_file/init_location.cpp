@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 18:31:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 18:49:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ std::string extract_index(std::string buff)
     return (name);    
 }
 
-void    init_conf_location(std::list<std::string> & location, t_conf & conf)
+void    location_to_conf(std::list<std::string> & location, t_conf & conf)
 {
     int                                 size = location.size();
     std::pair<std::string, std::string> pair;
@@ -58,7 +58,7 @@ void    init_conf_location(std::list<std::string> & location, t_conf & conf)
     conf.location.insert(make_pair(type, path));
 }
 
-std::list<std::string>  extract_location(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin)
+std::list<std::string>  extract_bloc_location(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin)
 {
     std::list<std::string>::iterator    end;
     std::list<std::string>::iterator    it = begin;
@@ -82,7 +82,7 @@ std::list<std::string>  extract_location(std::list<std::string> & cnf_file, std:
     return (location);
 }
 
-void    parse_locations(std::list<std::string> & cnf_file, t_conf & conf)
+void    handle_locations(std::list<std::string> & cnf_file, t_conf & conf)
 {
     std::list<std::string> location;
     
@@ -99,8 +99,8 @@ void    parse_locations(std::list<std::string> & cnf_file, t_conf & conf)
         }
         if ((*it).find("location") != (*it).npos)
         {
-            location = extract_location(cnf_file, it);
-            init_conf_location(location, conf);
+            location = extract_bloc_location(cnf_file, it);
+            location_to_conf(location, conf);
         }
     }
 }

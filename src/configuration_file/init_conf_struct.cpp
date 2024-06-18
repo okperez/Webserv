@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 17:56:25 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 18:46:51 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
         {
             if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos|| (*it).find("server\0") != (*it).npos) 
             {
-                parse_locations(cnf_file, conf);
+                handle_locations(cnf_file, conf);
                 return ; 
             }
         }
@@ -73,6 +73,6 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
             conf.server_name = extract_conf(*it, ';');
         i++;
     }
-    parse_locations(cnf_file, conf);
+    handle_locations(cnf_file, conf);
     // print_locations(conf);
 }

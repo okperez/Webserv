@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 14:22:10 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 18:52:44 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,13 +102,13 @@ typedef struct s_listen
 
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
-int         parse_conf_file(char *argv, std::vector<t_conf> & conf);
+int         handle_conf_file(char *argv, std::vector<t_conf> & conf);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 std::string clear_str(std::list<std::string> cnf_file);
 std::string extract_conf(std::string buff, char c);
-void        parse_locations(std::list<std::string> & cnf_file, t_conf & conf);
+void        handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
 void        clear_space(std::string & type);
 
 

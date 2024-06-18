@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 18:31:52 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/18 18:52:44 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,7 @@ void    remove_server_part(std::list<std::string> & cnf_file)
     // }
 }
 
-int     parse_conf_file(char *argv, std::vector<t_conf> & conf)
+int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
 {
     std::ifstream               file;
     std::string                 buff;
