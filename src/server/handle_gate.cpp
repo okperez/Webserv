@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_gate.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/17 16:53:45 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/18 08:49:57 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,13 +62,13 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 	std::vector<t_conftest> conf_test(2);
 	conf_test[0].ipv4_port.reserve(4);
 	conf_test[1].ipv4_port.reserve(4);
-	conf_test[0].ipv4_port.push_back("8080");
-	conf_test[0].ipv4_port.push_back("8081");
-	conf_test[0].ipv4_port.push_back("8082");
-	conf_test[0].ipv4_port.push_back("8083");
-	conf_test[1].ipv4_port.push_back("8084");
-	conf_test[1].ipv4_port.push_back("8085");
-	conf_test[1].ipv4_port.push_back("8086");
+	conf_test[0].ipv4_port.push_back("8180");
+	conf_test[0].ipv4_port.push_back("8181");
+	conf_test[0].ipv4_port.push_back("8182");
+	conf_test[0].ipv4_port.push_back("8183");
+	conf_test[1].ipv4_port.push_back("8184");
+	conf_test[1].ipv4_port.push_back("8185");
+	conf_test[1].ipv4_port.push_back("8186");
 	// std::vector<int> ipv6_port; => A gerer peut etre?
 	
 	// A REMPLACER : CONF_TEST PAR CONF
@@ -78,7 +78,7 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 			int port;
 			std::istringstream iss(*jt);
 			iss >> port;
-			if (check_port_binding(server_fd, port)) // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
+			if (check_port_binding(server_fd, port))
 				continue;
 			t_listen new_socket;
 			new_socket.fd = socket(AF_INET, SOCK_STREAM, 0);   //socket set up for listening is used only for accepting connections, not for exchanging data

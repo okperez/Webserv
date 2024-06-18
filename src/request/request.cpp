@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/15 08:50:42 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/18 11:11:13 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,14 +44,67 @@ void        init_request_struct(t_request & request, char const *buffer)
   request.media = extract_header(buff);
 }
 
-//  parse request from client and send back response 
+/*
+Recherche pour la location de la plus precise a la moins precise dans le serveur
+*/
+std::string look_if_location(std::string &target, t_conf & conf) {
 
+	std::cout << "Look_for_location avec target = " << target << std::endl;
+	try {
+		std::string tmp = conf.location.find(target)->first; // Si find ne trouve pas d occurence renvoie exception bad_alloc
+		std::cout << "FIND : " << tmp << std::endl;
+		return (tmp);	
+	}
+	catch(std::bad_alloc & e) {
+		std::string s = target;
+    	if (target.back() == '/')
+			s.erase(s.length() - 1, 1); 
+		else {
+			size_t found = s.rfind('/');
+			if (found == std::string::npos) {
+				std::cout << "NOT FOUND" << std::endl; // si not found + pas de root globale pour le serveur => page d erreur en dur 
+				return ("");
+			}
+			s.erase(found + 1, s.length() - found + 1);
+		}
+		return (look_if_location(s, conf));
+	}
+}
+
+/*
+Cherche si une location = correspondante a la target existe, sinon appelle look_if_location
+*/
+std::string look_for_location(std::string &target, t_conf & conf) {
+	
+	try {
+		std::string s = "=" + target;
+		return (conf.location.find(s)->first);// Si find ne trouve pas d occurence renvoie exception bad_alloc
+	}
+	catch(std::bad_alloc & e) {
+		return (look_if_location(target, conf));
+		//on recupere l index de la location :)
+	}
+}
+
+//  parse request from client and send back response 
 int  handle_request(int socket_fd, t_request & request, t_conf & conf)
 {
-	(void) conf; // A EFFACER UNE FOIS CONFF INCLUS
   const char *response_true = "HTTP/1.1 200 OK\r\n\r\n";
   const char *response_false = "HTTP/1.1 404 Not Found\r\n\r\n";
 
+  /* A EFFACER UNE FOIS PARSING DONE */
+	std::cout << "TEST0" << std::endl;
+  std::map<std::string, std::string> tmp;
+  tmp["root"] = "pages";
+  conf.location["=/lol"] = tmp; 
+  conf.location["=/lol/"] = tmp; 
+  conf.location["=/lol/index.html"] = tmp; 
+  conf.location["/"] = tmp; 
+	std::cout << "TEST1" << std::endl;
+
+  /* ********************************* */
+
+  std::string index = look_for_location(request.target, conf); // si pas trouve index = ""
   if (request.target == "/")
   {
     write(socket_fd, response_true, strlen(response_true));
@@ -142,6 +195,11 @@ void	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & c
 	std::cout << std::endl;
 	init_request_struct(request, buffer);
   	print_request(request);
+  /*
+  revoir choose_server avec info de ce site :
+  https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
+  */
+  // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
 	if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
 		i_conf = choose_server(request, conf);
 	handle_request(fds[i].fd, request, conf[i_conf]);
