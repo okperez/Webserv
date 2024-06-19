@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 18:46:51 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/19 09:40:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
         if ((*it).find("root ")!= (*it).npos && flag_loc == 0)
             conf.root_dir = extract_conf(*it, ';');
         if ((*it).find("client_max_body_size ")!= (*it).npos)
-            conf.max_body_size = extract_conf(*it, ';');
+            conf.max_body_size = extract_conf(*it, ';');                    //boy siz mandatory
         if ((*it).find("index ")!= (*it).npos)
             conf.files = extract_conf(*it, ';');
         if ((*it).find("server_name ") != (*it).npos)

@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 16:47:51 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/19 09:34:47 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void	erase_content(std::string & str, char c)
 	str.erase(0, pos);
 }
 
-void	check_outside_bracket(std::string str)
+void	check_outside_bracket(std::string str)				//que server a gerer
 {
 	while (1)
 	{
