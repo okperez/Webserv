@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 10:31:42 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 11:57:07 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,47 +101,47 @@ typedef struct s_listen
 	
 } t_listen;
 
+/* *************************** CONFIGURATION_FILE *************************** */
+
 void    		init_request_struct(t_request & request, char const *buffer);
 int     		handle_request(int socket_fd, t_request & request);
-int         handle_conf_file(char *argv, std::vector<t_conf> & conf);
-void        check_bracket(std::list<std::string> & cnf_file);
-void        check_syntax(std::list<std::string> & cnf_file);
-void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
-std::string clear_str(std::list<std::string> cnf_file);
-std::string extract_conf(std::string buff, char c);
-void        handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
-void        clear_space(std::string & type);
+int         	handle_conf_file(char *argv, std::vector<t_conf> & conf);
+void        	check_bracket(std::list<std::string> & cnf_file);
+void        	check_syntax(std::list<std::string> & cnf_file);
+void        	set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
+std::string 	clear_str(std::list<std::string> cnf_file);
+std::string 	extract_conf(std::string buff, char c);
+void        	handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
+void        	clear_space(std::string & type);
 
-
-
-
-/* ****************************** request.cpp ******************************** */
+/* ******************************** REQUEST ********************************* */
 
 void	      	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error);
 int     		handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<std::string, std::string> map_error);
 void    		init_request_struct(t_request & request, char const *buffer);
+std::string 	look_for_location(std::string &target, t_conf & conf);
+void			add_path(std::string &target, t_conf & conf, std::string &index);
 
-/* ****************************** server.cpp ******************************** */
+/* ********************************* SERVER ********************************* */
 
-void				open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
-struct pollfd 		*create_fds(std::vector<t_listen> &server_fd);
-void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
-
-/* *************************** close_server.cpp ***************************** */
-
-void				close_connection(struct pollfd *fds, int i);
-void				close_fds(struct pollfd *fds, int nb);
-void				save_fds(struct pollfd *fds, int max);
-void 				sighandler(int signal);
+void			open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
+struct pollfd 	*create_fds(std::vector<t_listen> &server_fd);
+void			launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
+void			close_connection(struct pollfd *fds, int i);
+void			close_fds(struct pollfd *fds, int nb);
+void			save_fds(struct pollfd *fds, int max);
+void 			sighandler(int signal);
 
 /* ********************************** ERROR ********************************* */
-void	create_map_error(std::map<std::string, std::string> &map_error);
-void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error);
+
+void		create_map_error(std::map<std::string, std::string> &map_error);
+void		fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error);
 
 /* ****************************** A_EFFACER ********************************* */
 
-void    print_request(t_request & request);
-void    print_location(std::vector<t_conf> &conf);
+void    	print_request(t_request & request);
+void    	print_location(std::vector<t_conf> &conf);
+
 /* ************************************************************************** */
 /* ********************************** ENUM ********************************** */
 /* ************************************************************************** */
