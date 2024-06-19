@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:52:24 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/19 11:53:05 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 12:00:29 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ std::string look_if_location(std::string &target, t_conf & conf) {
 /*
 Cherche si une location = correspondante a la target existe, sinon appelle look_if_location
 */
+// A FAIRE : VOIR COMMENT GERER =/loc et =/loc/index.html
 std::string look_for_location(std::string &target, t_conf & conf) {
 	
 	std::string s = "=" + target;

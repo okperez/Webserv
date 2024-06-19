@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 11:57:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 16:07:22 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,13 @@ typedef struct s_conf
 {
   std::vector<std::string>                                          ipv4_port;
   std::vector<std::string>                                          ipv6_port;
-  std::string														                            max_body_size;
+  std::string														max_body_size;
   std::string                                                       server_name;
   std::string                                                       root_dir;
   std::string                                                       files;
   std::map<std::string, std::map<std::string, std::string>>         location;
   std::map<std::string, std::string>										err_pgs;
+  std::string               host;
 }t_conf;
 
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
@@ -121,6 +122,7 @@ int     		handle_request(int socket_fd, t_request & request, t_conf & conf, std:
 void    		init_request_struct(t_request & request, char const *buffer);
 std::string 	look_for_location(std::string &target, t_conf & conf);
 void			add_path(std::string &target, t_conf & conf, std::string &index);
+bool			check_allow_method(t_request &request, t_conf &conf, std::string &index);
 
 /* ********************************* SERVER ********************************* */
 
