@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 19:22:55 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/19 09:46:06 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,13 @@ int main(int argc, char **argv)
 			signal(SIGINT, sighandler);
 			if (parse_conf_file(argv[1], conf) == -1)
 				std::cout << "ERROR";
-			print_location(conf);
-			// std::cout << "conf.root_dir " << conf[0].root_dir << std::endl;
+			
 
 			/* ********** A EFFACER ************ */
+
+			// print_location(conf);
+			// std::cout << "conf.root_dir " << conf[0].root_dir << std::endl;
+			
 			t_conf		test;
 
 			test.server_name = "test";

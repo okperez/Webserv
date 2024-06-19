@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_http_error.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 15:10:48 by garance           #+#    #+#             */
-/*   Updated: 2024/06/18 19:52:18 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/19 10:21:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,5 +34,5 @@ void	fill_error(std::string &body, std::string &response, std::string code, t_co
     response = "HTTP/1.1 ";
     response += code;
     response += map_error[code];
-    response += "\r\nContent-Type: text/html\r\nContent-Length: ";
+    response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attetion si css jss....
 }

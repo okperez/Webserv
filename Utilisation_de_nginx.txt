@@ -8,7 +8,7 @@
 
 *************************************************************************
 
-2. MODIFIER FICHIER DE CONFIGURATION
+2. MODIFIER FICHIER DE CONFIGURATION dans le dossier /var/www/sites-ennable
 
     sudo "${EDITOR:-vi}" tutorial     ============> tutorial est le nom de du fichier de conf
 
