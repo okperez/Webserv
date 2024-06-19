@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 10:25:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 11:32:54 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,11 +50,11 @@ Recherche pour la location de la plus precise a la moins precise dans le serveur
 // PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
 std::string look_if_location(std::string &target, t_conf & conf) {
 
-	// std::cout << "Look_for_location avec target = " << target << std::endl;
+	std::cout << "Look_for_location avec target = " << target << std::endl;
 	std::map< std::string, std::map<std::string, std::string> >::iterator it;
 	it = conf.location.find(target);
 	if (it != conf.location.end()) {
-		// std::cout << "FIND : " << it->first << std::endl;
+		std::cout << "FIND : " << it->first << std::endl;
 		return (it->first);	
 	}
 	std::string s = target;
@@ -63,7 +63,7 @@ std::string look_if_location(std::string &target, t_conf & conf) {
 	else {
 		size_t found = s.rfind('/');
 		if (found == std::string::npos) {
-			// std::cout << "NOT FOUND" << std::endl; // si not found + pas de root globale pour le serveur => page d erreur en dur 
+			std::cout << "NOT FOUND" << std::endl; // si not found + pas de root globale pour le serveur => page d erreur en dur 
 			return ("");
 		}
 		s.erase(found + 1, s.length() - found + 1);
@@ -153,7 +153,7 @@ int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<
 	// conf.location["=/lol/"] = tmp1; 
 	// // conf.location["=/lol/index.html"] = tmp1; => a voir comment on traite la root
 	// // conf.location["/"] = tmp1;
-	// conf.err_pgs["404"] = "pages/error_pages/error_404.html";
+	conf.err_pgs["404"] = "pages/error_pages/error_404.html";
 	// // conf.root_dir = "";
 	// /* ********************************* */
 
@@ -177,7 +177,7 @@ int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<
 	/* AVANT D AJOUTER LE PATH => check method ok */
 	else
 		add_path(request.target, conf, index); // GET POST DELETE
-	// std::cout << "request.target " << request.target << std::endl;
+	std::cout << "request.target " << request.target << std::endl;
 	return (build_response(socket_fd, request, conf, map_error), 1); // GET ONLY ICI
 }
 

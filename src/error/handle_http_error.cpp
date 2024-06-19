@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 15:10:48 by garance           #+#    #+#             */
-/*   Updated: 2024/06/19 10:21:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 11:09:38 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	create_map_error(std::map<std::string, std::string> &map_error) {
 void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error) {
     
     if (conf.err_pgs.find(code) == conf.err_pgs.end())
-        std::cout << "IMPLEMENTER EN DUR ERROR PAGE" << std::endl; // A FAIRE
+        std::cout << "1.IMPLEMENTER EN DUR ERROR PAGE" << std::endl; // A FAIRE
     else {
         std::ifstream file;
 
@@ -29,7 +29,7 @@ void	fill_error(std::string &body, std::string &response, std::string code, t_co
         if (file.is_open())
 		    std::getline(file, body, '\0');
         else
-            std::cout << "IMPLEMENTER EN DUR ERROR PAGE" << std::endl; // A FAIRE
+            std::cout << "2.IMPLEMENTER EN DUR ERROR PAGE" << std::endl; // A FAIRE
     }
     response = "HTTP/1.1 ";
     response += code;

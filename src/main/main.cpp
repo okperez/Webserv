@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 10:32:34 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 10:59:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,10 @@ int main(int argc, char **argv)
 			// print_location(conf);
 			// std::cout << "conf.root_dir " << conf[0].root_dir << std::endl;
 			
-			t_conf		test;
+			// t_conf		test;
 
-			test.server_name = "test";
-			conf.push_back(test);
+			// test.server_name = "test";
+			// conf.push_back(test);
 			
 			/* ********************************* */
 			

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_gate.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/18 08:49:57 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/19 10:59:56 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,21 +59,22 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 	(void) conf;
 	int opt = 1;
 	/* QUI SERA REMPLACE PAR LES ELEMENTS DE CONF :*/	
-	std::vector<t_conftest> conf_test(2);
-	conf_test[0].ipv4_port.reserve(4);
-	conf_test[1].ipv4_port.reserve(4);
-	conf_test[0].ipv4_port.push_back("8180");
-	conf_test[0].ipv4_port.push_back("8181");
-	conf_test[0].ipv4_port.push_back("8182");
-	conf_test[0].ipv4_port.push_back("8183");
-	conf_test[1].ipv4_port.push_back("8184");
-	conf_test[1].ipv4_port.push_back("8185");
-	conf_test[1].ipv4_port.push_back("8186");
+	// std::vector<t_conftest> conf_test(2);
+	// conf_test[0].ipv4_port.reserve(4);
+	// conf_test[1].ipv4_port.reserve(4);
+	// conf_test[0].ipv4_port.push_back("8180");
+	// conf_test[0].ipv4_port.push_back("8181");
+	// conf_test[0].ipv4_port.push_back("8182");
+	// conf_test[0].ipv4_port.push_back("8183");
+	// conf_test[1].ipv4_port.push_back("8184");
+	// conf_test[1].ipv4_port.push_back("8185");
+	// conf_test[1].ipv4_port.push_back("8186");
 	// std::vector<int> ipv6_port; => A gerer peut etre?
 	
 	// A REMPLACER : CONF_TEST PAR CONF
 	/* QUI RESTE :*/
-	for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
+	// for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
+	for(std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
 		for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 			int port;
 			std::istringstream iss(*jt);
