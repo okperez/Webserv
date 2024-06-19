@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 09:32:57 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/19 09:45:10 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,6 +217,6 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
         std::cerr << e.what() << '\n';
         return (-1);
     }
-    // print_all_struct(conf, server_nbr);
+    print_all_struct(conf, server_nbr);
     return (0);
 }
