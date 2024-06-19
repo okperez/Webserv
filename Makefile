@@ -24,6 +24,12 @@ EXCEPTION_SRCS	=	ServerException.cpp
 REQUEST_DIR		=	request/
 REQUEST_SRCS	=	request.cpp
 
+ERROR_DIR		=	error/
+ERROR_SRCS		=	handle_http_error.cpp
+
+A_EFFACER_DIR		=	a_effacer/
+A_EFFACER_SRCS	=	print.cpp
+
 ############################# HANDLE DIRECTORIES ##############################
 
 SRCS_DIR 		= 	src/
@@ -33,12 +39,8 @@ SRCS			=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
 					$(addprefix $(SERV_DIR), $(SERV_SRCS)) \
 					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
 					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
-					
-SRCS_BONUS		=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
-					$(addprefix $(CONF_DIR), $(CONF_SRCS)) \
-					$(addprefix $(SERV_DIR), $(SERV_SRCS)) \
-					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
-					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
+					$(addprefix $(ERROR_DIR), $(ERROR_SRCS)) \
+					$(addprefix $(A_EFFACER_DIR), $(A_EFFACER_SRCS))
 
 OBJS_DIR 		= 	.objs/
 

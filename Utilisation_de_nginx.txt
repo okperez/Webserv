@@ -1,0 +1,27 @@
+1. LANCER NGINX
+
+    sudo nginx
+
+    ou si modif fichier de conf ou si problem avec 1ere command : 
+
+    sudo service nginx restart
+
+*************************************************************************
+
+2. MODIFIER FICHIER DE CONFIGURATION dans le dossier /var/www/sites-ennable
+
+    sudo "${EDITOR:-vi}" tutorial     ============> tutorial est le nom de du fichier de conf
+
+*************************************************************************
+
+3. CREER SITE HEBERGE PAR NGINX
+
+    dans le dossier /tmp ou /var/www
+
+    Pour creer et editer des fichiers : sudo "${EDITOR:-vi}" nom_de_la_page
+
+*************************************************************************
+
+4. CONSULTER FICHIER ERREUR NGINX
+
+    sudo tail -f /var/log/nginx/error.log

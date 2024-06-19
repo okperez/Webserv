@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 18:52:44 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/19 10:31:42 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ typedef struct s_conf
   std::string                                                       root_dir;
   std::string                                                       files;
   std::map<std::string, std::map<std::string, std::string>>         location;
+  std::map<std::string, std::string>										err_pgs;
 }t_conf;
 
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
@@ -114,11 +115,17 @@ void        clear_space(std::string & type);
 
 
 
+/* ****************************** request.cpp ******************************** */
+
+void	      	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error);
+int     		handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<std::string, std::string> map_error);
+void    		init_request_struct(t_request & request, char const *buffer);
 
 /* ****************************** server.cpp ******************************** */
+
 void				open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
 struct pollfd 		*create_fds(std::vector<t_listen> &server_fd);
-void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket);
+void				launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
 
 /* *************************** close_server.cpp ***************************** */
 
@@ -127,6 +134,14 @@ void				close_fds(struct pollfd *fds, int nb);
 void				save_fds(struct pollfd *fds, int max);
 void 				sighandler(int signal);
 
+/* ********************************** ERROR ********************************* */
+void	create_map_error(std::map<std::string, std::string> &map_error);
+void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error);
+
+/* ****************************** A_EFFACER ********************************* */
+
+void    print_request(t_request & request);
+void    print_location(std::vector<t_conf> &conf);
 /* ************************************************************************** */
 /* ********************************** ENUM ********************************** */
 /* ************************************************************************** */

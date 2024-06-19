@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/12 16:56:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/14 17:39:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/18 18:40:38 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@ struct pollfd *create_fds(std::vector<t_listen> &server_fd) {
 	int i = 0;
 	
 	fds = new pollfd[MAX_CONNECTION + server_fd.size()];
+	// ou max de co par serveur ? 
+	// fds = new pollfd[MAX_CONNECTION * server_fd.size() + server_fd.size()];
 	for (std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->fd;
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
@@ -59,27 +61,8 @@ void	new_connection(struct pollfd *fds, int server_fd) {
 
 }
 
-/*
-The normal procedure for parsing an HTTP message is to read the start-line
-into a structure, read each header field line into a hash table by field name
-until the empty line, and then use the parsed data to determine if a message
-body is expected. If a message body has been indicated, then it is read as a
-stream until an amount of octets equal to the message body length is read or the
-connection is closed.
-*/
-void	do_request(struct pollfd *fds, int i, char *buffer) {
-
-	t_request 	request;
-	
-	for (int j = 0; j < 1024; j++)
-		std::cout << buffer[j];
-	std::cout << std::endl;
-	init_request_struct(request, buffer);
-	handle_request(fds[i].fd, request);
-}
-
 /* Called if there something to be read and handled in one of the fds */
-void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd) {
+void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error) {
 	
 	for (int i = 0; i < MAX_CONNECTION; i++)
 	{
@@ -99,14 +82,17 @@ void	pollin_happen(struct pollfd *fds, std::vector<t_listen> &server_fd) {
 			if (!n_bytes)
 				close_connection(fds, i);
 			else
-				do_request(fds, i, buffer);
+				do_request(fds, i, buffer, conf, map_error);
 			return ;
 		}
 	}
 }
 
-void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket) {
+void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf) {
 	
+	/* Est ce qu on ne ferait pas une struct avec map_error et vector_server ?*/
+	std::map<std::string, std::string> map_error;
+	create_map_error(map_error);
 	while (1)
 	{
 		std::cout << "Waiting...\n";
@@ -116,6 +102,6 @@ void	launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max
 			close_fds(fds, max_socket);
 			throw(ServerException("Failed to poll."));
 		}
-		pollin_happen(fds, server_fd);
+		pollin_happen(fds, server_fd, conf, map_error);
 	}
 }
