@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 12:56:31 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 13:27:10 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,11 @@ void    remove_server_part(std::list<std::string> & cnf_file)
     // }
 }
 
+void    split_conf_file(std::list<std::string> cnf_file, std::list<std::string> * split_file[])
+{
+    
+}
+
 int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
 {
     std::ifstream               file;
@@ -183,13 +188,9 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
     try
     {
         clear_file(cnf_file, argv);
-        // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-        // {
-            // std::cout << *it << std::endl;
-        // }
 		check_syntax(cnf_file);
         server_nbr = count_server(cnf_file);
-        // std::cout << "Nbr server = " << server_nbr << std::endl;
+        std::list<std::string>      split_file[server_nbr];
         conf.resize(server_nbr);
         // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
         // {
