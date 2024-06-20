@@ -6,16 +6,11 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/18 18:49:07 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 12:03:26 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/server.hpp"
-
-void    clear_space(std::string & type)
-{
-	type.erase(remove_if(type.begin(), type.end(), isspace), type.end());
-}
 
 std::string extract_type(std::string buff)
 {

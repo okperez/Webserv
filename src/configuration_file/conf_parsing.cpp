@@ -6,24 +6,11 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 09:45:10 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 12:56:31 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/server.hpp"
-
-int     print_error(char const *str)
-{
-    std::cerr << "Error: " << str << std::endl; 
-    return (-1);
-}
-
-bool    is_white_space(char c, char d)
-{
-    if (c == d && isspace(c))
-        return (true);
-    return (false);
-}
 
 char*        get_ip_address(void)
 {
@@ -66,10 +53,15 @@ void    check_for_root(std::map<std::string, std::map<std::string, std::string>>
     }
 }
 
-void    check_if_missing(t_conf & conf)
+void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
 {
+    int location_methods = 0;
+    int total_methods = 0;
+    
     if (conf.ipv4_port.size() == 0)
         throw ConfFileException ("Error: missing port number");
+    if (conf.max_body_size.empty())
+        throw ConfFileException ("Error: missing body size number");
     if (conf.root_dir.empty())
         check_for_root(conf.location);
     if (conf.files == "")
@@ -83,7 +75,20 @@ void    check_if_missing(t_conf & conf)
         // std::cout << "No server_name has been set-up, server_name will be set to IP adress: ";
         // std::cout << conf.server_name << std::endl;
     }
-}
+    for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf.location.begin(); it != conf.location.end(); it++)
+    {
+        for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+        {
+            if (is_allow_methods((*its).first))
+                location_methods++;
+        }
+    }
+    total_methods = std::count_if(cnf_file.begin(), cnf_file.end(), is_allow_methods);
+    std::cout << "total_methods" << total_methods << std::endl;
+    std::cout << "location_methods" << location_methods << std::endl;
+    if (total_methods > location_methods)
+        throw ConfFileException ("Error: allow_methods present outside location");
+ }
 
 void    clear_file(std::list<std::string> & cnf_file, char *argv)
 {
@@ -110,13 +115,25 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
         throw ConfFileException("Error: no such configuration file");
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end();)
     {
-        std::unique((*it).begin(), (*it).end(), is_white_space);
+        (*it).erase(std::unique((*it).begin(), (*it).end(), is_white_space), (*it).end());
         if ((*it).find('#') == 0)
         {
             it = cnf_file.erase(it);
             continue ;
         }
         it++;
+    }
+    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    {
+        if (((*it) == "server" || (*it) == "server ") && *std::next(it) == "{")
+        {
+            *it = "server{";
+            it = cnf_file.erase(std::next(it));
+        }
+    }
+    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    {
+        std::cout << *it << std::endl;
     }
 }
 
@@ -135,31 +152,6 @@ int     count_server(std::list<std::string> & cnf_file)
     return (count);
 }   
 
-void    print_all_struct(std::vector<t_conf> & conf, int count)
-{
-    for (int i = 0; i < count; i++)
-    {
-        std::cout << "Content server:\n\n";
-        for (std::vector<std::string>::iterator it = conf[i].ipv4_port.begin(); it != conf[i].ipv4_port.end(); it++)
-        {
-            std::cout << "ipv4_port = " << *it << std::endl;
-        }
-        std::cout << std::endl;
-        std::cout << "Server name = " << conf[i].server_name << std::endl;
-        std::cout << std::endl;
-        std::cout << "root_dir = " << conf[i].root_dir << std::endl;
-        std::cout << std::endl;
-        for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf[i].location.begin(); it != conf[i].location.end(); it++)
-        {
-            std::cout << "Location " << (*it).first << std::endl;
-            for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
-            {
-                std::cout << (*its).first << " | " << (*its).second << std::endl;
-            }
-            std::cout << std::endl;
-        }
-    }
-}
 
 
 void    remove_server_part(std::list<std::string> & cnf_file)
@@ -168,7 +160,7 @@ void    remove_server_part(std::list<std::string> & cnf_file)
     std::list<std::string>::iterator end = cnf_file.end();
     for (std::list<std::string>::iterator it = ++begin; it != cnf_file.end(); it++)
     {
-        if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos|| (*it).find("server\0") != (*it).npos)
+        if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos)
         {
             end = ++it;
             break ;
@@ -199,19 +191,23 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
         server_nbr = count_server(cnf_file);
         // std::cout << "Nbr server = " << server_nbr << std::endl;
         conf.resize(server_nbr);
+        // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+        // {
+            // std::cout << *it << std::endl;
+        // }
         for (int i = 0; i < server_nbr; i++)
         {
             set_conf_struct(cnf_file, conf[i]);
-            check_if_missing(conf[i]);
+            check_if_missing(conf[i], cnf_file);
             remove_server_part(cnf_file);
             // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
             // {
                 // std::cout << *it << std::endl;
             // }
-            // std::cout << "||||||||||||||||||||||||||||||||||||||||||||||\n";
+            std::cout << "\n\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n";
+            // compare_server(conf);
         }
     }
-    // compare_server(conf);
     catch(const std::exception & e)
     {
         std::cerr << e.what() << '\n';
@@ -220,3 +216,6 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
     print_all_struct(conf, server_nbr);
     return (0);
 }
+
+// gerer cas ou allow method dns server
+// comparer nombre total de allow method dans fichier vs location (tout server)

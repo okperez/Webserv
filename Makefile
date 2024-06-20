@@ -12,6 +12,7 @@ CONF_SRCS		=	conf_parsing.cpp \
 					check_syntax.cpp \
 					init_conf_struct.cpp \
 					init_location.cpp \
+					conf_utils.cpp \
 
 SERV_DIR		=	server/
 SERV_SRCS		=	server.cpp \

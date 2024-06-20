@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 10:31:42 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/20 12:03:48 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ typedef struct s_conf
   std::vector<std::string>                                          ipv4_port;
   std::vector<std::string>                                          ipv6_port;
   std::string														                            max_body_size;
+  std::string														                            host;
   std::string                                                       server_name;
   std::string                                                       root_dir;
   std::string                                                       files;
@@ -107,13 +108,19 @@ int         handle_conf_file(char *argv, std::vector<t_conf> & conf);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
-std::string clear_str(std::list<std::string> cnf_file);
 std::string extract_conf(std::string buff, char c);
 void        handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
+
+/* ****************************** utils.cpp ******************************** */
+
 void        clear_space(std::string & type);
-
-
-
+bool        is_equal(t_conf & conf1, t_conf & conf2);
+void        print_all_struct(std::vector<t_conf> & conf, int count);
+std::string clear_str(std::list<std::string> cnf_file);
+bool        is_allow_methods(std::string str);
+int         print_error(char const *str);
+bool        is_white_space(char c, char d);
+void        clear_space(std::string & type);
 
 /* ****************************** request.cpp ******************************** */
 
