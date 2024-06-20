@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 09:34:47 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 17:15:23 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,9 @@ void	check_bracket(std::list<std::string> & cnf_file)
 		}
 		if (sign == -1)
         	throw ConfFileException ("Error: missing bracket");
-		}
+	}
+	if (sign == 1)
+    throw ConfFileException ("Error: too many bracket");	
 }
 
 void	erase_content(std::string & str, char c)
@@ -47,7 +49,7 @@ void	erase_content(std::string & str, char c)
 	str.erase(0, pos);
 }
 
-void	check_outside_bracket(std::string str)				//que server a gerer
+void	check_outside_bracket(std::string str)
 {
 	while (1)
 	{
@@ -57,7 +59,7 @@ void	check_outside_bracket(std::string str)				//que server a gerer
 		std::string extract = str.substr(0, str.find('{'));
 		erase_content(str, '{');
 		// std::cout << "Extracted sequence =\n" << extract << std::endl;
-		if (extract == "" || extract == "events" || extract == "http" || extract.find("server") != extract.npos
+		if (extract == "" || extract.find("server") != extract.npos
 			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos
 			|| extract.find("location=") != extract.npos)
 			;
@@ -90,32 +92,6 @@ void	check_http_content(std::string str)
 		throw ConfFileException("Error: server context not declared in main");
 }
 
-void	check_events_content(std::string str)
-{
-	static const size_t	pos = str.find("events{");
-	str.erase(0, pos);
-	static const size_t	r_bracket = str.find('}');
-
-	if (r_bracket > str.find("http{"))
-		throw ConfFileException("Error: http context not declared in main");
-	std::string sub = str.substr(7, r_bracket - 7);
-	if (sub.find("worker_connections") == sub.npos)
-		std::cout << "Worker_connections directive missing, number of simultaneous connections will be set to default\n";
-}
-
-void	check_order(std::string str)
-{
-	static const size_t	pos_events = str.find("events{");
-	static const size_t	pos_http = str.find("http{");
-	static const size_t	pos_server = str.find("server{");
-
-	if (pos_events == str.npos|| pos_http == str.npos || pos_server == str.npos)
-        throw ConfFileException ("Error: missing context");
-	if (!(pos_events < pos_http && pos_http < pos_server))
-        throw ConfFileException ("Error: contexts declared in wrong order");
-	check_events_content(str);
-}
-
 std::string	clear_str(std::list<std::string> cnf_file)
 {
 	std::string	str = "";
@@ -134,6 +110,18 @@ void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
 
 }
 
+
+void    quick_parsing(std::list<std::string> & cnf_file)
+{
+    auto it = cnf_file.begin();
+    if (*it != "server {" && *it != "server{")
+		
+    {
+        std::cout << (*it) << std::endl;
+        throw ConfFileException ("Error: missing server directive");
+    }
+}
+
 void	check_syntax(std::list<std::string> & cnf_file)
 {
 	std::string	str;
@@ -141,6 +129,6 @@ void	check_syntax(std::list<std::string> & cnf_file)
 	check_bracket(cnf_file);
 	str = clear_str(cnf_file);
 	check_bracket_content(cnf_file, str);
-	// check_order(str);
 	check_outside_bracket(str);
+	quick_parsing(cnf_file);
 }

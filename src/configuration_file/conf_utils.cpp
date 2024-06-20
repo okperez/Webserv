@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 12:03:56 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 15:11:18 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,18 +20,12 @@ bool    is_equal(t_conf & conf1, t_conf & conf2)
     if ((conf1.ipv4_port.size() == conf2.ipv4_port.size()))
     {
         if (std::equal(conf1.ipv4_port.begin(), conf1.ipv4_port.end(), conf2.ipv4_port.begin()))
-        {
-            std::cout << *conf1.ipv4_port.begin() << *conf2.ipv4_port.begin() << std::endl;
             flag++;
-        }
     }
     if (conf1.host == conf2.host)
         flag++;
     if (flag == 3)
-    {
-        std::cout << "IS EQUAL\n";
         return true;
-    }
     return false ;
 }
 

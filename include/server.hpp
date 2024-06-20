@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 12:03:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 16:12:18 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,8 @@ void        check_syntax(std::list<std::string> & cnf_file);
 void        set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf);
 std::string extract_conf(std::string buff, char c);
 void        handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
+void        compare_server(std::vector<t_conf> & conf, int  & server_nbr);
+void        check_if_missing(t_conf & conf, std::list<std::string> & cnf_file);
 
 /* ****************************** utils.cpp ******************************** */
 
