@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 13:54:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 14:49:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,21 +28,12 @@ char*        get_ip_address(void)
 
 void    check_for_root(std::map<std::string, std::map<std::string, std::string>> & location)
 {
-    // std::cout << "INSIDE CHECK ROOT" << std::endl;
-    // for (std::map<std::string, std::map<std::string, std::string>>::iterator it = location.begin(); it != location.end(); it++)
-    // {
-        // for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
-            // std::cout << (*its).first << " | " << (*its).second << std::endl;
-    // }
     int flag;
     for (std::map<std::string, std::map<std::string, std::string>>::iterator it = location.begin(); it != location.end(); it++)
     {
-        // std::cout << "\n";
         flag = 0;
-        // std::cout << (*it).first << std::endl;
         for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
         {
-            // std::cout << (*its).first << " | " << (*its).second << std::endl;
             if ((*its).first == "root" && !(*its).second.empty())
                 flag = 1;
             else if ((*its).first == "return" && !(*its).second.empty())
@@ -65,16 +56,9 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
     if (conf.root_dir.empty())
         check_for_root(conf.location);
     if (conf.files == "")
-    {
-        std::cout << "No default file has been set-up, default file will be set to index.html" << std::endl;
         conf.files = "index.html";
-    }
     if (conf.server_name.empty())
-    {
         conf.server_name = get_ip_address();
-        // std::cout << "No server_name has been set-up, server_name will be set to IP adress: ";
-        // std::cout << conf.server_name << std::endl;
-    }
     for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf.location.begin(); it != conf.location.end(); it++)
     {
         for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
@@ -84,8 +68,6 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
         }
     }
     total_methods = std::count_if(cnf_file.begin(), cnf_file.end(), is_allow_methods);
-    std::cout << "total_methods" << total_methods << std::endl;
-    std::cout << "location_methods" << location_methods << std::endl;
     if (total_methods > location_methods)
         throw ConfFileException ("Error: allow_methods present outside location");
  }
@@ -160,6 +142,28 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
     }
 }
 
+void    compare_server(std::vector<t_conf> & conf, int  & server_nbr)
+{
+    std::vector<t_conf>::iterator it = conf.begin();
+    std::vector<t_conf>::iterator its;
+    
+    while (it != conf.end())
+    {
+        its = it + 1;
+        while (its != conf.end())
+        {
+            if (is_equal((*it), (*its)))
+            {
+                its = conf.erase(its);
+                server_nbr--;
+            }
+            else
+                its++;
+        }
+        it++;
+    }
+}
+
 int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
 {
     std::ifstream               file;
@@ -181,8 +185,8 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
             set_conf_struct(split_file[i], conf[i]);
             check_if_missing(conf[i], split_file[i]);
             // std::cout << "\n\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n";
-            // compare_server(conf);
         }
+        compare_server(conf, server_nbr);
     }
     catch(const std::exception & e)
     {
