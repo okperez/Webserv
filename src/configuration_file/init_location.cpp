@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 12:03:26 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 13:52:47 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,14 +84,13 @@ void    handle_locations(std::list<std::string> & cnf_file, t_conf & conf)
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         // std::cout << "STRING HERE ========== " << *it << std::endl;
-        if (it != cnf_file.begin())
-        {
-            if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos|| (*it).find("server ") != (*it).npos) 
-            {
-                // std::cout << "string here = " << (*it) << std::endl;
-                break ;
-            }
-        }
+        // if (it != cnf_file.begin())
+        // {
+            // if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos|| (*it).find("server ") != (*it).npos) 
+            // {
+                // break ;
+            // }
+        // }
         if ((*it).find("location") != (*it).npos)
         {
             location = extract_bloc_location(cnf_file, it);

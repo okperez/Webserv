@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 13:27:10 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/20 13:54:19 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,10 +131,6 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
             it = cnf_file.erase(std::next(it));
         }
     }
-    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    {
-        std::cout << *it << std::endl;
-    }
 }
 
 int     count_server(std::list<std::string> & cnf_file)
@@ -152,30 +148,16 @@ int     count_server(std::list<std::string> & cnf_file)
     return (count);
 }   
 
-
-
-void    remove_server_part(std::list<std::string> & cnf_file)
+void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string> split_file[])
 {
-    std::list<std::string>::iterator begin = cnf_file.begin();
-    std::list<std::string>::iterator end = cnf_file.end();
-    for (std::list<std::string>::iterator it = ++begin; it != cnf_file.end(); it++)
+    int server = 0;
+
+    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
-        if ((*it).find("server{") != (*it).npos || (*it).find("server {") != (*it).npos)
-        {
-            end = ++it;
-            break ;
-        }
+        if (((*it).find("server{") != (*it).npos|| (*it).find("server {") != (*it).npos) && it != cnf_file.begin())
+            server += 1;  
+        split_file[server].push_back((*it));
     }
-    cnf_file.erase(begin, end);
-    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    // {
-        // std::cout << *it << std::endl;
-    // }
-}
-
-void    split_conf_file(std::list<std::string> cnf_file, std::list<std::string> * split_file[])
-{
-    
 }
 
 int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
@@ -191,21 +173,14 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
 		check_syntax(cnf_file);
         server_nbr = count_server(cnf_file);
         std::list<std::string>      split_file[server_nbr];
+        split_conf_file(cnf_file, split_file);
         conf.resize(server_nbr);
-        // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-        // {
-            // std::cout << *it << std::endl;
-        // }
+
         for (int i = 0; i < server_nbr; i++)
         {
-            set_conf_struct(cnf_file, conf[i]);
-            check_if_missing(conf[i], cnf_file);
-            remove_server_part(cnf_file);
-            // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-            // {
-                // std::cout << *it << std::endl;
-            // }
-            std::cout << "\n\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n";
+            set_conf_struct(split_file[i], conf[i]);
+            check_if_missing(conf[i], split_file[i]);
+            // std::cout << "\n\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n";
             // compare_server(conf);
         }
     }
