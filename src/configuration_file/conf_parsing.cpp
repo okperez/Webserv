@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 13:24:14 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 15:15:48 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,10 +75,10 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
     int server = 0;
     int bracket = 0;
     
-    for (auto it = cnf_file.begin(); it != cnf_file.end(); it++)
-    {
-            std::cout << *it << std::endl;
-    }
+    // for (auto it = cnf_file.begin(); it != cnf_file.end(); it++)
+    // {
+            // std::cout << *it << std::endl;
+    // }
     
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {

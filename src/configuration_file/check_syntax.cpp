@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 13:21:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 14:11:54 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,6 @@ std::string	clear_str(std::list<std::string> cnf_file)
 	for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
 		str += *it;
 	clear_space(str);
-	// std::cout << "Here is the string:\n" << str << "\n\n";
 	str = str.substr(0, str.find('\0'));
 	return (str);
 }
@@ -108,12 +107,8 @@ std::string	clear_str(std::list<std::string> cnf_file)
 void    quick_parsing(std::list<std::string> & cnf_file)
 {
     auto it = cnf_file.begin();
-    if (*it != "server {" && *it != "server{")
-		
-    {
-        std::cout << (*it) << std::endl;
+    if (*it != "server {" && *it != "server{")	
         throw ConfFileException ("Error: missing server directive");
-    }
 }
 
 void	check_syntax(std::list<std::string> & cnf_file)

@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 13:42:13 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 14:24:40 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,10 +48,10 @@ void    set_flags(std::string str, int & flag_loc, int & flag_err_pgs)
 
 void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
 {
-    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    {
-        std::cout << *it << std::endl;
-    }
+    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    // {
+        // std::cout << *it << std::endl;
+    // }
     int i = 0;
     int flag_loc = 0;                  // check if whether we are inside location or not (matter for root setting)
     int flag_err_pgs = 0;
@@ -67,20 +67,19 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
         }
         else if ((*it).find("root ")!= (*it).npos && flag_loc == 0)
             conf.root_dir = extract_conf(*it, ';');
-        else if ((*it).find("client_max_body_size ")!= (*it).npos)
+        else if ((*it).find("client_max_body_size ")!= (*it).npos && flag_loc == 0 && flag_err_pgs == 0)
             conf.max_body_size = extract_conf(*it, ';');
-        else if ((*it).find("index ")!= (*it).npos)
+        else if ((*it).find("index ")!= (*it).npos && flag_loc == 0 && flag_err_pgs == 0)
             conf.files = extract_conf(*it, ';');
-        else if ((*it).find("server_name ") != (*it).npos)
+        else if ((*it).find("server_name ") != (*it).npos && flag_loc == 0 && flag_err_pgs == 0)
             conf.server_name = extract_conf(*it, ';');
-        else if ((*it).find("host ") != (*it).npos)
+        else if ((*it).find("host ") != (*it).npos && flag_loc == 0 && flag_err_pgs == 0)
             conf.host = extract_conf(*it, ';');
         else
-        {
             check_if_valid((*it), flag_loc, flag_err_pgs);
-        }
         i++;
     }
     handle_locations(cnf_file, conf);
+    handle_err_pgs(cnf_file, conf);
     // print_locations(conf);
 }

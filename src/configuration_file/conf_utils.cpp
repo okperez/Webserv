@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 15:11:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 15:25:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,15 +33,15 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
 {
     for (int i = 0; i < count; i++)
     {
-        std::cout << "Content server:\n\n";
+        std::cout << "Content server " << i << ":\n\n";
         for (std::vector<std::string>::iterator it = conf[i].ipv4_port.begin(); it != conf[i].ipv4_port.end(); it++)
         {
-            std::cout << "ipv4_port = " << *it << std::endl;
+            std::cout << "ipv4_port | " << *it << std::endl;
         }
         std::cout << std::endl;
-        std::cout << "Server name = " << conf[i].server_name << std::endl;
+        std::cout << "Server name | " << conf[i].server_name << std::endl;
         std::cout << std::endl;
-        std::cout << "root_dir = " << conf[i].root_dir << std::endl;
+        std::cout << "root_dir | " << conf[i].root_dir << std::endl;
         std::cout << std::endl;
         for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf[i].location.begin(); it != conf[i].location.end(); it++)
         {
@@ -52,6 +52,11 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
             }
             std::cout << std::endl;
         }
+        for (std::map<std::string, std::string>::iterator it = conf[i].err_pgs.begin(); it != conf[i].err_pgs.end(); it++)
+        {
+            std::cout << (*it).first << " | "  << (*it).second << std::endl;
+        }
+        std::cout << "\n\n";
     }
 }
 
