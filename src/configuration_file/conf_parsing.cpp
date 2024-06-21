@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 15:15:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 18:17:47 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
     }
     else
         throw ConfFileException("Error: no such configuration file");
+    if (cnf_file.size() == 0)
+        throw ConfFileException ("Error: empty file");
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end();)
     {
         (*it).erase(std::unique((*it).begin(), (*it).end(), is_white_space), (*it).end());
@@ -45,6 +47,7 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
         }
         it++;
     }
+    std::cout << "Here parsing fail with server only in conf file\n";
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         if (((*it) == "server" || (*it) == "server ") && *std::next(it) == "{")
@@ -75,11 +78,6 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
     int server = 0;
     int bracket = 0;
     
-    // for (auto it = cnf_file.begin(); it != cnf_file.end(); it++)
-    // {
-            // std::cout << *it << std::endl;
-    // }
-    
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         if ((*it).find('{') != (*it).npos)
@@ -98,18 +96,6 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
         }
         split_file[server].push_back((*it));
     }
-    // possiblite d'introduire une regle ici  qui dit que si on est pas a conf end
-    //(donc qu'il reste des lignes non attribues a un serveur on considere le ficher conf faux)
-    
-    
-    // for (int i = 0; i < 3; i++)
-    // {
-        // for (auto it = split_file[i].begin(); it != split_file[i].end(); it++)
-        // {
-            // std::cout << *it << std::endl;
-        // }
-        // std::cout << "\n\n||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n";
-    // }
 }
 
 int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
