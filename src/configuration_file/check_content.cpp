@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 16:09:47 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 13:49:21 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,46 @@ void    compare_server(std::vector<t_conf> & conf, int  & server_nbr)
                 its++;
         }
         it++;
+    }
+}
+
+void    check_if_valid(std::string str, int loc, int err_pgs)
+{
+    // if (loc == 0)
+        // std::cout << str << std::endl;
+    std::string arg = str.substr(0, str.find(' '));
+    // std::string valid_loc[8] = {"index", "allow_methods", "autoindex", "upload_dir", "root", "cgi_extension"
+                        // , "cgi_path", "return",};
+    std::string valid_loc = "index allow_methods autoindex upload_dir root cgi_extension cgi_path return location try_files";
+    std::string valid_server = "index root listen host client_max_body_size error_page server{ }";
+    std::string error_page = "404 403 error_page";
+    
+    
+    if (loc == 1)
+    {
+        if (valid_loc.find(arg) == valid_loc.npos)
+        {
+            
+            std::cout << "Invalid arg = " << arg << std::endl;
+            throw ConfFileException ("Error: invalid argument in location");
+        }
+    }
+    else if (err_pgs == 1)
+    {
+        if (error_page.find(arg) == error_page.npos)
+        {
+            std::cout << "Invalid arg = " << arg << std::endl;
+            throw ConfFileException ("Error: invalid argument in error_page");
+        }
+    }
+    else
+    {
+        if (valid_server.find(arg) == valid_server.npos)
+        {
+            
+            std::cout << "Invalid arg = " << arg << std::endl;
+            throw ConfFileException ("Error: invalid argument in server");
+        }
     }
 }
 

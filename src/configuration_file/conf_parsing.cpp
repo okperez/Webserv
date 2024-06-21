@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 17:09:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 13:24:14 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
         {
             std::getline(file, buff, '\n');
             {
-                    int pos = buff.find_first_of("abcdefghijklmnopqrstuvwxyz{}#");
+                    int pos = buff.find_first_of("abcdefghijklmnopqrstuvwxyz{}4#");
                     buff.erase(0, pos);
             }
             if (!buff.empty())
@@ -75,6 +75,11 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
     int server = 0;
     int bracket = 0;
     
+    for (auto it = cnf_file.begin(); it != cnf_file.end(); it++)
+    {
+            std::cout << *it << std::endl;
+    }
+    
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         if ((*it).find('{') != (*it).npos)
@@ -93,6 +98,10 @@ void    split_conf_file(std::list<std::string> & cnf_file, std::list<std::string
         }
         split_file[server].push_back((*it));
     }
+    // possiblite d'introduire une regle ici  qui dit que si on est pas a conf end
+    //(donc qu'il reste des lignes non attribues a un serveur on considere le ficher conf faux)
+    
+    
     // for (int i = 0; i < 3; i++)
     // {
         // for (auto it = split_file[i].begin(); it != split_file[i].end(); it++)

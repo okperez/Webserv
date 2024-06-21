@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 16:12:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 13:41:32 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,8 @@ typedef struct s_conf
   std::string                                                       root_dir;
   std::string                                                       files;
   std::map<std::string, std::map<std::string, std::string>>         location;
-  std::map<std::string, std::string>										err_pgs;
+  std::map<std::string, std::string>										            err_pgs;
+  std::list<std::string>                                            wrong_arg;
 }t_conf;
 
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
@@ -112,6 +113,7 @@ std::string extract_conf(std::string buff, char c);
 void        handle_locations(std::list<std::string> & cnf_file, t_conf & conf);
 void        compare_server(std::vector<t_conf> & conf, int  & server_nbr);
 void        check_if_missing(t_conf & conf, std::list<std::string> & cnf_file);
+void        check_if_valid(std::string str, int loc, int err_pgs);
 
 /* ****************************** utils.cpp ******************************** */
 

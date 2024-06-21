@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/20 17:15:23 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/21 13:21:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,12 +105,6 @@ std::string	clear_str(std::list<std::string> cnf_file)
 	return (str);
 }
 
-void	check_bracket_content(std::list<std::string> cnf_file, std::string & str)
-{
-
-}
-
-
 void    quick_parsing(std::list<std::string> & cnf_file)
 {
     auto it = cnf_file.begin();
@@ -128,7 +122,6 @@ void	check_syntax(std::list<std::string> & cnf_file)
 
 	check_bracket(cnf_file);
 	str = clear_str(cnf_file);
-	check_bracket_content(cnf_file, str);
 	check_outside_bracket(str);
 	quick_parsing(cnf_file);
 }
