@@ -25,7 +25,9 @@ EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp
 					
 REQUEST_DIR		=	request/
-REQUEST_SRCS	=	request.cpp
+REQUEST_SRCS	=	request.cpp \
+					location.cpp \
+					allow_method.cpp
 
 ERROR_DIR		=	error/
 ERROR_SRCS		=	handle_http_error.cpp

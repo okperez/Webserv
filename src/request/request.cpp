@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 10:25:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/19 17:43:19 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,65 +44,6 @@ void        init_request_struct(t_request & request, char const *buffer)
   request.media = extract_header(buff);
 }
 
-/*
-Recherche pour la location de la plus precise a la moins precise dans le serveur
-*/
-// PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
-std::string look_if_location(std::string &target, t_conf & conf) {
-
-	// std::cout << "Look_for_location avec target = " << target << std::endl;
-	std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	it = conf.location.find(target);
-	if (it != conf.location.end()) {
-		// std::cout << "FIND : " << it->first << std::endl;
-		return (it->first);	
-	}
-	std::string s = target;
-	if (target.back() == '/')
-		s.erase(s.length() - 1, 1); 
-	else {
-		size_t found = s.rfind('/');
-		if (found == std::string::npos) {
-			// std::cout << "NOT FOUND" << std::endl; // si not found + pas de root globale pour le serveur => page d erreur en dur 
-			return ("");
-		}
-		s.erase(found + 1, s.length() - found + 1);
-	}
-	return (look_if_location(s, conf));
-}
-
-/*
-Cherche si une location = correspondante a la target existe, sinon appelle look_if_location
-*/
-std::string look_for_location(std::string &target, t_conf & conf) {
-	
-	std::string s = "=" + target;
-	std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	it = conf.location.find(s);
-	if (it != conf.location.end())
-		return (it->first);
-	// std::cout << "hey" << std::endl;
-	return (look_if_location(target, conf));
-	//on recupere l index de la location :)
-}
-
-/* Supprime la location et la remplace par la root */
-void	add_path(std::string &target, t_conf & conf, std::string &index) {
-	
-	std::string root;
-	
-	if (conf.location[index].find("root") == conf.location[index].end())
-		root = conf.root_dir;
-	else
-		root  = conf.location[index]["root"];
-	// else if(index.back() == '/' && conf.location[index]["root"].back() != '/')
-	// 	conf.location[index]["root"] += "/";
-	if(index.back() == '/' && root.back() != '/')
-		root += "/";
-	target.replace(target.find(index), index.length(), root);
-	// std::cout << "target : " << target << std::endl;
-}
-
 void	send_response(int socket_fd, t_request &request, std::string &response_content) {
 	
 	std::stringstream stream;
@@ -119,8 +60,6 @@ void	send_response(int socket_fd, t_request &request, std::string &response_cont
 void	build_response(int socket_fd, t_request &request, t_conf &conf, std::map<std::string, std::string> map_error) {
 	
 	std::ifstream     file;
-	// std::stringstream stream;
-	// std::string       tmp;
 	std::string response_content;
 
 	file.open(request.target);
@@ -132,32 +71,18 @@ void	build_response(int socket_fd, t_request &request, t_conf &conf, std::map<st
 	else
 		fill_error(request.body, response_content, "404", conf, map_error);
 	send_response(socket_fd, request, response_content);
-	// request.lenght = request.body.size();
-	// // std::string response_content = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
-	// stream << request.lenght;
-	// stream >> tmp;
-	// response_content += tmp + "\r\n\r\n" + request.body;
-	// write(socket_fd, response_content.c_str(), response_content.size());
 }
 
 //  parse request from client and send back response 
 int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<std::string, std::string> map_error)
 {
-	// const char *response_true = "HTTP/1.1 200 OK\r\n\r\n";
-	// const char *response_false = "HTTP/1.1 404 Not Found\r\n\r\n";
-
 	// /* A EFFACER UNE FOIS PARSING DONE */
-	// std::map<std::string, std::string> tmp1;
-	// tmp1["root"] = "pages";
-	// conf.location["/lol"] = tmp1; 
-	// conf.location["=/lol/"] = tmp1; 
-	// // conf.location["=/lol/index.html"] = tmp1; => a voir comment on traite la root
-	// // conf.location["/"] = tmp1;
-	// conf.err_pgs["404"] = "pages/error_pages/error_404.html";
-	// // conf.root_dir = "";
+	conf.err_pgs["404"] = "pages/error_pages/error_404.html";
+	conf.err_pgs["405"] = "pages/error_pages/error_405.html";
 	// /* ********************************* */
 
 	std::string index = look_for_location(request.target, conf); // si pas trouve index = ""
+	std::cout << "index = " << index << std::endl;
 	if (index.empty())
 	{
 		if (conf.root_dir.empty()) {
@@ -171,31 +96,106 @@ int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<
 			else	
 				request.target.insert(0, conf.root_dir);
 		}
-		// write(socket_fd, response_true, strlen(response_true));
-		// return (1);
 	}
 	/* AVANT D AJOUTER LE PATH => check method ok */
-	else
+	else {
+		if (!check_allow_method(request, conf, index)) {
+			std::string response;
+			fill_error(request.body, response, "405", conf, map_error);
+			return (send_response(socket_fd, request, response), 1);
+		}
 		add_path(request.target, conf, index); // GET POST DELETE
-	// std::cout << "request.target " << request.target << std::endl;
+	}
+	std::cout << "request.target " << request.target << std::endl;
 	return (build_response(socket_fd, request, conf, map_error), 1); // GET ONLY ICI
 }
 
 // TEST OK
 /* Si plusieurs serveurs, retourne l index du fichier conf correspondant au server, sinon 0 par default */
-int  choose_server(t_request & request, std::vector<t_conf> & conf) {
+int  choose_server_curl(t_request & request, std::vector<t_conf> & conf) {
   
   std::istringstream	iss(request.host);
   std::string         	host;
+  std::string         	port;
   int					i = 0;
 
   std::getline(iss, host, ':');
+  std::getline(iss, port);
+  std::cout << "host = " << host << std::endl;
+  std::cout << "port = " << port << std::endl;
   for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
-	if (host == it->server_name)
-		return (i);
+	if (host == it->server_name) {
+		std::vector<std::string>::iterator it = find(conf[i].ipv4_port.begin(), conf[i].ipv4_port.end(), port);
+		if (it != conf[i].ipv4_port.end())
+			return (i);
+	}
 	i++;  
   }
   return (0);
+}
+
+// TEST OK
+/* Si plusieurs serveurs, retourne l index du fichier conf correspondant au server, sinon 0 par default */
+int  choose_server_browser(t_request & request, std::vector<t_conf> & conf) {
+  
+  std::istringstream	iss(request.host);
+  std::string         	host;
+  std::string         	port;
+  int					i = 0;
+
+  std::getline(iss, host, ':');
+  std::getline(iss, port);
+  std::cout << "host = " << host << std::endl;
+  std::cout << "port = " << port << std::endl;
+  for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+	if (host == it->host || !it->host.length()) {
+		std::vector<std::string>::iterator it = find(conf[i].ipv4_port.begin(), conf[i].ipv4_port.end(), port);
+		if (it != conf[i].ipv4_port.end())
+			return (i);
+	}
+	i++;  
+  }
+  return (0);
+}
+
+bool	is_host(std::string s) {
+	
+	int i;
+	
+	if (s == "localhost")
+		return (true);
+	for (int j = 0; j < 4; j++) {
+		for (i = 0; s[i]; i++){
+			std::cout << s[i] << std::endl;
+			if (!isdigit(s[i]))
+				break;
+		}
+			if (i < 1 || i > 3 || (s[i] && s[i] != '.' && j < 3))
+				return (false);
+			s.erase(0, i + 1);
+		// }
+		if ((j == 3 && !s.empty()) || (j < 3 && s.empty()))
+			return (false);
+	}
+	return (true);
+}
+
+int	pick_server(t_request &request, std::vector<t_conf> &conf) {
+	std::istringstream	iss(request.host);
+	std::string         	host;
+	std::string         	port;
+	
+	std::getline(iss, host, ':');
+	std::getline(iss, port);
+	std::cout << "host = " << host << std::endl;
+	std::cout << "port = " << port << std::endl;
+	
+	if (is_host(host)) { 
+		std::cout << "true" << std::endl;
+	}
+	else
+		std::cout << "false" << std::endl;
+	return (0);
 }
 
 /*
@@ -221,7 +221,10 @@ void	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & c
   https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
   */
   // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
-	if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
-		i_conf = choose_server(request, conf);
+	i_conf = pick_server(request, conf);
+	// if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
+	// 	i_conf = choose_server_curl(request, conf);
+	// else
+	// 	i_conf = choose_server_browser(request, conf);
 	handle_request(fds[i].fd, request, conf[i_conf], map_error);
 }

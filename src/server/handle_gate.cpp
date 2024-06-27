@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_gate.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/18 08:49:57 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/27 11:00:16 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,18 @@ void	bind_socket(t_listen *new_socket, struct sockaddr_in &server_addr, std::vec
 	}
 }
 
+// /* Assigning a transport address to the socket */
+// void	bind_socket(t_listen *new_socket, struct sockaddr &server_addr, std::vector<t_listen> &server_fd, int port) {
+	
+// 	if (bind((*new_socket).fd, (struct sockaddr *) &server_addr, sizeof(server_addr)))
+// 	{
+// 		for(std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
+// 			close (it->fd);
+// 		std::cerr << "Failed to bind to port " << port << std::endl;
+// 		throw(ServerException(""));
+// 	}
+// }
+
 /*
 The listen system call tells a socket that it should be capable of accepting incoming connections:
 backlog, defines the maximum number of pending connections that can be queued up before connections are refused.
@@ -59,21 +71,22 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 	(void) conf;
 	int opt = 1;
 	/* QUI SERA REMPLACE PAR LES ELEMENTS DE CONF :*/	
-	std::vector<t_conftest> conf_test(2);
-	conf_test[0].ipv4_port.reserve(4);
-	conf_test[1].ipv4_port.reserve(4);
-	conf_test[0].ipv4_port.push_back("8180");
-	conf_test[0].ipv4_port.push_back("8181");
-	conf_test[0].ipv4_port.push_back("8182");
-	conf_test[0].ipv4_port.push_back("8183");
-	conf_test[1].ipv4_port.push_back("8184");
-	conf_test[1].ipv4_port.push_back("8185");
-	conf_test[1].ipv4_port.push_back("8186");
+	// std::vector<t_conftest> conf_test(2);
+	// conf_test[0].ipv4_port.reserve(4);
+	// conf_test[1].ipv4_port.reserve(4);
+	// conf_test[0].ipv4_port.push_back("8180");
+	// conf_test[0].ipv4_port.push_back("8181");
+	// conf_test[0].ipv4_port.push_back("8182");
+	// conf_test[0].ipv4_port.push_back("8183");
+	// conf_test[1].ipv4_port.push_back("8184");
+	// conf_test[1].ipv4_port.push_back("8185");
+	// conf_test[1].ipv4_port.push_back("8186");
 	// std::vector<int> ipv6_port; => A gerer peut etre?
 	
 	// A REMPLACER : CONF_TEST PAR CONF
 	/* QUI RESTE :*/
-	for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
+	// for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
+	for(std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
 		for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 			int port;
 			std::istringstream iss(*jt);
@@ -92,12 +105,23 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 			*/
 			if (setsockopt(new_socket.fd, SOL_SOCKET, SO_REUSEADDR, &opt, 4))
 				throw (ServerException("Failed to create server socket"));
-			struct sockaddr_in server_addr;
-			server_addr.sin_family = AF_INET;          			// address family
-			server_addr.sin_addr.s_addr = INADDR_ANY;   		//The address for this socket. This is just your machine’s IP address
-			server_addr.sin_port = htons(port);         			//The port number (the transport address)
-			bind_socket(&new_socket, server_addr, server_fd, port);
+			struct addrinfo hints, *res;
+			struct sockaddr_in *server;
+			
+			hints.ai_family = AF_INET;          			// address family
+			hints.ai_socktype = SOCK_STREAM;          			
+			getaddrinfo("127.0.0.2", NULL, &hints, &res);
+			server = (struct sockaddr_in *)res->ai_addr;
+			server->sin_port = htons(port);         			//The port number (the transport address)
+			bind_socket(&new_socket, *server, server_fd, port);
 			listen_socket(&new_socket, server_fd, port);
+			
+			// struct sockaddr_in server_addr;
+			// server_addr.sin_family = AF_INET;          			// address family
+			// server_addr.sin_addr.s_addr = INADDR_ANY;   //inetadress du host 		//The address for this socket. This is just your machine’s IP address
+			// server_addr.sin_port = htons(port);         			//The port number (the transport address)
+			// bind_socket(&new_socket, server_addr, server_fd, port);
+			// listen_socket(&new_socket, server_fd, port);
 			new_socket.port = port;
 			server_fd.push_back(new_socket);
 		}
