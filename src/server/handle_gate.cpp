@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 09:15:19 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/19 18:01:36 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/27 11:00:16 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,18 @@ void	bind_socket(t_listen *new_socket, struct sockaddr_in &server_addr, std::vec
 		throw(ServerException(""));
 	}
 }
+
+// /* Assigning a transport address to the socket */
+// void	bind_socket(t_listen *new_socket, struct sockaddr &server_addr, std::vector<t_listen> &server_fd, int port) {
+	
+// 	if (bind((*new_socket).fd, (struct sockaddr *) &server_addr, sizeof(server_addr)))
+// 	{
+// 		for(std::vector<t_listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
+// 			close (it->fd);
+// 		std::cerr << "Failed to bind to port " << port << std::endl;
+// 		throw(ServerException(""));
+// 	}
+// }
 
 /*
 The listen system call tells a socket that it should be capable of accepting incoming connections:
@@ -93,12 +105,23 @@ void	open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server
 			*/
 			if (setsockopt(new_socket.fd, SOL_SOCKET, SO_REUSEADDR, &opt, 4))
 				throw (ServerException("Failed to create server socket"));
-			struct sockaddr_in server_addr;
-			server_addr.sin_family = AF_INET;          			// address family
-			server_addr.sin_addr.s_addr = INADDR_ANY;   //inetadress du host 		//The address for this socket. This is just your machine’s IP address
-			server_addr.sin_port = htons(port);         			//The port number (the transport address)
-			bind_socket(&new_socket, server_addr, server_fd, port);
+			struct addrinfo hints, *res;
+			struct sockaddr_in *server;
+			
+			hints.ai_family = AF_INET;          			// address family
+			hints.ai_socktype = SOCK_STREAM;          			
+			getaddrinfo("127.0.0.2", NULL, &hints, &res);
+			server = (struct sockaddr_in *)res->ai_addr;
+			server->sin_port = htons(port);         			//The port number (the transport address)
+			bind_socket(&new_socket, *server, server_fd, port);
 			listen_socket(&new_socket, server_fd, port);
+			
+			// struct sockaddr_in server_addr;
+			// server_addr.sin_family = AF_INET;          			// address family
+			// server_addr.sin_addr.s_addr = INADDR_ANY;   //inetadress du host 		//The address for this socket. This is just your machine’s IP address
+			// server_addr.sin_port = htons(port);         			//The port number (the transport address)
+			// bind_socket(&new_socket, server_addr, server_fd, port);
+			// listen_socket(&new_socket, server_fd, port);
 			new_socket.port = port;
 			server_fd.push_back(new_socket);
 		}
