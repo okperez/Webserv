@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/19 17:43:19 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/27 12:14:55 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<
 	// /* ********************************* */
 
 	std::string index = look_for_location(request.target, conf); // si pas trouve index = ""
-	std::cout << "index = " << index << std::endl;
+	// std::cout << "index = " << index << std::endl;
 	if (index.empty())
 	{
 		if (conf.root_dir.empty()) {
@@ -106,7 +106,7 @@ int  handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<
 		}
 		add_path(request.target, conf, index); // GET POST DELETE
 	}
-	std::cout << "request.target " << request.target << std::endl;
+	// std::cout << "request.target " << request.target << std::endl;
 	return (build_response(socket_fd, request, conf, map_error), 1); // GET ONLY ICI
 }
 
@@ -211,20 +211,24 @@ void	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & c
 	t_request 	request;
 	int			i_conf = 0;
 	
-	for (int j = 0; j < 1024; j++)
-		std::cout << buffer[j];
-	std::cout << std::endl;
+	// for (int j = 0; j < 1024; j++)
+	// 	std::cout << buffer[j];
+	// std::cout << std::endl;
 	init_request_struct(request, buffer);
-  	print_request(request);
+  	// print_request(request);
   /*
   revoir choose_server avec info de ce site :
   https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
   */
   // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
-	i_conf = pick_server(request, conf);
-	// if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
-	// 	i_conf = choose_server_curl(request, conf);
-	// else
-	// 	i_conf = choose_server_browser(request, conf);
+
+  
+	// i_conf = pick_server(request, conf);
+
+	
+	if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
+		i_conf = choose_server_curl(request, conf);
+	else
+		i_conf = choose_server_browser(request, conf);
 	handle_request(fds[i].fd, request, conf[i_conf], map_error);
 }
