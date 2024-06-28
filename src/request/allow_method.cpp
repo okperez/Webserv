@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 12:02:41 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/19 13:58:02 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 bool	check_allow_method(t_request &request, t_conf &conf, std::string &index) {
 	std::string	method[3] = {"GET", "POST", "DELETE"};

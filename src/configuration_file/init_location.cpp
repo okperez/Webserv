@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   init_location.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 14:21:44 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 std::string extract_type(std::string buff)
 {

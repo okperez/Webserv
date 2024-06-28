@@ -6,11 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/03 14:00:36 by operez            #+#    #+#             */
-/*   Updated: 2024/06/27 12:14:55 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 std::string extract_line(std::string & buff, char delim)
 {
@@ -158,28 +158,61 @@ int  choose_server_browser(t_request & request, std::vector<t_conf> & conf) {
   return (0);
 }
 
-bool	is_host(std::string s) {
+/* Reste a checker si le port est bien present dans le serveur qu on retourne */
+int	is_host(std::string host, std::string port, std::vector<t_conf> &conf) {
+	int i = 0;
 	
-	int i;
-	
-	if (s == "localhost")
-		return (true);
-	for (int j = 0; j < 4; j++) {
-		for (i = 0; s[i]; i++){
-			std::cout << s[i] << std::endl;
-			if (!isdigit(s[i]))
-				break;
+	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+		if (host == it->host || (host == "localhost" && it->host == "127.0.0.1")) {
+			for (std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++)
+				if (*jt == port)
+					return (i);
 		}
-			if (i < 1 || i > 3 || (s[i] && s[i] != '.' && j < 3))
-				return (false);
-			s.erase(0, i + 1);
-		// }
-		if ((j == 3 && !s.empty()) || (j < 3 && s.empty()))
-			return (false);
+		i++;
 	}
-	return (true);
+	return (-1);
 }
 
+/* Reste a checker si le port est bien present dans le serveur qu on retourne */
+int	is_server_name(std::string host, std::string port, std::vector<t_conf> &conf) {
+	int i = 0;
+	
+	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+		if (host == it->server_name) {
+			for (std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++)
+				if (*jt == port)
+					return (i);
+		i++;
+		}
+	}
+	return (-1);
+}
+/*
+URI Comparison
+
+   When comparing two URIs to decide if they match or not, a client
+   SHOULD use a case-sensitive octet-by-octet comparison of the entire
+   URIs, with these exceptions:
+
+      - A port that is empty or not given is equivalent to the default
+        port for that URI-reference;
+
+        - Comparisons of host names MUST be case-insensitive;
+
+        - Comparisons of scheme names MUST be case-insensitive;
+
+        - An empty abs_path is equivalent to an abs_path of "/".
+
+   Characters other than those in the "reserved" and "unsafe" sets (see
+   RFC 2396 [42]) are equivalent to their ""%" HEX HEX" encoding.
+
+   For example, the following three URIs are equivalent:
+
+      http://abc.com:80/~smith/home.html
+      http://ABC.com/%7Esmith/home.html
+      http://ABC.com:/%7esmith/home.html
+
+*/
 int	pick_server(t_request &request, std::vector<t_conf> &conf) {
 	std::istringstream	iss(request.host);
 	std::string         	host;
@@ -190,7 +223,10 @@ int	pick_server(t_request &request, std::vector<t_conf> &conf) {
 	std::cout << "host = " << host << std::endl;
 	std::cout << "port = " << port << std::endl;
 	
-	if (is_host(host)) { 
+	if (conf.size() == 0)
+		return (0);
+	std::cout << "is_host = " << is_host(host, port, conf) << std::endl;
+	if (is_host(host, port, conf) > -1) { 
 		std::cout << "true" << std::endl;
 	}
 	else
@@ -223,12 +259,12 @@ void	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & c
   // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
 
   
-	// i_conf = pick_server(request, conf);
+	i_conf = pick_server(request, conf);
 
 	
-	if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
-		i_conf = choose_server_curl(request, conf);
-	else
-		i_conf = choose_server_browser(request, conf);
+	// if (request.agent.substr(0, 4) == "curl" && conf.size() > 1)
+	// 	i_conf = choose_server_curl(request, conf);
+	// else
+	// 	i_conf = choose_server_browser(request, conf);
 	handle_request(fds[i].fd, request, conf[i_conf], map_error);
 }

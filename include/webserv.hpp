@@ -1,39 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/27 11:07:56 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/28 17:51:52 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
-# include <iostream>
-# include <fstream>
-# include <cstdlib>
-# include <string>
-# include <cstring>
-# include <algorithm>
-# include <vector>
-# include <map>
-# include <list>
-# include <sstream>
-# include <vector>
-#include <utility>
-# include <unistd.h>
-# include <sys/types.h>
-# include <sys/socket.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-#include <poll.h>
-#include <fcntl.h>
-#include <signal.h>
-
+#include "Listen.hpp"
+#include "Server.hpp"
 #include "ServerException.hpp"
 
 #define MAX_CONNECTION	20
@@ -96,12 +77,16 @@ typedef struct s_request
 
 } t_request;
 
-typedef struct s_listen
-{
-	int			fd;
-	int			port;
+// typedef struct s_listen
+// {
+// 	int			fd;
+// 	std::string	port;
+// 	int			conf_i;
+// 	in_addr_t	s_addr;
+// 	std::string host;
 	
-} t_listen;
+// 	~s_listen() {}; // A METTRE DANS .cpp
+// } t_listen;
 
 /* *************************** CONFIGURATION_FILE *************************** */
 
@@ -144,9 +129,9 @@ bool			check_allow_method(t_request &request, t_conf &conf, std::string &index);
 
 /* ********************************* SERVER ********************************* */
 
-void			open_listen_socket(std::vector<t_conf> &conf, std::vector<t_listen> &server_fd);
-struct pollfd 	*create_fds(std::vector<t_listen> &server_fd);
-void			launch_server(struct pollfd *fds, std::vector<t_listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
+void			open_listen_socket(std::vector<t_conf> &conf, std::vector<Listen> &server_fd);
+struct pollfd 	*create_fds(std::vector<Listen> &server_fd);
+void			launch_server(struct pollfd *fds, std::vector<Listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
 void			close_connection(struct pollfd *fds, int i);
 void			close_fds(struct pollfd *fds, int nb);
 void			save_fds(struct pollfd *fds, int max);

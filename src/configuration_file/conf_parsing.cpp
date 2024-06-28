@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   conf_parsing.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 18:17:47 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 void    clear_file(std::list<std::string> & cnf_file, char *argv)
 {

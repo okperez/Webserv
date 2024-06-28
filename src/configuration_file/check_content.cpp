@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   check_content.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 14:20:42 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 char*        get_ip_address(void)
 {
@@ -22,7 +22,7 @@ char*        get_ip_address(void)
     if (host_entry == NULL) {
         std::cerr << "Error getting host entry" << std::endl;
     }
-    char *ip = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0]));
+    char *ip = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0])); // VOIR AVEC ORLANDO SI FONCTION AUTORISEE
     return (ip);
 }
 

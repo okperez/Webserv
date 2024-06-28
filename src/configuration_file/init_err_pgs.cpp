@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   init_err_pgs.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 14:22:22 by operez            #+#    #+#             */
-/*   Updated: 2024/06/21 15:21:10 by operez           ###   ########.fr       */
+/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/server.hpp"
+#include "../../include/webserv.hpp"
 
 void    err_pgs_to_conf(std::list<std::string> & err_pgs, t_conf & conf)
 {

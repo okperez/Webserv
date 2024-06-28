@@ -17,9 +17,11 @@ CONF_SRCS		=	conf_parsing.cpp \
 					init_err_pgs.cpp \
 
 SERV_DIR		=	server/
-SERV_SRCS		=	server.cpp \
+SERV_SRCS		=	server_f.cpp \
+					Server.cpp \
 					close_server.cpp \
-					handle_gate.cpp
+					handle_gate.cpp \
+					Listen.cpp
 
 EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp
