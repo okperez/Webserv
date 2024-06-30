@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Listen.cpp                                         :+:      :+:    :+:   */
+/*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 08:39:33 by garance          ###   ########.fr       */
+/*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
+/*   Updated: 2024/06/29 11:32:45 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,14 @@
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
 
-Listen::Listen() : _fd(0), _port(0), _s_addr(0), _host(""), _i_conf(0) {}
+ErrorPages::ErrorPages() {
+    map_error["404"] = " Not Found";
+	map_error["405"] = " Method Not Allowed";
+}
 
-Listen::Listen(const Listen & orig) : _fd(orig._fd), _port(orig._port), _s_addr(orig._s_addr), _host(orig._host), _i_conf(orig._i_conf) { (void) orig; }
+ErrorPages::ErrorPages(const ErrorPages & orig) { (void) orig; }
 
-Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) , _i_conf(i) {}
-
-Listen::~Listen() {}
+ErrorPages::~ErrorPages() {}
 
 /* ************************************************************************* */
 /* ************************** OPERATOR OVERLOADING ************************* */
@@ -30,7 +31,7 @@ Listen::~Listen() {}
 
 /* ************************** Assignment Operator  ************************* */
 
-Listen &Listen::operator=(Listen & rhs) {
+ErrorPages &ErrorPages::operator=(ErrorPages & rhs) {
 	(void) rhs;
 	return (*this); 
 }
@@ -39,39 +40,36 @@ Listen &Listen::operator=(Listen & rhs) {
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
 
-int	Listen::getFd() const {
-	return (_fd);
-}
-
-int	Listen::getIconf() const {
-	return (_i_conf);
-}
-
-const std::string	Listen::getPort() const {
-	return (_port);
-}
-
-const in_addr_t	Listen::getS_addr() const {
-	return (_s_addr);
-}
-
-const std::string	Listen::getHost() const {
-	return (_host);
-}
 
 /* ************************************************************************* */
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-
-void	Listen::close_fd() {
-	close(_fd);
+void	ErrorPages::err_not_found(std::string &body, std::string &code) {
+	body = "<!DOCTYPE html>\n<html>\n<head>\n\t<title>";
+	body += map_error[code];
+	body += "</title>\n</head>\n<body>\n\t<h1>";
+	body += code;
+	body += "</h1>\n\t<h1>";
+	body += map_error[code];
+	body += "</h1>\n</body>";
 }
 
-void	Listen::printlisten() {
-	std::cout << "FD : " << _fd << std::endl;
-	std::cout << "ICONF : " << _i_conf << std::endl;
-	std::cout << "PORT : " << _port << std::endl;
-	std::cout << "S_ADDR : " << _s_addr << std::endl;
-	std::cout << "HOST : " << _host << std::endl << std::endl;
+void	ErrorPages::fill_error(std::string &body, std::string &response, std::string code, t_conf &conf) {
+    
+    if (conf.err_pgs.find(code) == conf.err_pgs.end())
+		err_not_found(body, code);
+    else {
+        std::ifstream file;
+
+        file.open(conf.err_pgs[code]);
+        if (file.is_open())
+		    std::getline(file, body, '\0');
+        else
+			err_not_found(body, code);
+    }
+    response = "HTTP/1.1 ";
+    response += code;
+    response += map_error[code];
+    response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:51:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/30 08:20:06 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,13 @@
 
 #include "Listen.hpp"
 #include "Server.hpp"
+#include "ErrorPages.hpp"
+#include "Request.hpp"
 #include "ServerException.hpp"
 
-#define MAX_CONNECTION	20
+
+#define MAX_CONNECTION	1000
+#define BUFFER_SIZE	4000
 
 typedef struct s_conf
 {
@@ -118,34 +122,34 @@ std::string extract_index(std::string buff);
 
 
 
-/* ****************************** request.cpp ******************************** */
+// /* ****************************** request.cpp ******************************** */
 
-void	      	do_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error);
-int     		handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<std::string, std::string> map_error);
-void    		init_request_struct(t_request & request, char const *buffer);
-std::string 	look_for_location(std::string &target, t_conf & conf);
-void			add_path(std::string &target, t_conf & conf, std::string &index);
-bool			check_allow_method(t_request &request, t_conf &conf, std::string &index);
+// void	      	read_request(struct pollfd *fds, int i, char *buffer, std::vector<t_conf> & conf, std::map<std::string, std::string> map_error);
+// int     		handle_request(int socket_fd, t_request & request, t_conf & conf, std::map<std::string, std::string> map_error);
+// void    		init_request_struct(t_request & request, char const *buffer);
+// std::string 	look_for_location(std::string &target, t_conf & conf);
+// void			add_path(std::string &target, t_conf & conf, std::string &index);
+// bool			check_allow_method(t_request &request, t_conf &conf, std::string &index);
 
-/* ********************************* SERVER ********************************* */
+// /* ********************************* SERVER ********************************* */
 
-void			open_listen_socket(std::vector<t_conf> &conf, std::vector<Listen> &server_fd);
-struct pollfd 	*create_fds(std::vector<Listen> &server_fd);
-void			launch_server(struct pollfd *fds, std::vector<Listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
-void			close_connection(struct pollfd *fds, int i);
+// void			open_listen_socket(std::vector<t_conf> &conf, std::vector<Listen> &server_fd);
+// struct pollfd 	*create_fds(std::vector<Listen> &server_fd);
+// void			launch_server(struct pollfd *fds, std::vector<Listen> &server_fd, int max_socket, std::vector<t_conf> & conf);
+// void			close_connection(struct pollfd *fds, int i);
 void			close_fds(struct pollfd *fds, int nb);
 void			save_fds(struct pollfd *fds, int max);
 void 			sighandler(int signal);
 
 /* ********************************** ERROR ********************************* */
 
-void		create_map_error(std::map<std::string, std::string> &map_error);
-void		fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error);
+// void		create_map_error(std::map<std::string, std::string> &map_error);
+// void		fill_error(std::string &body, std::string &response, std::string code, t_conf &conf, std::map<std::string, std::string> map_error);
 
-/* ****************************** A_EFFACER ********************************* */
+// /* ****************************** A_EFFACER ********************************* */
 
-void    	print_request(t_request & request);
-void    	print_location(std::vector<t_conf> &conf);
+// void    	print_request(t_request & request);
+// void    	print_location(std::vector<t_conf> &conf);
 
 /* ************************************************************************** */
 /* ********************************** ENUM ********************************** */
@@ -154,6 +158,14 @@ void    	print_location(std::vector<t_conf> &conf);
 enum	e_rule {
 	SAVE,
 	CLOSE,
+};
+
+enum	e_status_request {
+	NW,
+	READING,
+  RD_TO_RESPOND,
+  RD_TO_SEND,
+  SENT,
 };
 
 #endif

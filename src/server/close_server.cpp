@@ -3,22 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/29 12:12:38 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
-
-void	close_fds(struct pollfd *fds, int nb) {
-	for (int i = 0; i < nb; i++) {
-		if (fds[i].fd > -1)
-			close_connection(fds, i);
-	}
-	delete[] fds;
-}
 
 void	close_connection(struct pollfd *fds, int i) {
 
@@ -27,6 +19,14 @@ void	close_connection(struct pollfd *fds, int i) {
 	fds[i].fd = -1;
 	fds[i].revents = 0;
 	fds[i].events = 0;
+}
+
+void	close_fds(struct pollfd *fds, int nb) {
+	for (int i = 0; i < nb; i++) {
+		if (fds[i].fd > -1)
+			close_connection(fds, i);
+	}
+	delete[] fds;
 }
 
 void	save_fds(struct pollfd *fds, int max) {

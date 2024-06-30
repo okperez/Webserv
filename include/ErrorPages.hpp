@@ -1,51 +1,44 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Listen.hpp                                         :+:      :+:    :+:   */
+/*   ErrorPages.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 08:36:20 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/29 11:26:43 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef LISTEN_HPP
-# define LISTEN_HPP
+#ifndef ERRORPAGES_HPP
+# define ERRORPAGES_HPP
 
 #include "include.hpp"
 
-class Listen
+typedef struct s_conf t_conf;
+
+class ErrorPages
 {
 	private : 
-		const int			_fd;
-		const int			_i_conf;
-		const std::string	_port;
-		const in_addr_t		_s_addr;
-		const std::string 	_host;
+		std::map<std::string, std::string> map_error;
 	
-		Listen();
-		Listen &operator=(Listen & rhs);
+		ErrorPages(const ErrorPages & orig);
+		ErrorPages &operator=(ErrorPages & rhs);
 		
 	public :
-		Listen(const Listen & orig);
-		Listen(int fd, std::string &port, int _s_addr, std::string & host, int i);
-		~Listen();
+		ErrorPages();
+		~ErrorPages();
 
 		/* ***************************************************************** */
 		/* **************************** Accessor *************************** */
 		/* ***************************************************************** */
 
-		int	getFd() const;
-		int	getIconf() const;
-		const std::string	getPort() const;
-		const in_addr_t	getS_addr() const;
-		const std::string	getHost() const;
-		
-		void	close_fd();
-
-		void	printlisten(); //A EFFACER
-		
+        /* ***************************************************************** */
+        /* **************************** Actions **************************** */
+        /* ***************************************************************** */
+        
+        void	err_not_found(std::string &body, std::string &code);
+        void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf);
 } ;
 
 #endif

@@ -29,10 +29,12 @@ EXCEPTION_SRCS	=	ServerException.cpp
 REQUEST_DIR		=	request/
 REQUEST_SRCS	=	request.cpp \
 					location.cpp \
-					allow_method.cpp
+					allow_method.cpp \
+					Request.cpp
 
 ERROR_DIR		=	error/
-ERROR_SRCS		=	handle_http_error.cpp
+ERROR_SRCS		=	handle_http_error.cpp \
+					ErrorPages.cpp
 
 A_EFFACER_DIR		=	a_effacer/
 A_EFFACER_SRCS	=	print.cpp

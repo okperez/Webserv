@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/28 18:17:58 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/30 09:55:55 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int po
 	{
 		for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
 			it->close_fd();
-			// close (it->_fd);
 		std::cerr << "Failed to bind to port " << port << std::endl;
 		throw(ServerException(""));
 	}
@@ -117,11 +116,15 @@ void	Server::open_listen_socket() {
 			if (result != 0)
 				throw(ServerException("Non valid host"));
 			server = (struct sockaddr_in *)res->ai_addr;
-			std::cout << "addresse de server->sin_addr : " << server->sin_addr.s_addr << std::endl;
+			std::cout << "addresse de server->s_addr : " << server->sin_addr.s_addr << std::endl;
+			std::cout << "addresse de server->sin_family : " << server->sin_family << std::endl;
+			std::cout << "addresse de server->sin_port : " << server->sin_port << std::endl;
+			std::cout << "addresse de server->sin_zero : " << server->sin_zero << std::endl << std::endl;
 			server->sin_port = htons(port);         			//The port number (the transport address)
 			this->bind_socket(new_socket, *server, port);
 			this->listen_socket(new_socket, port);
 			Listen nw(new_socket, *jt, server->sin_addr.s_addr, it->host, i);
+			nw.printlisten();
 			freeaddrinfo(res);
 			server_fd.push_back(nw);
 		}
@@ -148,3 +151,262 @@ void	Server::create_fds() {
 		i++;
 	}
 }
+
+/* ************************************************************************* */
+/* ******************************* LAUNCHING ******************************* */
+/* ************************************************************************* */
+
+void	Server::launch_server(int max_socket) {
+	
+	while (1)
+	{
+		// std::cout << "Waiting...\n";
+		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
+		int ret = poll(fds, max_socket, 50);
+		if (ret < 0) { //verifier leak + leak de fd
+			close_fds(fds, max_socket);
+			throw(ServerException("Failed to poll."));
+		}
+		event_request();
+	}
+}
+
+/* ************************************************************************* */
+/* ********************************* EVENTS ******************************** */
+/* ************************************************************************* */
+
+
+/* Called if there something to be read and handled in one of the fds */
+void	Server::event_request() {
+	
+	for (int i = 0; i < MAX_CONNECTION; i++)
+	{
+		if (fds[i].revents & POLLIN)
+		{
+			// struct sockaddr_storage *name;
+			// socklen_t namelen = sizeof(name);
+			// getsockname(fds[i].fd, (struct sockaddr *)name, &namelen);
+			// struct sockaddr_in *socket = (struct sockaddr_in *)name;
+			// std::cout << "addresse de socket name : " << socket->sin_addr.s_addr << std::endl;
+			// std::cout << "Test 01" << std::endl;
+			
+			/* event_request sur socket listening for clients */
+			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+				if (it->getFd() == fds[i].fd) {
+					new_connection(it->getFd());
+					return ;
+				}
+			}
+			/* event_request sur socket listening for request ready to be handled */
+			char buffer[BUFFER_SIZE] = {0};
+			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE); //secu si ==-1
+			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
+			/*A significant difference between HTTP/1.1 and earlier versions of
+			HTTP is that persistent connections are the default behavior of any
+			HTTP connection. That is, unless otherwise indicated, the client
+			SHOULD assume that the server will maintain a persistent connection,
+			even after error responses from the server.
+
+			Persistent connections provide a mechanism by which a client and a
+			server can signal the close of a TCP connection. This signaling takes
+			place using the Connection header field (section 14.10). Once a close
+			has been signaled, the client MUST NOT send any more requests on that
+			connection.
+			*/
+				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+					if (it->getSocket_fd() == fds[i].fd) {
+						requests.erase(it);
+						break;			
+					}
+				}
+				close_connection(i);
+			}
+			else
+			/*
+			In order to remain persistent, all messages on the connection MUST
+			have a self-defined message length (i.e., one not defined by closure
+			of the connection), as described in section 4.4.
+			*/
+				read_request(i, buffer, n_bytes);
+			return ;
+		}
+	}
+	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
+			it->parse_request();
+			int i_conf = pick_server(*it);
+			it->handle_request(it->getSocket_fd(), conf[i_conf], error);
+			if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
+				for (int i = 0; i < MAX_CONNECTION; i++) {
+					if (fds[i].fd == it->getSocket_fd()) 
+						return (close_connection(i), (void) 0);
+				}				
+			}
+			requests.erase(it);
+			return ;
+		}
+	}
+}
+
+/* ************************************************************************* */
+/* *************************** HANDLE CONNECTION *************************** */
+/* ************************************************************************* */
+
+void	Server::new_connection(int server_fd) {
+	struct sockaddr_in client_addr;
+	int client_addr_len = sizeof(client_addr);
+	
+	std::cout << "Client asked for connection." << std::endl;
+	// A VERIF SI TOUJOURS LE CAS OU NON : 
+		// he accept system call grabs the first connection request on the queue of pending connections (set up in listen) and creates a new socket for that connection.
+		// By default, socket operations are synchronous, or blocking, and accept will block until a connection is present on the queue.
+	int socket_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+	if (socket_fd < 0) {
+		std::cout << "Client failed to connect." << std::endl;
+		return ;
+	}
+	for (int i = 1; i < MAX_CONNECTION; i++) {
+		if (fds[i].fd == -1) {
+			fds[i].fd = socket_fd;
+			fds[i].events = POLLIN;
+			std::cout << "Client connected on socket " << socket_fd << "." << std::endl;
+			return ;
+		}
+	}
+	close(socket_fd);
+	std::cerr << "Maximum of connection reached." << std::endl;
+	std::cerr << "Connection on socket " << socket_fd << " closed." << std::endl;
+
+}
+
+void	Server::close_connection(int i) {
+
+	std::cout << "Connection on socket " << fds[i].fd << " closed." << std::endl;
+	close(fds[i].fd);
+	fds[i].fd = -1;
+	fds[i].revents = 0;
+	fds[i].events = 0;
+}
+
+/* ************************************************************************* */
+/* ******************************** REQUEST ******************************** */
+/* ************************************************************************* */
+
+/* Reste a checker si le port est bien present dans le serveur qu on retourne */
+int	Server::is_host(std::string host, std::string port) {
+	int i = 0;
+	
+	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+		if (host == it->host || (host == "localhost" && it->host == "127.0.0.1")) {
+			for (std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++)
+				if (*jt == port)
+					return (i);
+		}
+		i++;
+	}
+	return (-1);
+}
+
+/* Reste a checker si le port est bien present dans le serveur qu on retourne */
+int	Server::is_server_name(std::string host, std::string port) {
+	int i = 0;
+	
+	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+		if (host == it->server_name) {
+			for (std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++)
+				if (*jt == port)
+					return (i);
+		i++;
+		}
+	}
+	return (-1);
+}
+/*
+URI Comparison
+
+   When comparing two URIs to decide if they match or not, a client
+   SHOULD use a case-sensitive octet-by-octet comparison of the entire
+   URIs, with these exceptions:
+
+      - A port that is empty or not given is equivalent to the default
+        port for that URI-reference;
+
+        - Comparisons of host names MUST be case-insensitive;
+
+        - Comparisons of scheme names MUST be case-insensitive;
+
+        - An empty abs_path is equivalent to an abs_path of "/".
+
+   Characters other than those in the "reserved" and "unsafe" sets (see
+   RFC 2396 [42]) are equivalent to their ""%" HEX HEX" encoding.
+
+   For example, the following three URIs are equivalent:
+
+      http://abc.com:80/~smith/home.html
+      http://ABC.com/%7Esmith/home.html
+      http://ABC.com:/%7esmith/home.html
+
+*/
+int	Server::pick_server(Request &request) {
+	std::istringstream	iss(request.getHost());
+	std::string         	host;
+	std::string         	port;
+	
+	std::getline(iss, host, ':');
+	std::getline(iss, port);
+	std::cout << "host = " << host << std::endl;
+	std::cout << "port = " << port << std::endl;
+	
+	if (conf.size() == 0)
+		return (0);
+	std::cout << "is_host = " << is_host(host, port) << std::endl;
+	if (is_host(host, port) > -1) { 
+		std::cout << "true" << std::endl;
+	}
+	else
+		std::cout << "false" << std::endl;
+	return (0);
+}
+
+/*
+The normal procedure for parsing an HTTP message is to read the start-line
+into a structure, read each header field line into a hash table by field name
+until the empty line, and then use the parsed data to determine if a message
+body is expected. If a message body has been indicated, then it is read as a
+stream until an amount of octets equal to the message body length is read or the
+connection is closed.
+*/
+/*
+  revoir choose_server avec info de ce site :
+  https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
+  */
+  // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
+void	Server::read_request(int i, char *buffer, int read) {
+
+	int			i_conf = 0;
+	
+	for (int j = 0; j < BUFFER_SIZE; j++)
+		std::cout << buffer[j];
+	std::cout << std::endl;
+	
+	std::cout << "read = " << read << std::endl;
+
+	// Si une requete a deja ete cree : 
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (it->getSocket_fd() == fds[i].fd) {
+			if (it->getStatus() == READING) { // UTILE ICI ?
+				it->addSave_buffer(buffer);
+				if (read < BUFFER_SIZE) {
+					it->setStatus(RD_TO_RESPOND);
+				}
+				std::cout << "getSave_buffer() = " << it->getSave_buffer() << std::endl;
+				return ;
+			}
+		}
+	}
+	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
+	Request 	request(buffer, read, fds[i].fd); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	requests.push_back(request);
+}
+

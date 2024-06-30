@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/28 18:19:04 by galambey         ###   ########.fr       */
+/*   Updated: 2024/06/30 08:20:58 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,16 @@
 #define SERVER_HPP
 
 #include "include.hpp"
+#include "ErrorPages.hpp"
+#include "Request.hpp"
 
 typedef struct s_conf t_conf;
 
 class Server
 {
 	private : 
+		ErrorPages error;
+
 		Server(const Server & orig);
 		Server &operator=(Server & rhs);
 		
@@ -33,6 +37,7 @@ class Server
 	public :
 		std::vector<t_conf>	conf; // public si on n integre pas parsing dans classe
 		std::vector<Listen> server_fd; // a passer en private une fois good
+		std::vector<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
 		
 		Server();
@@ -53,7 +58,23 @@ class Server
 		/* *************************** LAUNCHING *************************** */
 		/* ***************************************************************** */
 
+		void	launch_server(int max_socket);
+		void	event_request();
+		/* ***************************************************************** */
+		/* *********************** HANDLE CONNECTION *********************** */
+		/* ***************************************************************** */
+
+		void	new_connection(int server_fd);
+		void	close_connection(int i);
+
+		/* ***************************************************************** */
+		/* **************************** REQUEST **************************** */
+		/* ***************************************************************** */
 		
+		int	is_host(std::string host, std::string port);
+		int	is_server_name(std::string host, std::string port);
+		int	pick_server(Request &request);
+		void	read_request(int i, char *buffer, int read);	
 } ;
 
 #endif
