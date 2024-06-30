@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/06/30 09:21:33 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 13:03:11 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 Request::Request() {}
 
 Request::Request(char const *buffer, int read, int socket) {
+	std::cout << "Constructor Request called" << std::endl;
 	// std::string buff = buffer;
 
 	// A UPDATE
@@ -34,6 +35,7 @@ Request::Request(char const *buffer, int read, int socket) {
 		status = RD_TO_RESPOND;
 	else
 		status = READING;
+	std::cout << "End of Constructor Request" << std::endl;
 }
 
 Request::Request(const Request & orig) : status(orig.status), save_buffer(orig.save_buffer) , socket_fd(orig.socket_fd){
@@ -63,6 +65,8 @@ Request &Request::operator=(Request const & rhs) {
 	content_type = rhs.content_type;
 	connection = rhs.connection;
 	lenght = rhs.lenght;
+	socket_s_addr = rhs.socket_s_addr;
+
 	return (*this); 
 }
 
@@ -76,6 +80,10 @@ int Request::getStatus() const {
 
 int Request::getSocket_fd() const {
 	return (socket_fd);
+}
+
+in_addr_t Request::getSocket_s_addr() const {
+	return (socket_s_addr);
 }
 
 std::string Request::getHost() const {
@@ -102,7 +110,8 @@ void	Request::addSave_buffer(const char *buffer) {
 /* ******************************** Parsing ******************************** */
 /* ************************************************************************* */
 
-void	Request::parse_request() {
+void	Request::parse_request(in_addr_t s_addr) {
+	socket_s_addr = s_addr;
 	method = extract_line(save_buffer, ' ');
 	target = extract_line(save_buffer, ' ');
 	version = extract_line(save_buffer, '\r');
@@ -110,7 +119,7 @@ void	Request::parse_request() {
 	agent = extract_header(save_buffer);
 	media = extract_header(save_buffer);
 	connection = extract_elem("Connection:", "\r", save_buffer);
-	std::cout << "connection : " << connection << std ::endl;
+	// std::cout << "connection : " << connection << std ::endl;
 }
 
 /* ************************************************************************* */
@@ -293,8 +302,9 @@ std::string Request::extract_header(std::string & buff) const
 
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff) const {
 	int begin = buff.find(elem);
+	if (begin == -1)
+		return ("keep-alive");
 	int end = buff.find(delim);
 	std::string tmp (buff.substr(begin, end + 1));
-	std::cout << "elem line : |" << tmp  << "|" << std::endl;
 	return (extract_header(tmp));
 }

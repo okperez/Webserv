@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 08:20:58 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 13:33:51 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,8 +71,8 @@ class Server
 		/* **************************** REQUEST **************************** */
 		/* ***************************************************************** */
 		
-		int	is_host(std::string host, std::string port);
-		int	is_server_name(std::string host, std::string port);
+		int	is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i);
+		int	is_server_name(std::string host, std::string port, in_addr_t socket_s_addr);
 		int	pick_server(Request &request);
 		void	read_request(int i, char *buffer, int read);	
 } ;

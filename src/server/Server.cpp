@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 09:55:55 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 14:10:56 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,7 +234,13 @@ void	Server::event_request() {
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
-			it->parse_request();
+			struct sockaddr_storage name;
+			socklen_t namelen = sizeof(name);
+			getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
+			struct sockaddr_in *socket = (struct sockaddr_in *)&name;
+			// std::cout << "addresse de socket name : " << socket->sin_addr.s_addr << std::endl;
+			
+			it->parse_request(socket->sin_addr.s_addr);
 			int i_conf = pick_server(*it);
 			it->handle_request(it->getSocket_fd(), conf[i_conf], error);
 			if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
@@ -293,9 +299,20 @@ void	Server::close_connection(int i) {
 /* ******************************** REQUEST ******************************** */
 /* ************************************************************************* */
 
-/* Reste a checker si le port est bien present dans le serveur qu on retourne */
-int	Server::is_host(std::string host, std::string port) {
+/* Retourne l index du serveur correspondant a l'host */
+int	Server::is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i) {
 	int i = 0;
+	
+	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+		if (socket_s_addr == it->getS_addr() && port == it->getPort()) {
+			if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1"))
+			// if (conf[it->getIconf()].host == host || (host == "localhost" && conf[it->getIconf()].host == "127.0.0.1"))
+				return (std::cout << "it->getIconf() " << it->getIconf() << std::endl, it->getIconf());
+			else if (*default_i == -1)
+				*default_i = it->getIconf();
+		}
+	}
+	return (-1);
 	
 	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
 		if (host == it->host || (host == "localhost" && it->host == "127.0.0.1")) {
@@ -308,17 +325,11 @@ int	Server::is_host(std::string host, std::string port) {
 	return (-1);
 }
 
-/* Reste a checker si le port est bien present dans le serveur qu on retourne */
-int	Server::is_server_name(std::string host, std::string port) {
-	int i = 0;
-	
-	for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
-		if (host == it->server_name) {
-			for (std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++)
-				if (*jt == port)
-					return (i);
-		i++;
-		}
+/* Retourne l index du serveur correspondant au server_name */
+int	Server::is_server_name(std::string host, std::string port, in_addr_t socket_s_addr) {
+	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+		if (socket_s_addr == it->getS_addr() && port == it->getPort() && conf[it->getIconf()].server_name == host)
+			return (std::cout << "it->getIconf() " << it->getIconf() << std::endl, it->getIconf());
 	}
 	return (-1);
 }
@@ -332,9 +343,9 @@ URI Comparison
       - A port that is empty or not given is equivalent to the default
         port for that URI-reference;
 
-        - Comparisons of host names MUST be case-insensitive;
+        - Comparisons of host names MUST be case-insensitive; // OK
 
-        - Comparisons of scheme names MUST be case-insensitive;
+        - Comparisons of scheme names MUST be case-insensitive; // OK
 
         - An empty abs_path is equivalent to an abs_path of "/".
 
@@ -352,21 +363,24 @@ int	Server::pick_server(Request &request) {
 	std::istringstream	iss(request.getHost());
 	std::string         	host;
 	std::string         	port;
+	int						i_host;
+	int						i_name;
+	int						i_default = -1;
 	
 	std::getline(iss, host, ':');
+	str_tolower(host);
+	std::cout << host << std::endl;
 	std::getline(iss, port);
-	std::cout << "host = " << host << std::endl;
-	std::cout << "port = " << port << std::endl;
-	
 	if (conf.size() == 0)
 		return (0);
-	std::cout << "is_host = " << is_host(host, port) << std::endl;
-	if (is_host(host, port) > -1) { 
-		std::cout << "true" << std::endl;
-	}
-	else
-		std::cout << "false" << std::endl;
-	return (0);
+	i_host = is_host(host, port, request.getSocket_s_addr(), &i_default);
+	if (i_host > -1) // =====> Host a ete trouve : Il s'agit d'un server_host SINON le premier server correspondant a un host:port a ete save dans i_default
+		return (i_host);
+	i_name = is_server_name(host, port, request.getSocket_s_addr());
+	if (i_name > -1) // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
+		return (i_name);
+	else // =====> Pas de server_name avec port et host ok trouve => on renvoie i_default
+		return (i_default);
 }
 
 /*
@@ -406,7 +420,9 @@ void	Server::read_request(int i, char *buffer, int read) {
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
+	std:: cout << "Test 0 "<< std::endl;
 	Request 	request(buffer, read, fds[i].fd); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
+	std:: cout << "Test 1 "<< std::endl;
 }
 

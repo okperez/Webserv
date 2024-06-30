@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/29 11:26:07 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 14:07:54 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,38 @@ void	adapt_host(std::string &s) {
 	}
 }
 
+/* A INTEGRER DANS PARSING pour mettre en minuscule host et server_name qui doivent etre case insensitive*/
+void	str_tolower(std::string & s) {
+	for (int i = 0; s[i]; i++)
+		s[i] = tolower(s[i]); 
+}
+
+/*
+URI Comparison
+
+   When comparing two URIs to decide if they match or not, a client
+   SHOULD use a case-sensitive octet-by-octet comparison of the entire
+   URIs, with these exceptions:
+
+      - A port that is empty or not given is equivalent to the default
+        port for that URI-reference;
+
+        - Comparisons of host names MUST be case-insensitive;
+
+        - Comparisons of scheme names MUST be case-insensitive;
+
+        - An empty abs_path is equivalent to an abs_path of "/".
+
+   Characters other than those in the "reserved" and "unsafe" sets (see
+   RFC 2396 [42]) are equivalent to their ""%" HEX HEX" encoding.
+
+   For example, the following three URIs are equivalent:
+
+      http://abc.com:80/~smith/home.html
+      http://ABC.com/%7Esmith/home.html
+      http://ABC.com:/%7esmith/home.html
+
+*/
 int main(int argc, char **argv) 
 {
 	try {
@@ -63,6 +95,10 @@ int main(int argc, char **argv)
 			for(std::vector<t_conf>::iterator it = server.conf.begin(); it != server.conf.end(); it++) {
 				if (it->host.empty())
 					it->host = "127.0.0.1";
+				else
+					str_tolower(it->host); // host doit etre case insensitive
+				if (!it->server_name.empty())
+					str_tolower(it->server_name); // server_name doit etre case insensitive
 			}
 			std::cout << "******************************** END PARSING ********************************* " << std::endl;
 			/* ********** A EFFACER ************ */

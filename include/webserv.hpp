@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/30 08:20:06 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 14:06:17 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ bool        is_white_space(char c, char d);
 void        clear_space(std::string & type);
 std::string extract_type(std::string buff);
 std::string extract_index(std::string buff);
-
+void	      str_tolower(std::string & s);
 
 
 // /* ****************************** request.cpp ******************************** */

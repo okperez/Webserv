@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 09:22:02 by garance          ###   ########.fr       */
+/*   Updated: 2024/06/30 13:03:05 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ class Request
 {
 	private : 
 		int socket_fd;
+		in_addr_t	socket_s_addr;
 		int status;
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
 		std::string		response_content;
@@ -59,6 +60,7 @@ class Request
 		
 		int getStatus() const;
 		int getSocket_fd() const;
+		in_addr_t getSocket_s_addr() const;
 		std::string getHost() const;
 		std::string getConnection() const;
 		void	addSave_buffer(const char *buffer);
@@ -68,7 +70,7 @@ class Request
         /* **************************** Parsing **************************** */
         /* ***************************************************************** */
 
-		void	parse_request();
+		void	parse_request(in_addr_t s_addr);
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
