@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/06/29 11:32:45 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/01 17:05:41 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,31 +45,65 @@ ErrorPages &ErrorPages::operator=(ErrorPages & rhs) {
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-void	ErrorPages::err_not_found(std::string &body, std::string &code) {
-	body = "<!DOCTYPE html>\n<html>\n<head>\n\t<title>";
-	body += map_error[code];
-	body += "</title>\n</head>\n<body>\n\t<h1>";
-	body += code;
-	body += "</h1>\n\t<h1>";
-	body += map_error[code];
-	body += "</h1>\n</body>";
+void	ErrorPages::err_not_found(Response &response, std::string &code) {
+	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n\t<title>");
+	response.setBody(map_error[code]);
+	response.setBody("</title>\n</head>\n<body>\n\t<h1>");
+	response.setBody(code);
+	response.setBody("</h1>\n\t<h1>");
+	response.setBody(map_error[code]);
+	response.setBody("</h1>\n</body>\n</html>");
 }
 
-void	ErrorPages::fill_error(std::string &body, std::string &response, std::string code, t_conf &conf) {
+void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) {
     
     if (conf.err_pgs.find(code) == conf.err_pgs.end())
-		err_not_found(body, code);
+		err_not_found(response, code);
     else {
         std::ifstream file;
-
+		
         file.open(conf.err_pgs[code]);
         if (file.is_open())
-		    std::getline(file, body, '\0');
+			response.setBody(file);
+		    // std::getline(file, body, '\0');
         else
-			err_not_found(body, code);
+			err_not_found(response, code);
     }
-    response = "HTTP/1.1 ";
-    response += code;
-    response += map_error[code];
-    response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
+    // response = "HTTP/1.1 ";
+    // response += code;
+    // response += map_error[code];
+	response.setStatus(code, map_error[code]);
+	response.setContent_type("text/html"); // ATTENTION A MODI SELON TYPE FICHIER : css, jss...
+    // response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
 }
+
+// void	ErrorPages::fill_error(std::string &body, std::string &response, std::string code, t_conf &conf) {
+    
+//     if (conf.err_pgs.find(code) == conf.err_pgs.end())
+// 		err_not_found(body, code);
+//     else {
+//         std::ifstream file;
+		
+//         file.open(conf.err_pgs[code]);
+//         if (file.is_open())
+// 		    std::getline(file, body, '\0');
+//         else
+// 			err_not_found(body, code);
+//     }
+//     response = "HTTP/1.1 ";
+//     response += code;
+//     response += map_error[code];
+//     response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
+// }
+
+
+// void	ErrorPages::err_not_found(std::string &body, std::string &code) {
+// 	body = "<!DOCTYPE html>\n<html>\n<head>\n\t<title>";
+// 	body += map_error[code];
+// 	body += "</title>\n</head>\n<body>\n\t<h1>";
+// 	body += code;
+// 	body += "</h1>\n\t<h1>";
+// 	body += map_error[code];
+// 	body += "</h1>\n</body>";
+// }
+

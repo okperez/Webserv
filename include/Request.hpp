@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 13:03:05 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/01 16:26:54 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
-#include "include.hpp"
+#include "Response.hpp"
 
 typedef struct s_conf t_conf;
 
@@ -24,11 +24,12 @@ class Request
 		in_addr_t	socket_s_addr;
 		int status;
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
-		std::string		response_content;
+		// std::string		response_content;
 		
 		 // REQUEST line
 		std::string   method;   // HTTP method (ex: GET)
 		std::string   target;   // Request target (ex: index.html)
+		int			  dir;		//target end with a / => Request is a directory
 		std::string   version;  // HTTP version (ex: HTTP/1.1)
 
 
@@ -39,10 +40,11 @@ class Request
 		std::string   media;    // Header that specifies which media types the client can accept
 		std::string   connection;    // Header that specifies if we have to close the connection or keeping it alive
 
-		// BODY
-		std::string   body;
-		std::string   content_type;
-		size_t        lenght;
+		// Response
+		Response	response;
+		// std::string   body;
+		// std::string   content_type;
+		// size_t        lenght;
 		
 		Request();
 		
@@ -77,7 +79,8 @@ class Request
         /* ***************************************************************** */
 		
         int  handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
-		void	build_response(int socket_fd, t_conf &conf, ErrorPages &error);
+		void	build_index();
+		void	build_response(int socket_fd, t_conf &conf, std::string location, ErrorPages &error);
 		void	send_response(int socket_fd);
 
 		/* ***************************************************************** */
@@ -92,6 +95,7 @@ class Request
 		/* ***************************** Method **************************** */
 		/* ***************************************************************** */
 		
+		int	check_exist_method();
 		bool	check_allow_method(t_conf &conf, std::string &index);
 		
 		/* ***************************************************************** */

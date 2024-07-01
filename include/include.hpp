@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/28 15:46:14 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/01 13:17:18 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,5 +33,6 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <dirent.h>
 
 #endif

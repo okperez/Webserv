@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/06/30 14:06:17 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/01 14:49:10 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ class   ConfFileException : public std::exception
     }
 };
 
+// A EFFACER
 typedef struct s_request
 {
   // REQUEST line
@@ -163,9 +164,16 @@ enum	e_rule {
 enum	e_status_request {
 	NW,
 	READING,
-  RD_TO_RESPOND,
-  RD_TO_SEND,
-  SENT,
+	RD_TO_RESPOND,
+	RD_TO_SEND,
+	SENT,
+};
+
+enum	e_method {
+	GET,
+	POST,
+  	DELETE,
+  	UNKNOWN,
 };
 
 #endif

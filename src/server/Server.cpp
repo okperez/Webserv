@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 14:10:56 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/01 11:52:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,10 +116,6 @@ void	Server::open_listen_socket() {
 			if (result != 0)
 				throw(ServerException("Non valid host"));
 			server = (struct sockaddr_in *)res->ai_addr;
-			std::cout << "addresse de server->s_addr : " << server->sin_addr.s_addr << std::endl;
-			std::cout << "addresse de server->sin_family : " << server->sin_family << std::endl;
-			std::cout << "addresse de server->sin_port : " << server->sin_port << std::endl;
-			std::cout << "addresse de server->sin_zero : " << server->sin_zero << std::endl << std::endl;
 			server->sin_port = htons(port);         			//The port number (the transport address)
 			this->bind_socket(new_socket, *server, port);
 			this->listen_socket(new_socket, port);
@@ -182,14 +178,7 @@ void	Server::event_request() {
 	for (int i = 0; i < MAX_CONNECTION; i++)
 	{
 		if (fds[i].revents & POLLIN)
-		{
-			// struct sockaddr_storage *name;
-			// socklen_t namelen = sizeof(name);
-			// getsockname(fds[i].fd, (struct sockaddr *)name, &namelen);
-			// struct sockaddr_in *socket = (struct sockaddr_in *)name;
-			// std::cout << "addresse de socket name : " << socket->sin_addr.s_addr << std::endl;
-			// std::cout << "Test 01" << std::endl;
-			
+		{	
 			/* event_request sur socket listening for clients */
 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
@@ -234,22 +223,26 @@ void	Server::event_request() {
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
-			struct sockaddr_storage name;
-			socklen_t namelen = sizeof(name);
-			getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
-			struct sockaddr_in *socket = (struct sockaddr_in *)&name;
-			// std::cout << "addresse de socket name : " << socket->sin_addr.s_addr << std::endl;
-			
-			it->parse_request(socket->sin_addr.s_addr);
-			int i_conf = pick_server(*it);
-			it->handle_request(it->getSocket_fd(), conf[i_conf], error);
-			if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-				for (int i = 0; i < MAX_CONNECTION; i++) {
-					if (fds[i].fd == it->getSocket_fd()) 
-						return (close_connection(i), (void) 0);
-				}				
+			for (int j = 0; j < MAX_CONNECTION; j++) { // A TESTER AVEC SIEGE sinon effacer les 3
+				if (fds[j].fd == it->getSocket_fd()) { // A TESTER AVEC SIEGE
+					struct sockaddr_storage name;
+					socklen_t namelen = sizeof(name);
+					getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
+					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
+					it->parse_request(socket->sin_addr.s_addr);
+					int i_conf = pick_server(*it);
+					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
+					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
+						for (int i = 0; i < MAX_CONNECTION; i++) {
+							if (fds[i].fd == it->getSocket_fd()) 
+								return (close_connection(i), (void) 0);
+						}				
+					}
+					requests.erase(it);
+					return ;
+				}
 			}
-			requests.erase(it);
+			requests.erase(it); // A TESTER AVEC SIEGE
 			return ;
 		}
 	}
@@ -403,8 +396,6 @@ void	Server::read_request(int i, char *buffer, int read) {
 	for (int j = 0; j < BUFFER_SIZE; j++)
 		std::cout << buffer[j];
 	std::cout << std::endl;
-	
-	std::cout << "read = " << read << std::endl;
 
 	// Si une requete a deja ete cree : 
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
@@ -414,15 +405,12 @@ void	Server::read_request(int i, char *buffer, int read) {
 				if (read < BUFFER_SIZE) {
 					it->setStatus(RD_TO_RESPOND);
 				}
-				std::cout << "getSave_buffer() = " << it->getSave_buffer() << std::endl;
 				return ;
 			}
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	std:: cout << "Test 0 "<< std::endl;
 	Request 	request(buffer, read, fds[i].fd); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
-	std:: cout << "Test 1 "<< std::endl;
 }
 

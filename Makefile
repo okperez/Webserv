@@ -30,7 +30,8 @@ REQUEST_DIR		=	request/
 REQUEST_SRCS	=	request.cpp \
 					location.cpp \
 					allow_method.cpp \
-					Request.cpp
+					Request.cpp \
+					Response.cpp
 
 ERROR_DIR		=	error/
 ERROR_SRCS		=	handle_http_error.cpp \

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/06/30 13:03:11 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/01 18:07:52 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ Request::Request(char const *buffer, int read, int socket) {
 	// A UPDATE
 	socket_fd = socket;
 	save_buffer = buffer;
+	dir = 0;
 	// response_content = "";
 	// port = "";
 	// body = "";
@@ -38,7 +39,7 @@ Request::Request(char const *buffer, int read, int socket) {
 	std::cout << "End of Constructor Request" << std::endl;
 }
 
-Request::Request(const Request & orig) : status(orig.status), save_buffer(orig.save_buffer) , socket_fd(orig.socket_fd){
+Request::Request(const Request & orig) : status(orig.status), save_buffer(orig.save_buffer) , socket_fd(orig.socket_fd), dir(0) {
 	(void) orig;
 }
 
@@ -53,19 +54,18 @@ Request &Request::operator=(Request const & rhs) {
 	socket_fd = rhs.socket_fd;
 	status = rhs.status;
 	save_buffer = rhs.save_buffer;
-	response_content = rhs.response_content;
 	method = rhs.method;
 	target = rhs.target;
+	dir = rhs.dir;
 	version = rhs.version;
 	host = rhs.host;
 	port = rhs.port;
 	agent = rhs.agent;
 	media = rhs.media;
-	body = rhs.body;
-	content_type = rhs.content_type;
 	connection = rhs.connection;
-	lenght = rhs.lenght;
 	socket_s_addr = rhs.socket_s_addr;
+	
+	response = rhs.response;
 
 	return (*this); 
 }
@@ -114,6 +114,8 @@ void	Request::parse_request(in_addr_t s_addr) {
 	socket_s_addr = s_addr;
 	method = extract_line(save_buffer, ' ');
 	target = extract_line(save_buffer, ' ');
+	if (target.back() == '/')
+		dir = 1;
 	version = extract_line(save_buffer, '\r');
 	host = extract_header(save_buffer);
 	agent = extract_header(save_buffer);
@@ -128,66 +130,113 @@ void	Request::parse_request(in_addr_t s_addr) {
 
 void	Request::send_response(int socket_fd) {
 	
-	std::stringstream stream;
-	std::string       tmp;
-	
-	lenght = body.size();
-	// std::string response_content = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
-	stream << lenght;
-	stream >> tmp;
-	response_content += tmp + "\r\n\r\n" + body;
+	response.setContent_length();
+	std::string response_content = response.build_response();
 	write(socket_fd, response_content.c_str(), response_content.size());
 	status = SENT;
 }
 
-void	Request::build_response(int socket_fd, t_conf &conf, ErrorPages &error) {
+void	Request::build_index() {
+	DIR *tmp = opendir(target.data());
+	dirent *directory;
+	
+	/* A TESTER : RENTRER DANS UN DOSSIER NULL */
+	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
+	for (int i = 0; i < 2; i++) // =====> On passe les dossiers . et ..
+		directory = readdir(tmp);
+	while (1) {
+		directory = readdir(tmp);
+		if (!directory)
+			break; // =====> readdir a fini de lister
+		std::string link = directory->d_name;
+		if (static_cast<int>(directory->d_type) == 4) // =====> Si le lien est un dir = 4 si html =8
+			link += "/";
+		response.setBody("<p><a href=\"");
+		response.setBody(link);
+		response.setBody("\">");
+		response.setBody(directory->d_name);
+		response.setBody("</a></p>\n");
+	}
+	closedir(tmp);
+	response.setBody("</body>");
+	response.setBody("</html>");
+}
+
+void	Request::build_response(int socket_fd, t_conf &conf, std::string location, ErrorPages &error) {
 	
 	std::ifstream     file;
-
-	file.open(target);
-	if (file.is_open()) { //GERER ERREUR si pas bon 
-		std::getline(file, body, '\0');
-		// a verifier text/html si css jss ou utilise avec curl ou http...
-		response_content = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
+	
+	if (dir == 1) {
+		std::cout << "REQUEST IS A DIRECTORY" << std::endl;
+		std::map<std::string, std::string>::iterator it = conf.location[location].find("autoindex");
+		if (it == conf.location[location].end() || it->second != "on") {
+			std::cout << "A IMPLEMENTER PAGE PAR DEFAULT SI DIRECTORY CF SUBJECT" << std::endl;
+			return ;
+		}
+		else {
+			//  A VERIFIER SI index.html present dans la location on lance auto index quand meme ou on affiche index.html?
+			build_index();
+			response.setStatus("200", " OK");
+			response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
+			
+			// return ;
+		}
+			
 	}
-	else
-		error.fill_error(body, response_content, "404", conf);
+	else {
+		file.open(target);
+		if (file.is_open()) { //GERER ERREUR si pas bon 
+			response.setBody(file);
+			response.setStatus("200", " OK");
+			response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
+			// a verifier text/html si css jss ou utilise avec curl ou http...
+		}
+		else
+			error.fill_error(response, "404", conf);
+		// send_response(socket_fd);
+	}
 	send_response(socket_fd);
 }
 
 //  parse request from client and send back response 
 int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
 {
-	// /* A EFFACER UNE FOIS PARSING DONE */
-	conf.err_pgs["404"] = "pages/error_pages/error_404.html";
-	conf.err_pgs["405"] = "pages/error_pages/error_405.html";
-	// /* ********************************* */
-
-	std::string index = look_for_location(conf); // si pas trouve index = ""
-	// std::cout << "index = " << index << std::endl;
-	if (index.empty())
-	{
-		if (conf.root_dir.empty()) {
-			error.fill_error(body, response_content, "404", conf);
+	int i = check_exist_method();
+	std::cout << "i = " << i << std::endl;
+	switch (i) {
+		case UNKNOWN : {
+			std::cout << "ERROR" << std::endl;
+			error.fill_error(response, "405", conf);
 			return (send_response(socket_fd), 1);
 		}
-		else {
-			if (conf.root_dir.back() == '/')
-				target.replace(0, 1, conf.root_dir);
-			else	
-				target.insert(0, conf.root_dir);
+		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
+			std::cout << "target " << target << std::endl;
+			std::string index = look_for_location(conf); // si pas trouve index = ""
+			if (index.empty())
+			{
+				if (conf.root_dir.empty()) {
+					error.fill_error(response, "404", conf);
+					return (send_response(socket_fd), 1);
+				}
+				else {
+					if (conf.root_dir.back() == '/')
+						target.replace(0, 1, conf.root_dir);
+					else	
+						target.insert(0, conf.root_dir);
+				}
+			}
+			/* AVANT D AJOUTER LE PATH => check method ok */
+			else {
+				if (!check_allow_method(conf, index)) {
+					error.fill_error(response, "405", conf);
+					return (send_response(socket_fd), 1);
+				}
+				add_path(conf, index); // GET POST DELETE
+			}
+			std::cout << "target " << target << std::endl;
+			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
 		}
 	}
-	/* AVANT D AJOUTER LE PATH => check method ok */
-	else {
-		if (!check_allow_method(conf, index)) {
-			error.fill_error(body, response_content, "405", conf);
-			return (send_response(socket_fd), 1);
-		}
-		add_path(conf, index); // GET POST DELETE
-	}
-	// std::cout << "target " << target << std::endl;
-	return (build_response(socket_fd, conf, error), 1); // GET ONLY ICI
 }
 
 /* ************************************************************************* */
@@ -232,9 +281,7 @@ std::string Request::look_for_location(t_conf & conf) {
 	it = conf.location.find(s);
 	if (it != conf.location.end())
 		return (it->first);
-	// std::cout << "hey" << std::endl;
-	return (look_if_location(target, conf));
-	//on recupere l index de la location :)
+	return (look_if_location(target, conf)); //on recupere l index de la location :)
 }
 
 /* Supprime la location et la remplace par la root */
@@ -258,7 +305,7 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 /* ********************************* Method ******************************** */
 /* ************************************************************************* */
 
-bool	Request::check_allow_method(t_conf &conf, std::string &index) {
+int	Request::check_exist_method() {
 	std::string	method[3] = {"GET", "POST", "DELETE"};
 	int i;
 	
@@ -266,14 +313,15 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 		if (this->method == method[i])
 			break;
 	}
-	if (i < 3) {
-		if (conf.location[index].find("allow_methods") != conf.location[index].end()) {
-			if (conf.location[index]["allow_methods"].find(this->method) == std::string::npos)
-				return (false);
-		}
-		return (true);
+	return (i);
+}
+
+bool	Request::check_allow_method(t_conf &conf, std::string &index) {
+	if (conf.location[index].find("allow_methods") != conf.location[index].end()) {
+		if (conf.location[index]["allow_methods"].find(this->method) == std::string::npos)
+			return (false);
 	}
-	return (false);
+	return (true);
 }
 
 /* ************************************************************************* */
