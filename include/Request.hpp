@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/01 16:26:54 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/02 16:11:46 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,10 +79,8 @@ class Request
         /* ***************************************************************** */
 		
         int  handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
-		void	build_index();
-		void	build_response(int socket_fd, t_conf &conf, std::string location, ErrorPages &error);
 		void	send_response(int socket_fd);
-
+		
 		/* ***************************************************************** */
 		/* *************************** Location **************************** */
 		/* ***************************************************************** */
@@ -99,12 +97,22 @@ class Request
 		bool	check_allow_method(t_conf &conf, std::string &index);
 		
 		/* ***************************************************************** */
+		/* ****************************** GET ****************************** */
+		/* ***************************************************************** */
+		
+		void	build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
+		bool	open_targetfile(std::string & target);
+		void	target_directory(t_conf &conf, ErrorPages &error);
+		void	target_directory(t_conf &conf, std::string &location, ErrorPages &error);
+		void	build_index();
+		
+		/* ***************************************************************** */
 		/* ***************************** Utils ***************************** */
 		/* ***************************************************************** */
 
 		std::string extract_line(std::string & buff, char delim) const;
 		std::string extract_header(std::string & buff) const;
-		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff) const;
+		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
 } ;
 
 #endif

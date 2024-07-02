@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/06/30 14:07:54 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/02 16:01:19 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,26 +92,22 @@ int main(int argc, char **argv)
 			
 			// A RAJOUTER DANS PARSING HOST : si fichier conf 127.000.000.001 => doit devenir 127.0.0.1 : PS fonction adapt_host ci dessus
 			// A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
+			// A RAJOUTER DANS PARSING : directive autoindex et directive return dans bloc server 
 			for(std::vector<t_conf>::iterator it = server.conf.begin(); it != server.conf.end(); it++) {
-				if (it->host.empty())
+				if (it->host.empty()) // Finalement non pour l instant et voir avec Claire comment elle a fait...
 					it->host = "127.0.0.1";
 				else
+				// if (!it->host.empty())
 					str_tolower(it->host); // host doit etre case insensitive
 				if (!it->server_name.empty())
 					str_tolower(it->server_name); // server_name doit etre case insensitive
+				strtovect(it->files, it->files_vect, " "); // Pour transformer files en vecteur<string> de files => une fois implementer dans parsing, plus besoin de la string file
 			}
 			std::cout << "******************************** END PARSING ********************************* " << std::endl;
 			/* ********** A EFFACER ************ */
 
-			// conf[0].server_name = "test";
-			// conf[1].server_name = "test";
-			// print_location(conf);
-			// std::cout << "conf.root_dir " << conf[0].root_dir << std::endl;
-			
-			// t_conf		test;
-
-			// test.server_name = "test";
-			// conf.push_back(test);
+			server.conf[0].autoindex = "on";
+			server.conf[1].autoindex = "off";
 			
 			/* ********************************* */
 			
@@ -139,3 +135,60 @@ int main(int argc, char **argv)
     std::cerr << "Error: Missing configuration file: ./webserv [configuration file]\n";
 	return (1);
 }
+
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+// #include <sys/types.h>
+// #include <sys/socket.h>
+// #include <netdb.h>
+// #include <arpa/inet.h>
+// #include <unistd.h>
+
+// int main() {
+//     struct addrinfo hints, *res, *p;
+//     int status;
+//     char ipstr[INET6_ADDRSTRLEN];
+
+//     // Effacer la structure hints
+//     memset(&hints, 0, sizeof hints);
+//     hints.ai_family = AF_UNSPEC; // AF_INET ou AF_INET6 pour forcer version
+//     hints.ai_socktype = SOCK_STREAM; // ou SOCK_DGRAM pour UDP
+
+//     // Nom de serveur et service
+//     const char *hostname = "allo.com"; // ou l'adresse IP ou le nom de domaine réel de votre serveur
+//     const char *service = "8080"; // peut être "8560" selon le port que vous souhaitez utiliser
+
+//     // Appel à getaddrinfo
+//     if ((status = getaddrinfo(hostname, service, &hints, &res)) != 0) {
+//         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+//         return 1;
+//     }
+
+//     printf("Adresses IP pour %s:\n\n", hostname);
+
+//     // Boucler à travers les résultats et les afficher
+//     for(p = res; p != NULL; p = p->ai_next) {
+//         void *addr;
+//         std::string ipver;
+
+//         // Obtenir le pointeur vers l'adresse, selon si IPv4 ou IPv6
+//         if (p->ai_family == AF_INET) { // IPv4
+//             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+//             addr = &(ipv4->sin_addr);
+//             ipver = "IPv4";
+//         } else { // IPv6
+//             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+//             addr = &(ipv6->sin6_addr);
+//             ipver = "IPv6";
+//         }
+
+//         // Convertir l'adresse IP en une chaîne de caractères
+//         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+//         printf("  %s: %s\n", ipver.data(), ipstr);
+//     }
+
+//     freeaddrinfo(res); // Libérer la mémoire allouée par getaddrinfo
+
+//     return 0;
+// }

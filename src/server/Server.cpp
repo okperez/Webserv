@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/01 11:52:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/02 14:43:33 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,13 +111,27 @@ void	Server::open_listen_socket() {
 			
 			memset(&hints, 0, sizeof(hints));
 			hints.ai_family = AF_INET;          			// address family
-			hints.ai_socktype = SOCK_STREAM;          			
+			hints.ai_socktype = SOCK_STREAM;
+			// hints.ai_canonname = it->server_name.data();
+			// hints.ai_flags = AI_CANONNAME;
+			// int result = 0;
+			// if (it->host.empty()) {
+			// 	result = getaddrinfo(it->server_name.data(), NULL, &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
+			// 	std::cout << "result = " << result << std::endl;
+			// }
+			// else
+			
+			/* VOIR AVEC CLAIRE QUAND PAS D HOST D INDIQUER POUR LE SERVER NAME + SUR PC DE L ECOLE ... Passe getaddrinfo AVEC server.com mais pas avec server.gaga ou server, PK ?*/
+			// std::cout << "server_name |" << it->server_name << "|" << std::endl;
+			// std::cout << "jt->data() |" << jt->data() << "|" << std::endl;
+			// int result = getaddrinfo(it->server_name.data(), jt->data(), &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
 			int result = getaddrinfo(it->host.data(), NULL, &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
+			std::cout << "result = " << result << std::endl;
 			if (result != 0)
 				throw(ServerException("Non valid host"));
 			server = (struct sockaddr_in *)res->ai_addr;
 			server->sin_port = htons(port);         			//The port number (the transport address)
-			this->bind_socket(new_socket, *server, port);
+			this->bind_socket(new_socket, *server, port); // attention LEAK SI FAILED TO BIND
 			this->listen_socket(new_socket, port);
 			Listen nw(new_socket, *jt, server->sin_addr.s_addr, it->host, i);
 			nw.printlisten();
@@ -413,4 +427,3 @@ void	Server::read_request(int i, char *buffer, int read) {
 	Request 	request(buffer, read, fds[i].fd); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
 }
-

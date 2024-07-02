@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/01 18:07:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/02 16:19:57 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,7 @@ void	Request::addSave_buffer(const char *buffer) {
 /* ************************************************************************* */
 
 void	Request::parse_request(in_addr_t s_addr) {
+	
 	socket_s_addr = s_addr;
 	method = extract_line(save_buffer, ' ');
 	target = extract_line(save_buffer, ' ');
@@ -120,7 +121,7 @@ void	Request::parse_request(in_addr_t s_addr) {
 	host = extract_header(save_buffer);
 	agent = extract_header(save_buffer);
 	media = extract_header(save_buffer);
-	connection = extract_elem("Connection:", "\r", save_buffer);
+	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
 	// std::cout << "connection : " << connection << std ::endl;
 }
 
@@ -134,68 +135,6 @@ void	Request::send_response(int socket_fd) {
 	std::string response_content = response.build_response();
 	write(socket_fd, response_content.c_str(), response_content.size());
 	status = SENT;
-}
-
-void	Request::build_index() {
-	DIR *tmp = opendir(target.data());
-	dirent *directory;
-	
-	/* A TESTER : RENTRER DANS UN DOSSIER NULL */
-	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
-	for (int i = 0; i < 2; i++) // =====> On passe les dossiers . et ..
-		directory = readdir(tmp);
-	while (1) {
-		directory = readdir(tmp);
-		if (!directory)
-			break; // =====> readdir a fini de lister
-		std::string link = directory->d_name;
-		if (static_cast<int>(directory->d_type) == 4) // =====> Si le lien est un dir = 4 si html =8
-			link += "/";
-		response.setBody("<p><a href=\"");
-		response.setBody(link);
-		response.setBody("\">");
-		response.setBody(directory->d_name);
-		response.setBody("</a></p>\n");
-	}
-	closedir(tmp);
-	response.setBody("</body>");
-	response.setBody("</html>");
-}
-
-void	Request::build_response(int socket_fd, t_conf &conf, std::string location, ErrorPages &error) {
-	
-	std::ifstream     file;
-	
-	if (dir == 1) {
-		std::cout << "REQUEST IS A DIRECTORY" << std::endl;
-		std::map<std::string, std::string>::iterator it = conf.location[location].find("autoindex");
-		if (it == conf.location[location].end() || it->second != "on") {
-			std::cout << "A IMPLEMENTER PAGE PAR DEFAULT SI DIRECTORY CF SUBJECT" << std::endl;
-			return ;
-		}
-		else {
-			//  A VERIFIER SI index.html present dans la location on lance auto index quand meme ou on affiche index.html?
-			build_index();
-			response.setStatus("200", " OK");
-			response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
-			
-			// return ;
-		}
-			
-	}
-	else {
-		file.open(target);
-		if (file.is_open()) { //GERER ERREUR si pas bon 
-			response.setBody(file);
-			response.setStatus("200", " OK");
-			response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
-			// a verifier text/html si css jss ou utilise avec curl ou http...
-		}
-		else
-			error.fill_error(response, "404", conf);
-		// send_response(socket_fd);
-	}
-	send_response(socket_fd);
 }
 
 //  parse request from client and send back response 
@@ -249,22 +188,17 @@ Recherche pour la location de la plus precise a la moins precise dans le serveur
 // PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
 std::string Request::look_if_location(std::string &target, t_conf & conf) {
 
-	// std::cout << "Look_for_location avec target = " << target << std::endl;
 	std::map< std::string, std::map<std::string, std::string> >::iterator it;
 	it = conf.location.find(target);
-	if (it != conf.location.end()) {
-		// std::cout << "FIND : " << it->first << std::endl;
+	if (it != conf.location.end())
 		return (it->first);	
-	}
 	std::string s = target;
 	if (target.back() == '/')
 		s.erase(s.length() - 1, 1); 
 	else {
 		size_t found = s.rfind('/');
-		if (found == std::string::npos) {
-			// std::cout << "NOT FOUND" << std::endl; // si not found + pas de root globale pour le serveur => page d erreur en dur 
+		if (found == std::string::npos)
 			return ("");
-		}
 		s.erase(found + 1, s.length() - found + 1);
 	}
 	return (look_if_location(s, conf));
@@ -306,6 +240,7 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 /* ************************************************************************* */
 
 int	Request::check_exist_method() {
+	
 	std::string	method[3] = {"GET", "POST", "DELETE"};
 	int i;
 	
@@ -317,11 +252,119 @@ int	Request::check_exist_method() {
 }
 
 bool	Request::check_allow_method(t_conf &conf, std::string &index) {
+	
 	if (conf.location[index].find("allow_methods") != conf.location[index].end()) {
 		if (conf.location[index]["allow_methods"].find(this->method) == std::string::npos)
 			return (false);
 	}
 	return (true);
+}
+
+/* ************************************************************************* */
+/* ********************************** GET ********************************** */
+/* ************************************************************************* */
+
+void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
+	
+	if (location.empty()) {
+		// =====> Request is a directory (end with a "/")
+		if (dir == 1)
+			target_directory(conf, error);
+		//  =====> Request isn't a directory
+		else {
+			if (!open_targetfile(target))
+				error.fill_error(response, "404", conf);
+		}
+	}
+	else {
+		// =====> Request is a directory (end with a "/")
+		if (dir == 1)
+			target_directory(conf, location, error);
+		//  =====> Request isn't a directory
+		else {
+			if (!open_targetfile(target))
+				error.fill_error(response, "404", conf);
+		}
+	}
+	send_response(socket_fd);
+}
+
+bool	Request::open_targetfile(std::string & target) {
+	
+	std::ifstream     file;
+	
+	file.open(target);
+	if (file.is_open()) {
+		response.setBody(file);
+		response.setStatus("200", " OK");
+		response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
+		// a verifier text/html si css jss ou utilise avec curl ou http...
+		return (true);
+	}
+	return (false);
+}
+
+/* Le champs index a la  priorite sur autoindex si les deux sont presents */
+void	Request::target_directory(t_conf &conf, ErrorPages &error) {
+	
+	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
+		std::string tmp = target + *it;
+		if (open_targetfile(tmp)) // =====> open le 1er index valide
+			return ;
+	}
+	if (conf.autoindex == "on") // =====> Autoindex on
+		return (build_index(), (void)0);
+	error.fill_error(response, "404", conf);
+}
+
+/* Le champs index a la  priorite sur autoindex si les deux sont presents */
+void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &error) {
+	
+	std::map<std::string, std::string>::iterator it = conf.location[location].find("index");
+	if (it != conf.location[location].end()) { // =====> Index in location present
+		std::vector<std::string> index;
+		strtovect(it->second, index, " ");
+		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
+			std::string tmp = target + *jt;
+			if (open_targetfile(tmp)) // =====> open le 1er index valide
+				return ;
+		}
+	}
+	it = conf.location[location].find("autoindex"); // =====> Index in location absent or index page doesn't exist
+	if (it == conf.location[location].end() || it->second != "on") // =====> Autoindex off or absent
+		return (error.fill_error(response, "404", conf), (void)0);
+	else // =====> Autoindex on
+		build_index();
+}
+
+/*  Quand Autoindex est on : Cree la page html de l'index */
+void	Request::build_index() {
+	
+	DIR *tmp = opendir(target.data());
+	dirent *directory;
+	
+	/* A TESTER : RENTRER DANS UN DOSSIER NULL */
+	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
+	while (1) {
+		directory = readdir(tmp);
+		if (!directory)
+			break; // =====> readdir a fini de lister
+		std::string link = directory->d_name;
+		if (link == "." || link == "..")
+			continue;
+		if (static_cast<int>(directory->d_type) == 4) // =====> Si le lien est un dir = 4 si html =8
+			link += "/";
+		response.setBody("<p><a href=\"");
+		response.setBody(link);
+		response.setBody("\">");
+		response.setBody(directory->d_name);
+		response.setBody("</a></p>\n");
+	}
+	closedir(tmp);
+	response.setBody("</body>");
+	response.setBody("</html>");
+	response.setStatus("200", " OK");
+	response.setContent_type("text/html"); // Type ok : l'index auto genere est html
 }
 
 /* ************************************************************************* */
@@ -348,10 +391,11 @@ std::string Request::extract_header(std::string & buff) const
 	return (tmp);
 }
 
-std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff) const {
+std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
+	
 	int begin = buff.find(elem);
 	if (begin == -1)
-		return ("keep-alive");
+		return (nofound);
 	int end = buff.find(delim);
 	std::string tmp (buff.substr(begin, end + 1));
 	return (extract_header(tmp));

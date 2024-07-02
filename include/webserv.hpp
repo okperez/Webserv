@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/01 14:49:10 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/02 14:54:23 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,16 +25,18 @@
 
 typedef struct s_conf
 {
-  std::vector<std::string>                                          ipv4_port;
-  std::vector<std::string>                                          ipv6_port;
-  std::string														                            max_body_size;
-  std::string														                            host;
-  std::string                                                       server_name;
-  std::string                                                       root_dir;
-  std::string                                                       files;
-  std::map<std::string, std::map<std::string, std::string>>         location;
-  std::map<std::string, std::string>										            err_pgs;
-  std::list<std::string>                                            wrong_arg;
+  std::vector<std::string>                                  ipv4_port;
+  std::vector<std::string>                                  ipv6_port;
+  std::string														                    max_body_size;
+  std::string														                    host;
+  std::string                                               server_name;
+  std::string                                               root_dir;
+  std::string                                               files; // A Transformer en vecteur de string : il peut y en avoir plusieurs
+  std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
+  std::string                                               autoindex;
+  std::map<std::string, std::map<std::string, std::string>> location;
+  std::map<std::string, std::string>										    err_pgs;
+  std::list<std::string>                                    wrong_arg;
 }t_conf;
 
 // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
@@ -121,6 +123,8 @@ void        clear_space(std::string & type);
 std::string extract_type(std::string buff);
 std::string extract_index(std::string buff);
 void	      str_tolower(std::string & s);
+
+void        strtovect(std::string s, std::vector<std::string> & v, std::string const & delim);
 
 
 // /* ****************************** request.cpp ******************************** */

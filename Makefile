@@ -37,6 +37,9 @@ ERROR_DIR		=	error/
 ERROR_SRCS		=	handle_http_error.cpp \
 					ErrorPages.cpp
 
+UTILS_DIR		=	utils/
+UTILS_SRCS		=	utils.cpp
+
 A_EFFACER_DIR		=	a_effacer/
 A_EFFACER_SRCS	=	print.cpp
 
@@ -50,6 +53,7 @@ SRCS			=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
 					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
 					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
 					$(addprefix $(ERROR_DIR), $(ERROR_SRCS)) \
+					$(addprefix $(UTILS_DIR), $(UTILS_SRCS)) \
 					$(addprefix $(A_EFFACER_DIR), $(A_EFFACER_SRCS))
 
 OBJS_DIR 		= 	.objs/
