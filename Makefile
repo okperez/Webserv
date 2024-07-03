@@ -15,6 +15,7 @@ CONF_SRCS		=	conf_parsing.cpp \
 					conf_utils.cpp \
 					check_content.cpp \
 					init_err_pgs.cpp \
+					adapt_host.cpp \
 
 SERV_DIR		=	server/
 SERV_SRCS		=	Server.cpp \

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   conf_parsing.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:00:32 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,6 +126,7 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
         std::cerr << e.what() << '\n';
         return (-1);
     }
+    handle_host(conf);
     print_all_struct(conf, server_nbr);
     return (0);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   conf_utils.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:07:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
         std::cout << "Server name | " << conf[i].server_name << std::endl;
         std::cout << std::endl;
         std::cout << "root_dir | " << conf[i].root_dir << std::endl;
+        std::cout << "return | " << conf[i].ret << std::endl;
         std::cout << std::endl;
         for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf[i].location.begin(); it != conf[i].location.end(); it++)
         {
