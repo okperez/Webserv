@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/07/02 16:01:19 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/03 10:52:51 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ std::string	int_to_str(int n) {
 	return (oss.str());
 }
 
-/* Checke si adresse ip de l host a un format valid + supprime les 0 inutiles. ex : 127.0001.0001.1 => 127.1.1.1*/
+/* Checke si adresse ip de l host a un format valid + supprime les 0 inutiles. ex : 127.001.001.1 => 127.1.1.1*/
 void	adapt_host(std::string &s) {
 	
 	int i;
@@ -90,14 +90,14 @@ int main(int argc, char **argv)
 			if (handle_conf_file(argv[1], server.conf) == -1)
 				return (1);
 			
-			// A RAJOUTER DANS PARSING HOST : si fichier conf 127.000.000.001 => doit devenir 127.0.0.1 : PS fonction adapt_host ci dessus
-			// A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
+			// E/A  A RAJOUTER DANS PARSING HOST : si fichier conf 127.000.000.001 => doit devenir 127.0.0.1 : PS fonction adapt_host ci dessus
+			// E/A  A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
 			// A RAJOUTER DANS PARSING : directive autoindex et directive return dans bloc server 
 			for(std::vector<t_conf>::iterator it = server.conf.begin(); it != server.conf.end(); it++) {
-				if (it->host.empty()) // Finalement non pour l instant et voir avec Claire comment elle a fait...
-					it->host = "127.0.0.1";
-				else
-				// if (!it->host.empty())
+				// if (it->host.empty()) // Finalement non pour l instant et voir avec Claire comment elle a fait...
+				// 	it->host = "127.0.0.1";
+				// else
+				if (!it->host.empty())
 					str_tolower(it->host); // host doit etre case insensitive
 				if (!it->server_name.empty())
 					str_tolower(it->server_name); // server_name doit etre case insensitive

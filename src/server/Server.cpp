@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/02 14:43:33 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/03 10:38:33 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,7 @@ void	Server::open_listen_socket() {
 			if (result != 0)
 				throw(ServerException("Non valid host"));
 			server = (struct sockaddr_in *)res->ai_addr;
+			std::cout << "server->sin_addr.s_addr : " << server->sin_addr.s_addr;
 			server->sin_port = htons(port);         			//The port number (the transport address)
 			this->bind_socket(new_socket, *server, port); // attention LEAK SI FAILED TO BIND
 			this->listen_socket(new_socket, port);

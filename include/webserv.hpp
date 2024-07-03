@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/02 14:54:23 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/03 11:01:58 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ typedef struct s_conf
   std::string                                               files; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::string                                               autoindex;
+  std::string                                               ret; // return
   std::map<std::string, std::map<std::string, std::string>> location;
   std::map<std::string, std::string>										    err_pgs;
   std::list<std::string>                                    wrong_arg;
