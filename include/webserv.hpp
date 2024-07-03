@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 11:01:58 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 11:06:12 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,16 +40,16 @@ typedef struct s_conf
   std::list<std::string>                                    wrong_arg;
 }t_conf;
 
-// A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
-typedef struct s_conftest
-{
-  std::vector<std::string>  ipv4_port;
-  std::string               ipv6_port; // vecteur
-  std::string               server_name;
-  std::string               root_dir;
-  std::string               files;
-  std::string               location; // map<string, map<string(root, index, method, nom page), string >>
-}t_conftest;
+// // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
+// typedef struct s_conftest
+// {
+//   std::vector<std::string>  ipv4_port;
+//   std::string               ipv6_port; // vecteur
+//   std::string               server_name;
+//   std::string               root_dir;
+//   std::string               files;
+//   std::string               location; // map<string, map<string(root, index, method, nom page), string >>
+// }t_conftest;
 
 class   ConfFileException : public std::exception
 {
@@ -63,27 +63,27 @@ class   ConfFileException : public std::exception
     }
 };
 
-// A EFFACER
-typedef struct s_request
-{
-  // REQUEST line
-  std::string   method;   // HTTP method (ex: GET)
-  std::string   target;   // Request target (ex: index.html)
-  std::string   version;  // HTTP version (ex: HTTP/1.1)
+// // A EFFACER
+// typedef struct s_request
+// {
+//   // REQUEST line
+//   std::string   method;   // HTTP method (ex: GET)
+//   std::string   target;   // Request target (ex: index.html)
+//   std::string   version;  // HTTP version (ex: HTTP/1.1)
 
 
-  // HEADER section
-  std::string   host;     // Header that specifies the server's host and port
-  std::string   port;     // Header that describes the pport used
-  std::string   agent;    // Header that describes the client's user agent
-  std::string   media;    // Header that specifies which media types the client can accept
+//   // HEADER section
+//   std::string   host;     // Header that specifies the server's host and port
+//   std::string   port;     // Header that describes the pport used
+//   std::string   agent;    // Header that describes the client's user agent
+//   std::string   media;    // Header that specifies which media types the client can accept
 
-  // BODY
-  std::string   body;
-  std::string   content_type;
-  size_t        lenght;
+//   // BODY
+//   std::string   body;
+//   std::string   content_type;
+//   size_t        lenght;
 
-} t_request;
+// } t_request;
 
 // typedef struct s_listen
 // {
@@ -98,8 +98,8 @@ typedef struct s_request
 
 /* *************************** CONFIGURATION_FILE *************************** */
 
-void    		init_request_struct(t_request & request, char const *buffer);
-int     		handle_request(int socket_fd, t_request & request);
+// void    		init_request_struct(t_request & request, char const *buffer);
+// int     		handle_request(int socket_fd, t_request & request);
 int         handle_conf_file(char *argv, std::vector<t_conf> & conf);
 void        check_bracket(std::list<std::string> & cnf_file);
 void        check_syntax(std::list<std::string> & cnf_file);

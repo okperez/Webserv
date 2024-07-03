@@ -17,31 +17,22 @@ CONF_SRCS		=	conf_parsing.cpp \
 					init_err_pgs.cpp \
 
 SERV_DIR		=	server/
-SERV_SRCS		=	server_f.cpp \
-					Server.cpp \
+SERV_SRCS		=	Server.cpp \
 					close_server.cpp \
-					handle_gate.cpp \
 					Listen.cpp
 
 EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp
 					
 REQUEST_DIR		=	request/
-REQUEST_SRCS	=	request.cpp \
-					location.cpp \
-					allow_method.cpp \
-					Request.cpp \
+REQUEST_SRCS	=	Request.cpp \
 					Response.cpp
 
 ERROR_DIR		=	error/
-ERROR_SRCS		=	handle_http_error.cpp \
-					ErrorPages.cpp
+ERROR_SRCS		=	ErrorPages.cpp
 
 UTILS_DIR		=	utils/
 UTILS_SRCS		=	utils.cpp
-
-A_EFFACER_DIR		=	a_effacer/
-A_EFFACER_SRCS	=	print.cpp
 
 ############################# HANDLE DIRECTORIES ##############################
 
@@ -53,8 +44,7 @@ SRCS			=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
 					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
 					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
 					$(addprefix $(ERROR_DIR), $(ERROR_SRCS)) \
-					$(addprefix $(UTILS_DIR), $(UTILS_SRCS)) \
-					$(addprefix $(A_EFFACER_DIR), $(A_EFFACER_SRCS))
+					$(addprefix $(UTILS_DIR), $(UTILS_SRCS))
 
 OBJS_DIR 		= 	.objs/
 
