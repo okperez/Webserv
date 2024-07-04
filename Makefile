@@ -25,6 +25,9 @@ SERV_SRCS		=	Server.cpp \
 EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp
 					
+CGI_DIR			=	cgi/
+CGI_SRCS		=	handle_cgi.cpp
+
 REQUEST_DIR		=	request/
 REQUEST_SRCS	=	Request.cpp \
 					Response.cpp
@@ -43,6 +46,7 @@ SRCS			=	$(addprefix $(MAIN_DIR), $(MAIN_SRCS)) \
 					$(addprefix $(CONF_DIR), $(CONF_SRCS)) \
 					$(addprefix $(SERV_DIR), $(SERV_SRCS)) \
 					$(addprefix $(EXCEPTION_DIR), $(EXCEPTION_SRCS)) \
+					$(addprefix $(CGI_DIR), $(CGI_SRCS)) \
 					$(addprefix $(REQUEST_DIR), $(REQUEST_SRCS)) \
 					$(addprefix $(ERROR_DIR), $(ERROR_SRCS)) \
 					$(addprefix $(UTILS_DIR), $(UTILS_SRCS))

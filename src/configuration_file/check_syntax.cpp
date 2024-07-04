@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 15:43:16 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 10:42:30 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,18 +79,18 @@ void	check_server_content(std::string str)
 	std::string sub = str.substr(7, r_bracket - 7);
 }
 
-void	check_http_content(std::string str)
-{
-	static const size_t	pos = str.find("http{");
-	str.erase(0, pos);
-	static const size_t	r_bracket = str.find('}');
-
-	if (r_bracket > str.find("server{"))
-		throw ConfFileException("Error: server context not declared in main");
-	std::string sub = str.substr(5, r_bracket - 5);
-	if (sub.find("server{") == sub.npos)
-		throw ConfFileException("Error: server context not declared in main");
-}
+// void	check_http_content(std::string str)
+// {
+	// static const size_t	pos = str.find("http{");
+	// str.erase(0, pos);
+	// static const size_t	r_bracket = str.find('}');
+// 
+	// if (r_bracket > str.find("server{"))
+		// throw ConfFileException("Error: server context not declared in main");
+	// std::string sub = str.substr(5, r_bracket - 5);
+	// if (sub.find("server{") == sub.npos)
+		// throw ConfFileException("Error: server context not declared in main");
+// }
 
 std::string	clear_str(std::list<std::string> cnf_file)
 {
