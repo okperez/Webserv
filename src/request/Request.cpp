@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/02 16:19:57 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/04 12:14:22 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
 				add_path(conf, index); // GET POST DELETE
 			}
 			std::cout << "target " << target << std::endl;
+			// CGI
 			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
 		}
 	}
@@ -188,8 +189,8 @@ Recherche pour la location de la plus precise a la moins precise dans le serveur
 // PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
 std::string Request::look_if_location(std::string &target, t_conf & conf) {
 
-	std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	it = conf.location.find(target);
+	// std::map< std::string, std::map<std::string, std::string> >::iterator it;
+	auto it = conf.location.find(target);
 	if (it != conf.location.end())
 		return (it->first);	
 	std::string s = target;
@@ -211,8 +212,8 @@ Cherche si une location = correspondante a la target existe, sinon appelle look_
 std::string Request::look_for_location(t_conf & conf) {
 	
 	std::string s = "=" + target;
-	std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	it = conf.location.find(s);
+	// std::map< std::string, std::map<std::string, std::string> >::iterator it;
+	auto it = conf.location.find(s);
 	if (it != conf.location.end())
 		return (it->first);
 	return (look_if_location(target, conf)); //on recupere l index de la location :)
@@ -307,7 +308,8 @@ bool	Request::open_targetfile(std::string & target) {
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
 void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 	
-	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
+	// for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
+	for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = target + *it;
 		if (open_targetfile(tmp)) // =====> open le 1er index valide
 			return ;
@@ -320,11 +322,13 @@ void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
 void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	std::map<std::string, std::string>::iterator it = conf.location[location].find("index");
+	// std::map<std::string, std::string>::iterator it = conf.location[location].find("index");
+	auto it = conf.location[location].find("index");
 	if (it != conf.location[location].end()) { // =====> Index in location present
 		std::vector<std::string> index;
 		strtovect(it->second, index, " ");
-		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
+		// for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
+		for (auto jt = index.begin(); jt != index.end(); jt++) {
 			std::string tmp = target + *jt;
 			if (open_targetfile(tmp)) // =====> open le 1er index valide
 				return ;

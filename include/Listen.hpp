@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Listen.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/30 08:36:20 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/04 09:57:04 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,9 @@
 class Listen
 {
 	private : 
-		const int			_fd;
-		const int			_i_conf;
+		const int			_fd; // socket_server
+		// const int			_i_conf; // index du fichier conf => determiner quel serveur
+		std::vector<int>			_i_conf; // index du fichier conf => determiner quel serveur
 		const std::string	_port;
 		const in_addr_t		_s_addr;
 		const std::string 	_host;
@@ -37,10 +38,12 @@ class Listen
 		/* ***************************************************************** */
 
 		int	getFd() const;
-		int	getIconf() const;
+		std::vector<int>	getIconf() const;
 		const std::string	getPort() const;
 		const in_addr_t	getS_addr() const;
 		const std::string	getHost() const;
+		
+		void	addIconf(int i);
 		
 		void	close_fd();
 

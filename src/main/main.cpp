@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 10:52:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:48:36 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,8 +94,8 @@ int main(int argc, char **argv)
 			// E/A  A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
 			// A RAJOUTER DANS PARSING : directive autoindex et directive return dans bloc server 
 			for(std::vector<t_conf>::iterator it = server.conf.begin(); it != server.conf.end(); it++) {
-				// if (it->host.empty()) // Finalement non pour l instant et voir avec Claire comment elle a fait...
-				// 	it->host = "127.0.0.1";
+				if (it->host.empty()) // Finalement non pour l instant et voir avec Claire comment elle a fait...
+					it->host = "0.0.0.0";
 				// else
 				if (!it->host.empty())
 					str_tolower(it->host); // host doit etre case insensitive
@@ -103,6 +103,7 @@ int main(int argc, char **argv)
 					str_tolower(it->server_name); // server_name doit etre case insensitive
 				strtovect(it->files, it->files_vect, " "); // Pour transformer files en vecteur<string> de files => une fois implementer dans parsing, plus besoin de la string file
 			}
+			
 			std::cout << "******************************** END PARSING ********************************* " << std::endl;
 			/* ********** A EFFACER ************ */
 
