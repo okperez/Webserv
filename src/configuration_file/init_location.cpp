@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_location.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:03:23 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ std::string extract_index(std::string buff)
 
 void    location_to_conf(std::list<std::string> & location, t_conf & conf)
 {
-    int                                 size = location.size();
     std::pair<std::string, std::string> pair;
     std::map<std::string, std::string>  path;
     std::string                         type;
@@ -46,9 +45,10 @@ void    location_to_conf(std::list<std::string> & location, t_conf & conf)
         
     }
     conf.location.insert(make_pair(type, path));
+    std::cout << std::endl;
 }
 
-std::list<std::string>  extract_bloc_location(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin)
+std::list<std::string>  extract_bloc_location(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin, t_conf & conf)
 {
     std::list<std::string>::iterator    end;
     std::list<std::string>::iterator    it = begin;
@@ -61,9 +61,20 @@ std::list<std::string>  extract_bloc_location(std::list<std::string> & cnf_file,
             end = it;
             break ;
         }
+        if ((*it).find("return") != (*it).npos)
+        {
+            if (conf.flag.ret_loc == 1)
+            {
+                it = cnf_file.erase(it);
+                continue ;
+            }
+            else
+                conf.flag.ret_loc = 1;
+        }
         it++;
     }
     location.insert(location.end(), begin, end);
+    conf.flag.ret_loc = 0;
     return (location);
 }
 
@@ -75,7 +86,7 @@ void    handle_locations(std::list<std::string> & cnf_file, t_conf & conf)
     {
         if ((*it).find("location") != (*it).npos)
         {
-            location = extract_bloc_location(cnf_file, it);
+            location = extract_bloc_location(cnf_file, it, conf);
             location_to_conf(location, conf);
         }
     }

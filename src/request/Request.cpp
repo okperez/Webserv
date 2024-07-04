@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/04 12:14:22 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/04 15:05:36 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,11 +262,23 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 }
 
 /* ************************************************************************* */
+/* ********************************** CGI ********************************** */
+/* ************************************************************************* */
+
+// void    handle_cgi(t_conf & conf)
+// {
+// 	char	**env;
+
+// 	env = new 
+// }
+
+/* ************************************************************************* */
 /* ********************************** GET ********************************** */
 /* ************************************************************************* */
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
+	std::cout << "\nLOCATION = " << location << std::endl;
 	if (location.empty()) {
 		// =====> Request is a directory (end with a "/")
 		if (dir == 1)
@@ -282,6 +294,10 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		if (dir == 1)
 			target_directory(conf, location, error);
 		//  =====> Request isn't a directory
+		else if (location.find("cgi-bin"))
+		{
+			// handle_cgi(conf);
+		}
 		else {
 			if (!open_targetfile(target))
 				error.fill_error(response, "404", conf);

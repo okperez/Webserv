@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_syntax.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/04 10:42:30 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,18 +79,18 @@ void	check_server_content(std::string str)
 	std::string sub = str.substr(7, r_bracket - 7);
 }
 
-void	check_http_content(std::string str)
-{
-	static const size_t	pos = str.find("http{");
-	str.erase(0, pos);
-	static const size_t	r_bracket = str.find('}');
-
-	if (r_bracket > str.find("server{"))
-		throw ConfFileException("Error: server context not declared in main");
-	std::string sub = str.substr(5, r_bracket - 5);
-	if (sub.find("server{") == sub.npos)
-		throw ConfFileException("Error: server context not declared in main");
-}
+// void	check_http_content(std::string str)
+// {
+	// static const size_t	pos = str.find("http{");
+	// str.erase(0, pos);
+	// static const size_t	r_bracket = str.find('}');
+// 
+	// if (r_bracket > str.find("server{"))
+		// throw ConfFileException("Error: server context not declared in main");
+	// std::string sub = str.substr(5, r_bracket - 5);
+	// if (sub.find("server{") == sub.npos)
+		// throw ConfFileException("Error: server context not declared in main");
+// }
 
 std::string	clear_str(std::list<std::string> cnf_file)
 {
@@ -104,12 +104,12 @@ std::string	clear_str(std::list<std::string> cnf_file)
 	return (str);
 }
 
-void    quick_parsing(std::list<std::string> & cnf_file)
-{
-    auto it = cnf_file.begin();
-    if (*it != "server {" && *it != "server{")	
-        throw ConfFileException ("Error: missing server directive");
-}
+// void    quick_parsing(std::list<std::string> & cnf_file)
+// {
+    // auto it = cnf_file.begin();
+    // if (*it != "server {" && *it != "server{")	
+        // throw ConfFileException ("Error: missing server directive");
+// }
 
 void	check_syntax(std::list<std::string> & cnf_file)
 {
@@ -118,5 +118,5 @@ void	check_syntax(std::list<std::string> & cnf_file)
 	check_bracket(cnf_file);
 	str = clear_str(cnf_file);
 	check_outside_bracket(str);
-	quick_parsing(cnf_file);
+	// quick_parsing(cnf_file);
 }

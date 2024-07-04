@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 11:06:12 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/04 14:13:19 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,16 @@
 #include "Request.hpp"
 #include "ServerException.hpp"
 
-
 #define MAX_CONNECTION	1000
 #define BUFFER_SIZE	4000
+
+typedef struct s_flag
+{
+    int loc; 
+    int err_pgs;
+    int ret;
+    int ret_loc;
+}t_flag;
 
 typedef struct s_conf
 {
@@ -38,6 +45,7 @@ typedef struct s_conf
   std::map<std::string, std::map<std::string, std::string>> location;
   std::map<std::string, std::string>										    err_pgs;
   std::list<std::string>                                    wrong_arg;
+  s_flag                                                    flag;
 }t_conf;
 
 // // A EFFACER ET REMPLACER PAR LE VRAI T_CONF UNE FOIS PARSING DONE
@@ -110,6 +118,7 @@ void        handle_err_pgs(std::list<std::string> & cnf_file, t_conf & conf);
 void        compare_server(std::vector<t_conf> & conf, int  & server_nbr);
 void        check_if_missing(t_conf & conf, std::list<std::string> & cnf_file);
 void        check_if_valid(std::string str, int loc, int err_pgs);
+void        handle_host(std::vector<t_conf> & conf);
 
 /* ****************************** utils.cpp ******************************** */
 

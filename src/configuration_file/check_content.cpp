@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_content.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/03 15:46:17 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ char*        get_ip_address(void)
 void    check_for_root(std::map<std::string, std::map<std::string, std::string>> & location)
 {
     int flag;
-    for (std::map<std::string, std::map<std::string, std::string>>::iterator it = location.begin(); it != location.end(); it++)
+    for (auto it = location.begin(); it != location.end(); it++)
     {
         flag = 0;
-        for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+        for (auto its = (*it).second.begin(); its != (*it).second.end(); its++)
         {
             if ((*its).first == "root" && !(*its).second.empty())
                 flag = 1;
@@ -115,9 +115,9 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
         conf.files = "index.html";
     if (conf.server_name.empty())
         conf.server_name = get_ip_address();
-    for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf.location.begin(); it != conf.location.end(); it++)
+    for (auto it = conf.location.begin(); it != conf.location.end(); it++)
     {
-        for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+        for(auto its = (*it).second.begin(); its != (*it).second.end(); its++)
         {
             if (is_allow_methods((*its).first))
                 location_methods++;
