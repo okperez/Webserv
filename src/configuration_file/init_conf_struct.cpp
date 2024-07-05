@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 11:15:30 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 15:45:54 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,10 +63,10 @@ void    handle_files(std::string str, t_conf & conf)
         str.erase(0, str.find(' ') + 1);
     }
     conf.files_vect.push_back(str.substr(0, str.find(';')));
-    for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++)
-    {
-        std::cout << *it << std::endl;
-    }
+    // for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++)
+    // {
+    //     std::cout << *it << std::endl;
+    // }
 }
 
 void    set_flag(t_flag & flag)
@@ -100,6 +100,8 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
             handle_files((*it), conf);
         else if ((*it).find("server_name ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
             conf.server_name = extract_conf(*it, ';');
+        else if ((*it).find("autoindex ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
+            conf.autoindex = extract_conf(*it, ';');
         else if ((*it).find("host ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
             conf.host = extract_conf(*it, ';');
         else if ((*it).find("return ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)

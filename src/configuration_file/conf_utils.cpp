@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 10:36:40 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 15:50:06 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 bool    is_equal(t_conf & conf1, t_conf & conf2)
 {
     int flag = 0;
-    if (conf1.server_name == conf1.server_name)
+    if (conf1.server_name == conf2.server_name)
         flag++;
     if ((conf1.ipv4_port.size() == conf2.ipv4_port.size()))
     {

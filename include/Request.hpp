@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:13:59 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 16:13:42 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ class Request
 		 // REQUEST line
 		std::string   method;   // HTTP method (ex: GET)
 		std::string   target;   // Request target (ex: index.html)
+		std::string	  script_name;
+		std::string	  query_string;
 		int			  dir;		//target end with a / => Request is a directory
 		std::string   version;  // HTTP version (ex: HTTP/1.1)
 

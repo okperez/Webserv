@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/04 15:05:36 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/05 11:15:30 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,12 +265,40 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
-// void    handle_cgi(t_conf & conf)
-// {
-// 	char	**env;
+void    Request::handle_cgi(t_conf & conf)
+{
+	char	**env;
+	int		pid;
+	int		status;
+	std::string copy = target;
+	std::cout << "copy = " << copy << std::endl;
 
-// 	env = new 
-// }
+	// env = new char* [8];
+	// for (int i = 0; i < 8; i++)
+		// env[i] = new char [50];
+	// 
+	// char * exec = (char *)copy.substr(copy.rfind('/'), copy.rfind('&')).c_str();
+	// std::cout << "exec = " << exec << std::endl;
+	// char * argv[] = {exec, NULL};
+	// script_name = copy.substr(0, copy.find('&'));
+	// copy.erase(0, copy.find('&') + 1);
+	// query_string = copy.substr(0, copy.find(';'));
+	// 
+	// strcpy(env[0], method.c_str());
+	// strcpy(env[1], query_string.c_str());
+	// strcpy(env[2], script_name.c_str());
+	// strcpy(env[3], target.c_str());
+	// strcpy(env[4], conf.server_name.c_str());
+	// strcpy(env[5], conf.ipv4_port[0].c_str());
+	// strcpy(env[6], method.c_str());
+	// strcpy(env[7], agent.c_str());
+	// 
+	// pid = fork();
+	// if (pid != 0)
+		// execve(script_name.c_str(), argv, env);
+	// waitpid(pid, &status, 0);
+	// free(env);
+}
 
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */
@@ -294,10 +322,10 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		if (dir == 1)
 			target_directory(conf, location, error);
 		//  =====> Request isn't a directory
-		else if (location.find("cgi-bin"))
-		{
+		// else if (location.find("/cgi-bin") != location.npos)
+		// {
 			// handle_cgi(conf);
-		}
+		// }
 		else {
 			if (!open_targetfile(target))
 				error.fill_error(response, "404", conf);
