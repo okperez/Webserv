@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:28:30 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/05 11:33:30 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,6 +270,7 @@ void	Server::event_request() {
 					it->parse_request(socket->sin_addr.s_addr);
 					std::cout << "TEST0" << std::endl;
 					int i_conf = pick_server(*it);
+					i_conf = 0;
 					std::cout << "i_conf = " << i_conf << std::endl;
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu

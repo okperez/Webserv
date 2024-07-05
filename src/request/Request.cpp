@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/05 11:15:30 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/05 11:22:46 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,7 +306,7 @@ void    Request::handle_cgi(t_conf & conf)
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	std::cout << "\nLOCATION = " << location << std::endl;
+	// std::cout << "\nLOCATION = " << location << std::endl;
 	if (location.empty()) {
 		// =====> Request is a directory (end with a "/")
 		if (dir == 1)
