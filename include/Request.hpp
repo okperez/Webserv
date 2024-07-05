@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:13:59 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 18:05:33 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,11 @@ class Request
 		int			  dir;		//target end with a / => Request is a directory
 		std::string   version;  // HTTP version (ex: HTTP/1.1)
 
+		// POUR CGI : PARSING TARGET
+		std::string   _query_string;
+		std::string   _script_name;
 
+		
 		// HEADER section
 		std::string   host;     // Header that specifies the server's host and port
 		std::string   port;     // Header that describes the pport used
@@ -108,10 +112,14 @@ class Request
 		
 
 		/* ***************************************************************** */
-		/* ****************************** GET ****************************** */
+		/* ****************************** CGI ****************************** */
 		/* ***************************************************************** */
 		void            handle_cgi(t_conf & conf);
+		void			cgi_parse_target();
 
+		/* ***************************************************************** */
+		/* ****************************** POST ***************************** */
+		/* ***************************************************************** */
 		
 		/* ***************************************************************** */
 		/* ***************************** Utils ***************************** */

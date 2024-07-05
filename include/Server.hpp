@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:16:49 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/04 16:46:29 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ class Server
 		/* ***************************************************************** */
 		
 		// int	is_host(std::string host, std::string port, in_addr_t socket_s_addr, std::vector<int> *default_i);
-		int	is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i);
+		int	is_host(std::string host, std::string port, in_addr_t socket_s_addr);
 		// int	is_server_name(std::string host, std::string port, in_addr_t socket_s_addr);
 		int	is_server_name(std::string host, std::string port, std::vector<int> &tmp);
 		int	pick_server(Request &request);

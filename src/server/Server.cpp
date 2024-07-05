@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:28:30 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:29:15 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,91 +379,45 @@ int	Server::is_server_name(std::string host, std::string port, std::vector<int> 
 	return (-1);
 }
 
-/* Retourne l index du serveur correspondant a l'host */
-int	Server::is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i) {
+/* Retourne l index du serveur match */
+int	Server::is_host(std::string host, std::string port, in_addr_t socket_s_addr) {
 	int i = 0;
 	std::vector<int> tmp;
 	
-	// std::cout << "***************" << std::endl;
-	// std::cout << "request host = " << host << std::endl;
-	// std::cout << "request port = " << port << std::endl;
-	// std::cout << "request socket_s_addr = " << socket_s_addr << std::endl << std::endl;
-	// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+	
 	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-		// std::cout << "server host = " << it->getHost() << std::endl;
-		// std::cout << "server port = " << it->getPort() << std::endl;
-		// std::cout << "server socket_s_addr = " << it->getS_addr() << std::endl << std::endl;
 		if (port == it->getPort()) {
-			// std::cout << "MATCH port" << std::endl;
 			if (socket_s_addr == it->getS_addr()) {
-				// std::cout << "MATCH port + s_addr" << std::endl;
 				if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1")) {
-					// std::cout << "MATCH port + s_addr + host" << std::endl;
 					if (it->getIconf().size() == 1)
-						return (std::cout << "MATCH port + s_addr + host + size == 1" << std::endl, it->getIconf()[0]);
-					else if (it->getIconf().size() == 0) {
-						std::cout << "MATCH port + s_addr + host + size == 0" << std::endl;
-					}
-					else {
-						// std::cout << "MATCH port + s_addr + host + size > 1" << std::endl;
+						return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
+					else if (it->getIconf().size() == 0)
+						std::cout << "SI PENDANT TESTS ON RENTRE DEDANS A IMPLEMENTER SINON ALLER DANS LE ELSE " << std::endl;
+					else
 						tmp = it->getIconf();
-					}
 				}
-				else if (tmp.size() == 0) {
-					// std::cout << "MATCH port + s_addr + size == 0" << std::endl;
+				else if (tmp.size() == 0)
 					tmp = it->getIconf();
-				}
-				
 			}
-			else if (it->getS_addr() == 0 && tmp.size() == 0) {
-				// std::cout << "MATCH port + host = 0.0.0.0" << std::endl;
+			else if (it->getS_addr() == 0 && tmp.size() == 0)
 				tmp = it->getIconf();
-			}
 		}
 	}
-	for (auto it = tmp.begin(); it != tmp.end(); it++)
-		std::cout << "vect i_conf_default = " << *it << std::endl;
-	
-	int j = is_server_name(host, port, tmp); // a partir des fichiers de conf dans le tmp
+	// for (auto it = tmp.begin(); it != tmp.end(); it++)
+	// 	std::cout << "vect i_conf_default = " << *it << std::endl;
+	int j = is_server_name(host, port, tmp);  // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
 	if (j != -1)
 		return (j);
-
-	std::cout << "*************************\n PRINT default conf " << std::endl;
 	int count = 0;
+	int default_i = -1;
 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-		std::cout << "vect i_conf_default = " << *it << std::endl;
-		std::cout << "conf[*it].host = " << conf[*it].host << std::endl;
-		if (conf[*it].host == host) {
-			if (count == 0)
-				*default_i = *it;
-			count++;
+		if (conf[*it].host != host) {
+			return (*it); // =====> 1er host:port correspondant
 		}
-		else if (count == 0 && conf[*it].host == "0.0.0.0")
-			*default_i = *it;
+		else if (default_i == -1 && conf[*it].host == "0.0.0.0")
+			default_i = *it;
 	}
-	if (count == 1)
-		return (*default_i);
-	// if (count == 0)
-	// 	*default_i = tmp[0];
-	std::cout << "*************************" << std::endl;
-	return (-1);
-		// if (/* socket_s_addr == it->getS_addr() && */ port == it->getPort()) {
-		// 	if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1")) {
-		// 		if (it->getIconf().size() == 1)
-		// 	// if (conf[it->getIconf()].host == host || (host == "localhost" && conf[it->getIconf()].host == "127.0.0.1"))
-		// 			return (/* std::cout << "it->getIconf() " << it->getIconf() << std::endl, */ it->getIconf()[0]);
-		// 		else {
-		// 			std::cout << "1.HOST ALL IP" << std::endl;
-		// 			return (*default_i = it->getIconf(), -1);
-		// 		}
-		// 	}
-		// 	else if (default_i->size() == 0 && it->getHost() =="0.0.0.0") {
-		// 		std::cout << "2.HOST ALL IP" << std::endl;
-		// 		*default_i = it->getIconf();
-		// 	}
-		// }
-	std::cout << "***************" << std::endl;
-	return (-1);
+	return (default_i); // =====> 1er 0.0.0.0:port correspondant
 }
 
 
@@ -547,9 +501,6 @@ int	Server::pick_server(Request &request) {
 	std::istringstream	iss(request.getHost());
 	std::string         	host;
 	std::string         	port;
-	int						i_host;
-	int						i_name;
-	int						i_default = -1;
 	
 	std::getline(iss, host, ':');
 	str_tolower(host);
@@ -557,17 +508,7 @@ int	Server::pick_server(Request &request) {
 	std::getline(iss, port);
 	if (conf.size() == 0)
 		return (0);
-	i_host = is_host(host, port, request.getSocket_s_addr(), &i_default);
-	std::cout << "i_host = " << i_host << std::endl;
-	std::cout << "i_default = " << i_default << std::endl; 
-	if (i_host > -1) // =====> Host a ete trouve : Il s'agit d'un server_host SINON le premier server correspondant a un host:port a ete save dans i_default
-		return (i_host);
-	// i_name = is_server_name(host, port, request.getSocket_s_addr());
-	// if (i_name > -1) // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
-	// 	return (i_name);
-	else { // =====> Pas de server_name avec port et host ok trouve => on renvoie i_default
-		return (i_default);
-	}
+	return (is_host(host, port, request.getSocket_s_addr()));
 }
 
 /*

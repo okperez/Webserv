@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 15:06:17 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 15:46:48 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,11 @@ int main(int argc, char **argv)
 			// E/A  A RAJOUTER DANS PARSING HOST : si fichier conf 127.000.000.001 => doit devenir 127.0.0.1 : PS fonction adapt_host ci dessus
 			// E/A  A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
 			// A RAJOUTER DANS PARSING : directive autoindex et directive return dans bloc server 
+			
+			for (auto it =server.conf.begin(); it != server.conf.end(); it++)
+				if (it->host.empty())
+					it->host = "0.0.0.0";
+			
 			std::cout << "******************************** END PARSING ********************************* " << std::endl;
 			/* ********** A EFFACER ************ */
 

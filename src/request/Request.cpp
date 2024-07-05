@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/04 15:05:36 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/04 18:21:10 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
 				add_path(conf, index); // GET POST DELETE
 			}
 			std::cout << "target " << target << std::endl;
-			// CGI
+			cgi_parse_target();
 			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
 		}
 	}
@@ -265,6 +265,17 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
+void	Request::cgi_parse_target() {
+	
+	int found = target.find('?');
+
+	if (found != std::string::npos) {
+		_script_name = target.substr(0, found);
+		if (found < target.length() - 1)
+			_query_string = target.substr(found + 1);
+	}
+}
+
 // void    handle_cgi(t_conf & conf)
 // {
 // 	char	**env;
@@ -275,6 +286,11 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */
 /* ************************************************************************* */
+
+// A FAIRE : 
+//		setContenttype() en fonction du language du fichier  
+//		implementer directive return dans location ou server  
+//		voir si on arrive a envoyer une image  
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
@@ -386,6 +402,12 @@ void	Request::build_index() {
 	response.setStatus("200", " OK");
 	response.setContent_type("text/html"); // Type ok : l'index auto genere est html
 }
+
+/* ************************************************************************* */
+/* ********************************** POST ********************************* */
+/* ************************************************************************* */
+
+
 
 /* ************************************************************************* */
 /* ********************************* Utils ********************************* */
