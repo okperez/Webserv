@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/05 11:22:46 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/05 18:01:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,39 +265,108 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
+
+void	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
+{
+	int		pid;
+	int		status;
+	int		fd[2];
+	int		rd;
+	char	buff[1024];
+	std::string	output;
+	
+	pipe(fd);
+	pid = fork();
+	if (pid == -1)
+		perror("fork");
+	if (pid == 0)
+	{
+		dup2(fd[1], 1);
+		close(fd[0]);
+		close(fd[1]);
+		if (execve(pathname, argv, envp) != 0)
+		{
+			perror("execve");
+			return ;
+		}
+	}
+	else
+		waitpid(pid, &status, 0);
+	close(fd[1]);
+	while (1)
+	{
+		rd = read(fd[0], buff, sizeof(buff) - 1);
+		if (rd < 1)
+			break ;
+		buff[rd] = '\0';
+	}
+	close(fd[0]);
+	// std::cout << "BUFFER:\n" << buff << std::endl;
+	response.setBody(buff);
+	response.setStatus("200", " OK");
+	response.setContent_type("text/html");
+}
+
+void	Request::set_env(t_conf & conf, char ***env)
+{
+	strcpy(*env[0], ("REQUEST_METHOD=" + method).c_str());
+	strcpy(*env[1], ("QUERY_STRING=" + query_string).c_str());
+	strcpy(*env[2], ("SCRIPT_NAME=" + script_name).c_str());
+	strcpy(*env[3], ("SERVER_NAME=" + conf.server_name).c_str());
+	strcpy(*env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
+	strcpy(*env[5], ("REMOTE_ADDR=" + conf.host).c_str());
+	strcpy(*env[6], ("HTTP_USER_AGENT=" + agent).c_str());
+	*env[7] = NULL;
+}
+
 void    Request::handle_cgi(t_conf & conf)
 {
 	char	**env;
-	int		pid;
-	int		status;
-	std::string copy = target;
-	std::cout << "copy = " << copy << std::endl;
+	char	**argv;
 
-	// env = new char* [8];
-	// for (int i = 0; i < 8; i++)
-		// env[i] = new char [50];
-	// 
-	// char * exec = (char *)copy.substr(copy.rfind('/'), copy.rfind('&')).c_str();
-	// std::cout << "exec = " << exec << std::endl;
-	// char * argv[] = {exec, NULL};
-	// script_name = copy.substr(0, copy.find('&'));
-	// copy.erase(0, copy.find('&') + 1);
-	// query_string = copy.substr(0, copy.find(';'));
-	// 
-	// strcpy(env[0], method.c_str());
-	// strcpy(env[1], query_string.c_str());
-	// strcpy(env[2], script_name.c_str());
-	// strcpy(env[3], target.c_str());
-	// strcpy(env[4], conf.server_name.c_str());
-	// strcpy(env[5], conf.ipv4_port[0].c_str());
-	// strcpy(env[6], method.c_str());
-	// strcpy(env[7], agent.c_str());
-	// 
-	// pid = fork();
-	// if (pid != 0)
-		// execve(script_name.c_str(), argv, env);
-	// waitpid(pid, &status, 0);
-	// free(env);
+	char const *exec = "./cgi-bin/form_handler.cgi";
+	
+	std::string copy = target;
+	script_name = copy.substr(0, copy.find('?'));
+	copy.erase(0, copy.find('/') + 1);
+	copy.erase(0, copy.find('/') + 1);
+
+    argv = new char * [2];
+    argv[0] = new char [50];
+    argv[1] = NULL;
+    strcpy(argv[0], "form_handler.cgi");
+	env = new char* [8];
+	for (int i = 0; i < 7; i++)
+		env[i] = new char [1024];
+	strcpy(env[0], ("REQUEST_METHOD=" + method).c_str());
+	strcpy(env[1], ("QUERY_STRING=" + query_string).c_str());
+	strcpy(env[2], ("SCRIPT_NAME=" + script_name).c_str());
+	strcpy(env[3], ("SERVER_NAME=" + conf.server_name).c_str());
+	strcpy(env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
+	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
+	strcpy(env[6], ("HTTP_USER_AGENT=" + agent).c_str());
+	env[7] = NULL;
+	// set_env(conf, &env);
+	// char const *tmp = copy.substr(0, copy.rfind('?')).c_str();
+	// char *exec = new char [sizeof(tmp)];
+	// exec = strcpy(exec, tmp);
+	// std::cout << "Exec = " << exec << std::endl;
+	// char *const argv[] = {exec, NULL};
+	// char *argv[2] = {"form_handler.cgi", NULL};
+	copy.erase(0, copy.find('?') + 1);
+	query_string = copy.substr(0, copy.npos);
+	script_name.erase(0, script_name.find('/'));
+	script_name.insert(0, "./cgi-bin");
+	// std::cout << "script name = " << script_name << std::endl;
+	
+	exec_script(exec, argv, env);
+	// for (int i = 0; i < 7; i++)
+	// 	std::cout << i << " " << env[i] << std::endl;
+	for (int i = 0; i < 7; i++)
+		delete env[i];
+	delete env;
+	delete argv[0];
+	delete argv;
 }
 
 /* ************************************************************************* */
@@ -322,10 +391,10 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		if (dir == 1)
 			target_directory(conf, location, error);
 		//  =====> Request isn't a directory
-		// else if (location.find("/cgi-bin") != location.npos)
-		// {
-			// handle_cgi(conf);
-		// }
+		else if (location.find("/cgi-bin") != location.npos)
+		{
+			handle_cgi(conf);
+		}
 		else {
 			if (!open_targetfile(target))
 				error.fill_error(response, "404", conf);

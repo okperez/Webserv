@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 14:13:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/05 14:08:53 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ typedef struct s_conf
 {
   std::vector<std::string>                                  ipv4_port;
   std::vector<std::string>                                  ipv6_port;
-  std::string														                    max_body_size;
-  std::string														                    host;
+  std::string							                    max_body_size;
+  std::string											    host;
   std::string                                               server_name;
   std::string                                               root_dir;
   std::string                                               files; // A Transformer en vecteur de string : il peut y en avoir plusieurs
@@ -43,7 +43,7 @@ typedef struct s_conf
   std::string                                               autoindex;
   std::string                                               ret; // return
   std::map<std::string, std::map<std::string, std::string>> location;
-  std::map<std::string, std::string>										    err_pgs;
+  std::map<std::string, std::string>					    err_pgs;
   std::list<std::string>                                    wrong_arg;
   s_flag                                                    flag;
 }t_conf;
