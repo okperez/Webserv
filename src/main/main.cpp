@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 15:46:48 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/05 16:26:26 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,17 @@ int main(int argc, char **argv)
 			// E/A  A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
 			// A RAJOUTER DANS PARSING : directive autoindex et directive return dans bloc server 
 			
-			for (auto it =server.conf.begin(); it != server.conf.end(); it++)
+			for (auto it =server.conf.begin(); it != server.conf.end(); it++) {
 				if (it->host.empty())
 					it->host = "0.0.0.0";
-			
+			}
+
+			// SI PAS DE SERVER NAME OU SI SERVER NAME VIDE ==== > LEAKS SI RETURN(-1) ICI
 			std::cout << "******************************** END PARSING ********************************* " << std::endl;
 			/* ********** A EFFACER ************ */
 
 			server.conf[0].autoindex = "on";
-			server.conf[1].autoindex = "off";
+			// server.conf[1].autoindex = "off";
 			
 			/* ********************************* */
 			

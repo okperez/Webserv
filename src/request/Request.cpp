@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/04 18:21:10 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/05 15:58:07 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,9 @@ Request &Request::operator=(Request const & rhs) {
 	media = rhs.media;
 	connection = rhs.connection;
 	socket_s_addr = rhs.socket_s_addr;
+	socket_ip = rhs.socket_ip;
+	_query_string = rhs._query_string;
+	_script_name = rhs._script_name;
 	
 	response = rhs.response;
 
@@ -84,6 +87,10 @@ int Request::getSocket_fd() const {
 
 in_addr_t Request::getSocket_s_addr() const {
 	return (socket_s_addr);
+}
+
+std::string Request::getSocket_ip() const {
+	return (socket_ip);
 }
 
 std::string Request::getHost() const {
@@ -110,9 +117,23 @@ void	Request::addSave_buffer(const char *buffer) {
 /* ******************************** Parsing ******************************** */
 /* ************************************************************************* */
 
+void	Request::recover_ip_socket() {
+	u_int32_t n = ntohl(socket_s_addr);
+	std::stringstream iss;
+	for (int i = 24; i >= 0; i -= 8) {
+		int tmp = (n >> i) & 0xFF;
+		iss << tmp;
+		if (i > 0)
+			iss << '.';
+	}
+	socket_ip = iss.str();
+	std::cout << socket_ip << std::endl;
+}
+
 void	Request::parse_request(in_addr_t s_addr) {
 	
 	socket_s_addr = s_addr;
+	recover_ip_socket();
 	method = extract_line(save_buffer, ' ');
 	target = extract_line(save_buffer, ' ');
 	if (target.back() == '/')

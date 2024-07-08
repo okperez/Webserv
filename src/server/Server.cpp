@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 17:29:15 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/05 17:06:21 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,59 +102,57 @@ void	Server::listen_socket(int new_socket, int port) {
 	int flags = fcntl(new_socket, F_GETFL, 0); // A VERIFIER POUR FNCTL SUJET + ORLANDO
 	fcntl(new_socket, F_SETFL, flags | O_NONBLOCK);
 }
+
+struct addrinfo	*Server::get_addr_info(char *data) {
+	struct addrinfo hints, *res;
+	struct sockaddr_in *server;
 	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;          			// address family
+	hints.ai_socktype = SOCK_STREAM;
+	int result = getaddrinfo(data, NULL, &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
+	if (result != 0) {
+		freeaddrinfo(res);
+		throw(ServerException("Non valid host"));
+	}
+	return (res);
+}
+
+/*
+Le flag SO_REUSEADDR dans setsockopt() permet d'assigner la socket a un port meme si ce dernier est en TIME_WAIT
+ce qui peut arriver quand le serveur est quitte via un CTRL+C.
+Comme ca permet d'autoriser la réutilisation des adresses locales, il faut faire attention
+a son utillisation car cela pourrait engendrer des fqilles de securite. 
+*/
 void	Server::open_listen_socket() {
 	
 	int opt = 1;
 	int i = 0;
-	/* QUI SERA REMPLACE PAR LES ELEMENTS DE CONF :*/	
 	
-	/* QUI RESTE :*/
-	// for(std::vector<t_conftest>::iterator it = conf_test.begin(); it != conf_test.end(); it++) {
-	// for(std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
 	for(auto it = conf.begin(); it != conf.end(); it++) {
-		// for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 		for(auto jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 			int port;
 			std::istringstream iss(*jt);
 			iss >> port;
-			if (check_port_binding(server_fd, *jt, it->host, i)) {
-				std::cout << "CONTINUE" << std::endl;
+			if (check_port_binding(server_fd, *jt, it->host, i))
 				continue;
-			}
 			int new_socket;
 			new_socket = socket(AF_INET, SOCK_STREAM, 0);   //socket set up for listening is used only for accepting connections, not for exchanging data
 			if (new_socket < 0)
-				throw (ServerException("Failed to create server socket"));
-			/*
-			Le flag SO_REUSEADDR permet d'assigner la socket a un port meme si ce dernier est en TIME_WAIT
-			ce qui peut arriver quand le serveur est quitte via un CTRL+C.
-			Comme ca permet d'autoriser la réutilisation des adresses locales, il faut faire attention
-			a son utillisation car cela pourrait engendrer des fqilles de securite. 
-			*/
-			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &opt, 4))
-				throw (ServerException("Failed to create server socket"));
-			struct addrinfo hints, *res;
-			struct sockaddr_in *server;
-			
-			memset(&hints, 0, sizeof(hints));
-			hints.ai_family = AF_INET;          			// address family
-			hints.ai_socktype = SOCK_STREAM;
-			int result = getaddrinfo(it->host.data(), NULL, &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
-			std::cout << "result = " << result << std::endl;
-			if (result != 0)
-				throw(ServerException("Non valid host"));
-			server = (struct sockaddr_in *)res->ai_addr;
-			std::cout << "server->sin_addr.s_addr : " << server->sin_addr.s_addr<< std::endl;
-			// server->sin_port = htons(port);         			//The port number (the transport address)
-			server->sin_port = htons(port);
+				throw (ServerException("Failed to create server socket")); // NO LEAKS OK
+			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &opt, 4)) {
+				close(new_socket);
+				throw (ServerException("Failed to create server socket")); // NO LEAKS OK
+			}
+			struct addrinfo *res = get_addr_info(it->host.data());
+			struct sockaddr_in *server = (struct sockaddr_in *)res->ai_addr;
 			if (it->host == "0.0.0.0")
-				server->sin_addr.s_addr = INADDR_ANY;    			//The port number (the transport address)
+				server->sin_addr.s_addr = INADDR_ANY;
+			server->sin_port = htons(port);         			//The port number (the transport address)
 			this->bind_socket(new_socket, *server, port, it->host); // attention LEAK SI FAILED TO BIND
-			// this->bind_socket(new_socket, *server, port); // attention LEAK SI FAILED TO BIND
-			this->listen_socket(new_socket, port);
+			this->listen_socket(new_socket, port); // attention LEAK SI FAILED TO BIND
 			Listen nw(new_socket, *jt, server->sin_addr.s_addr, it->host, i);
-			nw.printlisten();
+			nw.printlisten(); // A EFFACER
 			freeaddrinfo(res);
 			server_fd.push_back(nw);
 		}
@@ -270,6 +268,7 @@ void	Server::event_request() {
 					it->parse_request(socket->sin_addr.s_addr);
 					std::cout << "TEST0" << std::endl;
 					int i_conf = pick_server(*it);
+					// i_conf = 0;
 					std::cout << "i_conf = " << i_conf << std::endl;
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
@@ -367,6 +366,59 @@ void	Server::close_connection(int i) {
 // 	return (-1);
 // }
 
+// /* Retourne l index du serveur correspondant au server_name */
+// int	Server::is_server_name(std::string host, std::string port, std::vector<int> &tmp) {
+// 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
+// 	// for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
+// 		if (conf[*it].server_name == host) {
+// 			for(auto jt = conf[*it].ipv4_port.begin(); jt != conf[*it].ipv4_port.end(); jt++)
+// 				return (std::cout << "server_name i_conf = " << *it << std::endl, *it);
+// 		}
+// 	}
+// 	return (-1);
+// }
+
+// /* Retourne l index du serveur match */
+// int	Server::is_host(std::string &host, std::string &port, in_addr_t socket_s_addr) {
+// 	int i = 0;
+// 	std::vector<int> tmp;
+	
+	
+// 	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
+// 		if (port == it->getPort()) {
+// 			if (socket_s_addr == it->getS_addr()) {
+// 				if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1")) {
+// 					if (it->getIconf().size() == 1)
+// 						return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
+// 					else if (it->getIconf().size() == 0)
+// 						std::cout << "SI PENDANT TESTS ON RENTRE DEDANS A IMPLEMENTER SINON ALLER DANS LE ELSE " << std::endl;
+// 					else
+// 						tmp = it->getIconf();
+// 				}
+// 				else if (tmp.size() == 0)
+// 					tmp = it->getIconf();
+// 			}
+// 			else if (it->getS_addr() == 0 && tmp.size() == 0)
+// 				tmp = it->getIconf();
+// 		}
+// 	}
+// 	// for (auto it = tmp.begin(); it != tmp.end(); it++)
+// 	// 	std::cout << "vect i_conf_default = " << *it << std::endl;
+// 	int j = is_server_name(host, port, tmp);  // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
+// 	if (j != -1)
+// 		return (j);
+// 	int count = 0;
+// 	int default_i = -1;
+// 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
+// 		if (conf[*it].host != host) {
+// 			return (*it); // =====> 1er host:port correspondant
+// 		}
+// 		else if (default_i == -1 && conf[*it].host == "0.0.0.0")
+// 			default_i = *it;
+// 	}
+// 	return (default_i); // =====> 1er 0.0.0.0:port correspondant
+// }
+
 /* Retourne l index du serveur correspondant au server_name */
 int	Server::is_server_name(std::string host, std::string port, std::vector<int> &tmp) {
 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
@@ -380,44 +432,58 @@ int	Server::is_server_name(std::string host, std::string port, std::vector<int> 
 }
 
 /* Retourne l index du serveur match */
-int	Server::is_host(std::string host, std::string port, in_addr_t socket_s_addr) {
+int	Server::is_host(std::string &host, std::string &port, in_addr_t socket_s_addr, std::string socket_ip) {
 	int i = 0;
 	std::vector<int> tmp;
 	
-	
+	// RETURN UNNIQUE MATCH OR SET TMP TO CANDIDATES
 	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
 		if (port == it->getPort()) {
-			if (socket_s_addr == it->getS_addr()) {
-				if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1")) {
-					if (it->getIconf().size() == 1)
-						return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
-					else if (it->getIconf().size() == 0)
-						std::cout << "SI PENDANT TESTS ON RENTRE DEDANS A IMPLEMENTER SINON ALLER DANS LE ELSE " << std::endl;
-					else
-						tmp = it->getIconf();
+			std::cout << "MATCH port" << std::endl;
+			if (socket_ip == it->getHost() || (it->getHost() == "localhost" && socket_ip == "127.0.0.1")) {
+				std::cout << "MATCH port + socket_ip" << std::endl;
+				if (it->getIconf().size() == 1) {
+					std::cout << "MATCH port + socket_ip + 1 candidat" << std::endl;
+					return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
 				}
-				else if (tmp.size() == 0)
+				else
 					tmp = it->getIconf();
 			}
-			else if (it->getS_addr() == 0 && tmp.size() == 0)
+			else if (tmp.size() == 0 && it->getHost() == "0.0.0.0")
 				tmp = it->getIconf();
 		}
 	}
-	// for (auto it = tmp.begin(); it != tmp.end(); it++)
-	// 	std::cout << "vect i_conf_default = " << *it << std::endl;
-	int j = is_server_name(host, port, tmp);  // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
-	if (j != -1)
-		return (j);
-	int count = 0;
-	int default_i = -1;
+
+	std::cout << "tmp size = " << tmp.size() << std::endl;
+	for (auto it = tmp.begin(); it != tmp.end(); it++)
+		std::cout << "vect i_conf_default = " << *it << std::endl;
+
+	std::vector<int> tmp2;
 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-		if (conf[*it].host != host) {
-			return (*it); // =====> 1er host:port correspondant
-		}
-		else if (default_i == -1 && conf[*it].host == "0.0.0.0")
-			default_i = *it;
+		if (conf[*it].host == socket_ip)
+			tmp2.push_back(*it);
 	}
-	return (default_i); // =====> 1er 0.0.0.0:port correspondant
+
+	std::cout << std::endl << "tmp2 size = " << tmp2.size() << std::endl;
+	for (auto it = tmp2.begin(); it != tmp2.end(); it++)
+		std::cout << "vect i_conf_default = " << *it << std::endl;
+	if (tmp2.size() == 1)
+		return (tmp2[0]);
+	std::vector<int> tmp3;
+	for (auto it = tmp2.begin(); it != tmp2.end(); it++) {
+		if (conf[*it].server_name == host)
+			tmp3.push_back(*it);
+	}
+	std::cout << std::endl << "tmp3 size = " << tmp3.size() << std::endl;
+	for (auto it = tmp3.begin(); it != tmp3.end(); it++)
+		std::cout << "vect i_conf_default = " << *it << std::endl;
+	
+	if (tmp3.size() == 1)
+		return (tmp3[0]);
+	else if (tmp2.size() > 0)
+		return (tmp2[0]);
+	else
+		return (tmp[0]);
 }
 
 
@@ -508,7 +574,7 @@ int	Server::pick_server(Request &request) {
 	std::getline(iss, port);
 	if (conf.size() == 0)
 		return (0);
-	return (is_host(host, port, request.getSocket_s_addr()));
+	return (is_host(host, port, request.getSocket_s_addr(), request.getSocket_ip()));
 }
 
 /*

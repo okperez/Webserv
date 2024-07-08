@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 18:05:33 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/05 10:35:46 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Request
 	private : 
 		int socket_fd;
 		in_addr_t	socket_s_addr;
+		std::string	socket_ip;
 		int status;
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
 		// std::string		response_content;
@@ -67,6 +68,7 @@ class Request
 		int getStatus() const;
 		int getSocket_fd() const;
 		in_addr_t getSocket_s_addr() const;
+		std::string getSocket_ip() const;
 		std::string getHost() const;
 		std::string getConnection() const;
 		void	addSave_buffer(const char *buffer);
@@ -76,6 +78,7 @@ class Request
         /* **************************** Parsing **************************** */
         /* ***************************************************************** */
 
+		void	recover_ip_socket();
 		void	parse_request(in_addr_t s_addr);
 		
         /* ***************************************************************** */
