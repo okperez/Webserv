@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 09:59:17 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 10:46:47 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 Listen::Listen() : _fd(0), _port(0), _s_addr(0), _host("") {}
 
-Listen::Listen(const Listen & orig) : _fd(orig._fd), _port(orig._port), _s_addr(orig._s_addr), _host(orig._host), _i_conf(orig._i_conf) { (void) orig; }
+Listen::Listen(const Listen & orig) : _fd(orig._fd), _i_conf(orig._i_conf), _port(orig._port), _s_addr(orig._s_addr), _host(orig._host) { (void) orig; }
 
 // Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) , _i_conf(i) {}
 
@@ -55,15 +55,15 @@ std::vector<int>	Listen::getIconf() const {
 	return (_i_conf);
 }
 
-const std::string	Listen::getPort() const {
+std::string	Listen::getPort() const {
 	return (_port);
 }
 
-const in_addr_t	Listen::getS_addr() const {
+in_addr_t	Listen::getS_addr() const {
 	return (_s_addr);
 }
 
-const std::string	Listen::getHost() const {
+std::string	Listen::getHost() const {
 	return (_host);
 }
 
@@ -83,7 +83,7 @@ void	Listen::close_fd() {
 
 void	Listen::printlisten() {
 	std::cout << "FD : " << _fd << std::endl;
-	for (auto it= _i_conf.begin(); it != _i_conf.end(); it++)
+	for (std::vector<int>::iterator it= _i_conf.begin(); it != _i_conf.end(); it++)
 		std::cout << "ICONF : " << *it << std::endl;
 	std::cout << "PORT : " << _port << std::endl;
 	std::cout << "S_ADDR : " << _s_addr << std::endl;

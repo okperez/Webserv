@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 15:50:42 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 09:06:08 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,4 +90,22 @@ bool    is_white_space(char c, char d)
 void    clear_space(std::string & type)
 {
 	type.erase(remove_if(type.begin(), type.end(), isspace), type.end());
+}
+
+int ft_stoi( std::string const & s ) {
+	long int 	n;
+	int 		digit = 0;
+	int 		i;
+	
+	for (i = 1 * (s[0] == '-'); s[i] == '0'; i++) {}
+	while (s[i]) {
+		if (!isdigit(s[i]))
+			throw (NotAnIntException());
+		digit++;
+		i++;
+	}
+	std::istringstream(s) >> n;
+	if (n < std::numeric_limits<int>::min() || n > std::numeric_limits<int>::max() || digit > 10)
+		throw (NotAnIntException());
+	return (static_cast<int>(n));
 }

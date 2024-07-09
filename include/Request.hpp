@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/05 10:35:46 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/09 09:26:31 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,11 +39,13 @@ class Request
 
 		
 		// HEADER section
-		std::string   host;     // Header that specifies the server's host and port
-		std::string   port;     // Header that describes the pport used
-		std::string   agent;    // Header that describes the client's user agent
-		std::string   media;    // Header that specifies which media types the client can accept
-		std::string   connection;    // Header that specifies if we have to close the connection or keeping it alive
+		std::string		host;      		// Header that specifies the server's host and port
+		std::string		port;      		// Header that describes the pport used
+		// std::string   agent;    		// Header that describes the client's user agent
+		// std::string   media;    		// Header that specifies which media types the client can accept
+		std::string		connection;    	// Header that specifies if we have to close the connection or keeping it alive
+		std::string		content_type;
+		int				content_length; // Header that specifies the length of the body
 
 		// Response
 		Response	response;
@@ -52,7 +54,7 @@ class Request
 		// size_t        lenght;
 		
 		Request();
-		
+
 	public :
 		Request(char const *buffer, int read, int socket);
 		Request(const Request & orig);
@@ -65,28 +67,31 @@ class Request
 
 		std::string getSave_buffer() const; //A EFFACER
 		
-		int getStatus() const;
-		int getSocket_fd() const;
-		in_addr_t getSocket_s_addr() const;
+		int 		getStatus() const;
+		int 		getSocket_fd() const;
+		in_addr_t 	getSocket_s_addr() const;
 		std::string getSocket_ip() const;
 		std::string getHost() const;
+		std::string getPort() const;
 		std::string getConnection() const;
-		void	addSave_buffer(const char *buffer);
-		void	setStatus(int status);
+		void		addSave_buffer(const char *buffer);
+		void		setStatus(int status);
 		
         /* ***************************************************************** */
         /* **************************** Parsing **************************** */
         /* ***************************************************************** */
 
-		void	recover_ip_socket();
-		void	parse_request(in_addr_t s_addr);
+		void		parse_host();
+		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
+		void		recover_ip_socket();
+		void		parse_request(in_addr_t s_addr);
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
 		
-        int  handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
-		void	send_response(int socket_fd);
+        int  		handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
+		void		send_response(int socket_fd);
 		
 		/* ***************************************************************** */
 		/* *************************** Location **************************** */
@@ -94,31 +99,31 @@ class Request
 		
 		std::string look_for_location(t_conf & conf);
 		std::string look_if_location(std::string &target, t_conf & conf);
-		void	add_path(t_conf & conf, std::string &index);
+		void		add_path(t_conf & conf, std::string &index);
 		
 		/* ***************************************************************** */
 		/* ***************************** Method **************************** */
 		/* ***************************************************************** */
 		
-		int	check_exist_method();
-		bool	check_allow_method(t_conf &conf, std::string &index);
+		int			check_exist_method();
+		bool		check_allow_method(t_conf &conf, std::string &index);
 		
 		/* ***************************************************************** */
 		/* ****************************** GET ****************************** */
 		/* ***************************************************************** */
 		
-		void	build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
-		bool	open_targetfile(std::string & target);
-		void	target_directory(t_conf &conf, ErrorPages &error);
-		void	target_directory(t_conf &conf, std::string &location, ErrorPages &error);
-		void	build_index();
+		void		build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
+		bool		open_targetfile(std::string & target);
+		void		target_directory(t_conf &conf, ErrorPages &error);
+		void		target_directory(t_conf &conf, std::string &location, ErrorPages &error);
+		void		build_index();
 		
 
 		/* ***************************************************************** */
 		/* ****************************** CGI ****************************** */
 		/* ***************************************************************** */
-		void            handle_cgi(t_conf & conf);
-		void			cgi_parse_target();
+		void        handle_cgi(t_conf & conf);
+		void		cgi_parse_target();
 
 		/* ***************************************************************** */
 		/* ****************************** POST ***************************** */
@@ -131,6 +136,7 @@ class Request
 		std::string extract_line(std::string & buff, char delim) const;
 		std::string extract_header(std::string & buff) const;
 		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
+		std::string extract_body(std::string const & delim, std::string & buff);
 } ;
 
 #endif

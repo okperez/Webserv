@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/05 17:06:21 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/09 11:13:39 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ Server &Server::operator=(Server & rhs) {
 Si une socket ecoute deja sur le port, retourne 1 pour continuer et ne pas creer la socket
 */
 bool	Server::check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host, int i) {
-	for(auto it = server_fd.begin(); it != server_fd.end(); it++) {
+	for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		if(it->getPort() == port && (it->getHost() == host || it->getHost() == "0.0.0.0")) {
 			it->addIconf(i);
 			return (true);
@@ -71,12 +71,11 @@ bool	Server::check_port_binding(std::vector<Listen> &server_fd, std::string &por
 }
 
 /* Assigning a transport address to the socket */
-void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int port, std::string & host) {
+void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int port) {
 	
 	if (bind(new_socket, (struct sockaddr *) &server_addr, sizeof(server_addr)))
 	{
-		// for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
-		for(auto it = server_fd.begin(); it != server_fd.end(); it++)
+		for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
 			it->close_fd();
 		std::cerr << "Failed to bind to port " << port << std::endl;
 		throw(ServerException(""));
@@ -91,10 +90,8 @@ void	Server::listen_socket(int new_socket, int port) {
 	
 	int connection_backlog = 10; // VOIR AVEC ORLANDO POURQUOI 10? A MODIFIER?
 	if (listen(new_socket, connection_backlog) != 0) {
-		// for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
-		for(auto it = server_fd.begin(); it != server_fd.end(); it++)
+		for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
 			it->close_fd();
-			// close (it->fd);
 		std::cerr << "Failed to listen to port " << port << std::endl;
 		throw(ServerException(""));
 	}
@@ -105,7 +102,6 @@ void	Server::listen_socket(int new_socket, int port) {
 
 struct addrinfo	*Server::get_addr_info(char *data) {
 	struct addrinfo hints, *res;
-	struct sockaddr_in *server;
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;          			// address family
@@ -129,8 +125,8 @@ void	Server::open_listen_socket() {
 	int opt = 1;
 	int i = 0;
 	
-	for(auto it = conf.begin(); it != conf.end(); it++) {
-		for(auto jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
+	for(std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++) {
+		for(std::vector<std::string>::iterator jt = it->ipv4_port.begin(); jt != it->ipv4_port.end(); jt++) {
 			int port;
 			std::istringstream iss(*jt);
 			iss >> port;
@@ -144,12 +140,12 @@ void	Server::open_listen_socket() {
 				close(new_socket);
 				throw (ServerException("Failed to create server socket")); // NO LEAKS OK
 			}
-			struct addrinfo *res = get_addr_info(it->host.data());
+			struct addrinfo *res = get_addr_info((char *)(it->host.data()));
 			struct sockaddr_in *server = (struct sockaddr_in *)res->ai_addr;
 			if (it->host == "0.0.0.0")
 				server->sin_addr.s_addr = INADDR_ANY;
 			server->sin_port = htons(port);         			//The port number (the transport address)
-			this->bind_socket(new_socket, *server, port, it->host); // attention LEAK SI FAILED TO BIND
+			this->bind_socket(new_socket, *server, port); // attention LEAK SI FAILED TO BIND
 			this->listen_socket(new_socket, port); // attention LEAK SI FAILED TO BIND
 			Listen nw(new_socket, *jt, server->sin_addr.s_addr, it->host, i);
 			nw.printlisten(); // A EFFACER
@@ -162,13 +158,13 @@ void	Server::open_listen_socket() {
 
 void	Server::create_fds() {
 	
-	int i = 0;
+	size_t i = 0;
 	
 	fds = new pollfd[MAX_CONNECTION + server_fd.size()];
 	// ou max de co par serveur ? 
 	// fds = new pollfd[MAX_CONNECTION * server_fd.size() + server_fd.size()];
 	// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
+	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->getFd();
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
 		i++;
@@ -214,7 +210,7 @@ void	Server::event_request() {
 		{	
 			/* event_request sur socket listening for clients */
 			// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-			for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
+			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
 					new_connection(it->getFd());
 					return ;
@@ -237,7 +233,7 @@ void	Server::event_request() {
 			connection.
 			*/
 				// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-				for (auto it = requests.begin(); it != requests.end(); it++) {
+				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
 						requests.erase(it);
 						break;			
@@ -256,8 +252,7 @@ void	Server::event_request() {
 		}
 	}
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
-	// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-	for (auto it = requests.begin(); it != requests.end(); it++) {
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
 			for (int j = 0; j < MAX_CONNECTION; j++) { // A TESTER AVEC SIEGE sinon effacer les 3
 				if (fds[j].fd == it->getSocket_fd()) { // A TESTER AVEC SIEGE
@@ -266,11 +261,10 @@ void	Server::event_request() {
 					getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
 					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
 					it->parse_request(socket->sin_addr.s_addr);
-					std::cout << "TEST0" << std::endl;
 					int i_conf = pick_server(*it);
-					// i_conf = 0;
 					std::cout << "i_conf = " << i_conf << std::endl;
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
+					
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
 						for (int i = 0; i < MAX_CONNECTION; i++) {
 							if (fds[i].fd == it->getSocket_fd()) 
@@ -331,121 +325,13 @@ void	Server::close_connection(int i) {
 /* ******************************** REQUEST ******************************** */
 /* ************************************************************************* */
 
-// /* Retourne l index du serveur correspondant au server_name */
-// int	Server::is_server_name(std::string host, std::string port, in_addr_t socket_s_addr) {
-// 	// // for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-// 	// for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-// 	// 	if (socket_s_addr == it->getS_addr() && port == it->getPort() && conf[it->getIconf()].server_name == host)
-// 	// 		return (std::cout << "it->getIconf() " << it->getIconf() << std::endl, it->getIconf());
-// 	// }
-// 	return (-1);
-// }
-
-// /* Retourne l index du serveur correspondant a l'host */
-// int	Server::is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i) {
-// 	int i = 0;
-	
-// 	std::cout << "***************" << std::endl;
-// 	std::cout << "request host = " << host << std::endl;
-// 	std::cout << "request port = " << port << std::endl;
-// 	std::cout << "request socket_s_addr = " << socket_s_addr << std::endl << std::endl;
-// 	// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
-// 	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-// 		std::cout << "server host = " << it->getHost() << std::endl;
-// 		std::cout << "server port = " << it->getPort() << std::endl;
-// 		std::cout << "server socket_s_addr = " << it->getS_addr() << std::endl << std::endl;
-// 		if (socket_s_addr == it->getS_addr() && port == it->getPort()) {
-// 			if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1"))
-// 			// if (conf[it->getIconf()].host == host || (host == "localhost" && conf[it->getIconf()].host == "127.0.0.1"))
-// 				return (std::cout << "it->getIconf() " << it->getIconf() << std::endl, it->getIconf());
-// 			else if (*default_i == -1)
-// 				*default_i = it->getIconf();
-// 		}
-// 	}
-// 	std::cout << "***************" << std::endl;
-// 	return (-1);
-// }
-
-// /* Retourne l index du serveur correspondant au server_name */
-// int	Server::is_server_name(std::string host, std::string port, std::vector<int> &tmp) {
-// 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-// 	// for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-// 		if (conf[*it].server_name == host) {
-// 			for(auto jt = conf[*it].ipv4_port.begin(); jt != conf[*it].ipv4_port.end(); jt++)
-// 				return (std::cout << "server_name i_conf = " << *it << std::endl, *it);
-// 		}
-// 	}
-// 	return (-1);
-// }
-
-// /* Retourne l index du serveur match */
-// int	Server::is_host(std::string &host, std::string &port, in_addr_t socket_s_addr) {
-// 	int i = 0;
-// 	std::vector<int> tmp;
-	
-	
-// 	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-// 		if (port == it->getPort()) {
-// 			if (socket_s_addr == it->getS_addr()) {
-// 				if (it->getHost() == host || (host == "localhost" && it->getHost() == "127.0.0.1")) {
-// 					if (it->getIconf().size() == 1)
-// 						return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
-// 					else if (it->getIconf().size() == 0)
-// 						std::cout << "SI PENDANT TESTS ON RENTRE DEDANS A IMPLEMENTER SINON ALLER DANS LE ELSE " << std::endl;
-// 					else
-// 						tmp = it->getIconf();
-// 				}
-// 				else if (tmp.size() == 0)
-// 					tmp = it->getIconf();
-// 			}
-// 			else if (it->getS_addr() == 0 && tmp.size() == 0)
-// 				tmp = it->getIconf();
-// 		}
-// 	}
-// 	// for (auto it = tmp.begin(); it != tmp.end(); it++)
-// 	// 	std::cout << "vect i_conf_default = " << *it << std::endl;
-// 	int j = is_server_name(host, port, tmp);  // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
-// 	if (j != -1)
-// 		return (j);
-// 	int count = 0;
-// 	int default_i = -1;
-// 	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-// 		if (conf[*it].host != host) {
-// 			return (*it); // =====> 1er host:port correspondant
-// 		}
-// 		else if (default_i == -1 && conf[*it].host == "0.0.0.0")
-// 			default_i = *it;
-// 	}
-// 	return (default_i); // =====> 1er 0.0.0.0:port correspondant
-// }
-
-/* Retourne l index du serveur correspondant au server_name */
-int	Server::is_server_name(std::string host, std::string port, std::vector<int> &tmp) {
-	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-	// for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
-		if (conf[*it].server_name == host) {
-			for(auto jt = conf[*it].ipv4_port.begin(); jt != conf[*it].ipv4_port.end(); jt++)
-				return (std::cout << "server_name i_conf = " << *it << std::endl, *it);
-		}
-	}
-	return (-1);
-}
-
-/* Retourne l index du serveur match */
-int	Server::is_host(std::string &host, std::string &port, in_addr_t socket_s_addr, std::string socket_ip) {
-	int i = 0;
-	std::vector<int> tmp;
-	
-	// RETURN UNNIQUE MATCH OR SET TMP TO CANDIDATES
-	for (auto it = server_fd.begin(); it != server_fd.end(); it++) {
+/* Check si on a un unnique match socket_ip - socket_ip_server */
+int	Server::unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp) {
+	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		if (port == it->getPort()) {
-			std::cout << "MATCH port" << std::endl;
 			if (socket_ip == it->getHost() || (it->getHost() == "localhost" && socket_ip == "127.0.0.1")) {
-				std::cout << "MATCH port + socket_ip" << std::endl;
-				if (it->getIconf().size() == 1) {
-					std::cout << "MATCH port + socket_ip + 1 candidat" << std::endl;
+				if (it->getIconf().size() == 1)
 					return (it->getIconf()[0]); // =====> Host a ete trouve : Il s'agit d'un server_host
-				}
 				else
 					tmp = it->getIconf();
 			}
@@ -453,89 +339,42 @@ int	Server::is_host(std::string &host, std::string &port, in_addr_t socket_s_add
 				tmp = it->getIconf();
 		}
 	}
-
-	std::cout << "tmp size = " << tmp.size() << std::endl;
-	for (auto it = tmp.begin(); it != tmp.end(); it++)
-		std::cout << "vect i_conf_default = " << *it << std::endl;
-
-	std::vector<int> tmp2;
-	for (auto it = tmp.begin(); it != tmp.end(); it++) {
-		if (conf[*it].host == socket_ip)
-			tmp2.push_back(*it);
-	}
-
-	std::cout << std::endl << "tmp2 size = " << tmp2.size() << std::endl;
-	for (auto it = tmp2.begin(); it != tmp2.end(); it++)
-		std::cout << "vect i_conf_default = " << *it << std::endl;
-	if (tmp2.size() == 1)
-		return (tmp2[0]);
-	std::vector<int> tmp3;
-	for (auto it = tmp2.begin(); it != tmp2.end(); it++) {
-		if (conf[*it].server_name == host)
-			tmp3.push_back(*it);
-	}
-	std::cout << std::endl << "tmp3 size = " << tmp3.size() << std::endl;
-	for (auto it = tmp3.begin(); it != tmp3.end(); it++)
-		std::cout << "vect i_conf_default = " << *it << std::endl;
-	
-	if (tmp3.size() == 1)
-		return (tmp3[0]);
-	else if (tmp2.size() > 0)
-		return (tmp2[0]);
-	else
-		return (tmp[0]);
+	return (-1);
 }
 
+/* Retourne l index du serveur match */
+int	Server::is_host(std::string host, std::string port, std::string socket_ip) {
+	int i;
+	std::vector<int> match, exact_host, server_name, default_host;
 
-// /*
-// URI Comparison
-
-//    When comparing two URIs to decide if they match or not, a client
-//    SHOULD use a case-sensitive octet-by-octet comparison of the entire
-//    URIs, with these exceptions:
-
-//       - A port that is empty or not given is equivalent to the default
-//         port for that URI-reference;
-
-//         - Comparisons of host names MUST be case-insensitive; // OK
-
-//         - Comparisons of scheme names MUST be case-insensitive; // OK
-
-//         - An empty abs_path is equivalent to an abs_path of "/".
-
-//    Characters other than those in the "reserved" and "unsafe" sets (see
-//    RFC 2396 [42]) are equivalent to their ""%" HEX HEX" encoding.
-
-//    For example, the following three URIs are equivalent:
-
-//       http://abc.com:80/~smith/home.html
-//       http://ABC.com/%7Esmith/home.html
-//       http://ABC.com:/%7esmith/home.html
-
-// */
-// int	Server::pick_server(Request &request) {
-// 	std::istringstream	iss(request.getHost());
-// 	std::string         	host;
-// 	std::string         	port;
-// 	int						i_host;
-// 	int						i_name;
-// 	int						i_default = -1;
-	
-// 	std::getline(iss, host, ':');
-// 	str_tolower(host);
-// 	std::cout << host << std::endl;
-// 	std::getline(iss, port);
-// 	if (conf.size() == 0)
-// 		return (0);
-// 	i_host = is_host(host, port, request.getSocket_s_addr(), &i_default);
-// 	if (i_host > -1) // =====> Host a ete trouve : Il s'agit d'un server_host SINON le premier server correspondant a un host:port a ete save dans i_default
-// 		return (i_host);
-// 	i_name = is_server_name(host, port, request.getSocket_s_addr());
-// 	if (i_name > -1) // =====> Server_name a ete trouve : Il s'agit d'un server_name existant avec le bon host et le bon port
-// 		return (i_name);
-// 	else // =====> Pas de server_name avec port et host ok trouve => on renvoie i_default
-// 		return (i_default);
-// }
+	i = unique_match(port, socket_ip, match);
+	std::cout << "i = " << i << std::endl;
+	if (i > -1)
+		return (i);
+	for (std::vector<int>::iterator it = match.begin(); it != match.end(); it++) {
+		if (conf[*it].host == socket_ip)
+			exact_host.push_back(*it);
+		if (conf[*it].host == "0.0.0.0")
+			default_host.push_back(*it);
+	}
+	if (exact_host.size() == 1)
+		return (exact_host[0]);
+	if (exact_host.size() > 0) {
+		for (std::vector<int>::iterator it = exact_host.begin(); it != exact_host.end(); it++)
+			if (conf[*it].server_name == host)
+				server_name.push_back(*it);
+	}
+	if (exact_host.size() == 0 || server_name.size() == 0) {
+		for (std::vector<int>::iterator it = default_host.begin(); it != default_host.end(); it++)
+			if (conf[*it].server_name == host)
+				server_name.push_back(*it);
+	}
+	if (server_name.size() == 1)
+		return (server_name[0]);
+	else if (exact_host.size() > 0)
+		return (exact_host[0]);
+	return (default_host[0]);
+}
 
 /*
 URI Comparison
@@ -564,17 +403,9 @@ URI Comparison
 
 */
 int	Server::pick_server(Request &request) {
-	std::istringstream	iss(request.getHost());
-	std::string         	host;
-	std::string         	port;
-	
-	std::getline(iss, host, ':');
-	str_tolower(host);
-	std::cout << host << std::endl;
-	std::getline(iss, port);
 	if (conf.size() == 0)
 		return (0);
-	return (is_host(host, port, request.getSocket_s_addr(), request.getSocket_ip()));
+	return (is_host(request.getHost(), request.getPort(), request.getSocket_ip()));
 }
 
 /*
@@ -591,16 +422,13 @@ connection is closed.
   */
   // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
 void	Server::read_request(int i, char *buffer, int read) {
-
-	int			i_conf = 0;
 	
 	for (int j = 0; j < BUFFER_SIZE; j++)
 		std::cout << buffer[j];
 	std::cout << std::endl;
 
 	// Si une requete a deja ete cree : 
-	// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-	for (auto it = requests.begin(); it != requests.end(); it++) {
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getSocket_fd() == fds[i].fd) {
 			if (it->getStatus() == READING) { // UTILE ICI ?
 				it->addSave_buffer(buffer);

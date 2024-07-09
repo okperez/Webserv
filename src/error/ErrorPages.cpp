@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/01 17:05:41 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 10:58:43 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,11 @@
 /* ************************************************************************* */
 
 ErrorPages::ErrorPages() {
+    map_error["400"] = " Bad Request";
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
+    map_error["413"] = " Request Entity Too Large";
+	map_error["505"] = " HTTP Version not supported";
 }
 
 ErrorPages::ErrorPages(const ErrorPages & orig) { (void) orig; }
@@ -62,7 +65,7 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
     else {
         std::ifstream file;
 		
-        file.open(conf.err_pgs[code]);
+        file.open(conf.err_pgs[code].data());
         if (file.is_open())
 			response.setBody(file);
 		    // std::getline(file, body, '\0');
