@@ -1,6 +1,6 @@
 NAME 			= 	webserv
-CXX 			= 	c++
-CXXFLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
+CXX 			= 	c++ -g3
+CXX_FLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
 
 ################################### SOURCES ###################################
 

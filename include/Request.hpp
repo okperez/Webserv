@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 10:38:56 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 11:28:22 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ class Request
 		/* ****************************** CGI ****************************** */
 		/* ***************************************************************** */
 		void	handle_cgi(t_conf & conf);
-		void	set_env(t_conf & conf, char ***env);
+		char**	set_env(t_conf & conf);
 		void	exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf & conf);
 
 
