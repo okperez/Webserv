@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 11:59:25 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:27:10 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Request::Request(char const *buffer, int read, int socket) {
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) , dir(0) {
-	(void) orig;
+	*this = orig;
 }
 
 Request::~Request() {}
@@ -132,6 +132,9 @@ void	Request::send_response(int socket_fd) {
 	response.setContent_length();
 	std::string response_content = response.build_response();
 	write(socket_fd, response_content.c_str(), response_content.size());
+	std::cout << "********** RESPONSE **********" << std::endl;
+	std::cout << response_content << std::endl;
+	std::cout << "******************************" << std::endl;
 	status = SENT;
 }
 
@@ -172,8 +175,9 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 				}
 				add_path(conf, index); // GET POST DELETE
 			}
-			std::cout << "target " << target << std::endl;
+			std::cout << "0 target " << target << std::endl;
 			cgi_parse_target();
+			std::cout << "1 target " << target << std::endl;
 			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
 		}
 	}
@@ -219,7 +223,7 @@ std::string Request::look_for_location(t_conf & conf) {
 	return (look_if_location(target, conf)); //on recupere l index de la location :)
 }
 
-/* Supprime la location et la remplace par la root */
+/* Supprime la location et la remplace par la root dans target */
 void	Request::add_path(t_conf & conf, std::string &index) {
 	
 	std::string root;
@@ -234,6 +238,20 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 		index.erase(0, 1);
 	target.replace(target.find(index), index.length(), root);
 	// std::cout << "target : " << target << std::endl;
+}
+
+/* Ajoute le path au fichier correspondant au code de redirection */
+void	Request::add_path(t_conf & conf, std::string &index, std::string &redir) {
+	
+	std::string root;
+	
+	if (conf.location[index].find("root") == conf.location[index].end())
+		root = conf.root_dir;
+	else
+		root  = conf.location[index]["root"];
+	if(strback(root) != '/')
+		root += "/";
+	redir = root + redir;
 }
 
 /* ************************************************************************* */
@@ -323,8 +341,8 @@ char**	Request::set_env(t_conf & conf)
 
 	std::cout << "target in CGI" << target << std::endl;
 	std::string copy = target;
-	script_name = copy.substr(0, copy.find('?'));
-	std::string join = ("./" + script_name);
+	_script_name = copy.substr(0, copy.find('?'));
+	std::string join = ("./" + _script_name);
 	char const *exec = join.c_str();
 	(void) exec;
 	copy.erase(0, copy.find('/') + 1);
@@ -333,8 +351,8 @@ char**	Request::set_env(t_conf & conf)
 	for (int i = 0; i < 7; i++)
 		env[i] = new char [1024];
 	strcpy(env[0], ("REQUEST_METHOD=" + method).c_str());
-	strcpy(env[1], ("QUERY_STRING=" + query_string).c_str());
-	strcpy(env[2], ("SCRIPT_NAME=" + script_name).c_str());
+	strcpy(env[1], ("QUERY_STRING=" + _query_string).c_str());
+	strcpy(env[2], ("SCRIPT_NAME=" + _script_name).c_str());
 	strcpy(env[3], ("SERVER_NAME=" + conf.server_name).c_str());
 	strcpy(env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
 	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
@@ -351,7 +369,7 @@ void    Request::handle_cgi(t_conf & conf)
 	char const *exec = "./cgi_script/form_handler.cgi";
 	
 	std::string copy = target;
-	script_name = copy.substr(0, copy.find('?'));
+	_script_name = copy.substr(0, copy.find('?'));
 	copy.erase(0, copy.find('/') + 1);
 	copy.erase(0, copy.find('/') + 1);
 
@@ -368,9 +386,9 @@ void    Request::handle_cgi(t_conf & conf)
 	// char *const argv[] = {exec, NULL};
 	// char *argv[2] = {"form_handler.cgi", NULL};
 	copy.erase(0, copy.find('?') + 1);
-	query_string = copy.substr(0, copy.npos);
-	script_name.erase(0, script_name.find('/'));
-	script_name.insert(0, "./cgi-bin");
+	_query_string = copy.substr(0, copy.npos);
+	_script_name.erase(0, _script_name.find('/'));
+	_script_name.insert(0, "./cgi-bin");
 	// std::cout << "script name = " << script_name << std::endl;
 	exec_script(exec, argv, env, conf);
 	// for (int i = 0; i < 7; i++)
@@ -388,14 +406,19 @@ void    Request::handle_cgi(t_conf & conf)
 
 // A FAIRE : 
 //		setContenttype() en fonction du language du fichier  
-//		implementer directive return dans location ou server  
+//		implementer directive return dans location ou server  ===> Gerer les cas d erreur de return si on a pas format code + " " + strig
 //		voir si on arrive a envoyer une image  
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	// std::cout << "\nLOCATION = " << location << std::endl;
+	std::cout << "\nLOCATION = " << location << std::endl;
+	std::cout << "TARGET = " << target << std::endl;
+	std::cout << "DIR = " << dir << std::endl;
+	// IMPLEMENTER REDIR ICI
 	if (location.empty()) {
 		// =====> Request is a directory (end with a "/")
+		if (!ret.empty())
+			redirection(ret, error); // A FAIRE : GERER CAS D ERREUR + ATTENTION AU OUCLE INFINI EX 0 loc correspondante dans 2eme request
 		if (dir == 1)
 			target_directory(conf, error);
 		//  =====> Request isn't a directory
@@ -405,8 +428,12 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		}
 	}
 	else {
+		// =====> Location has a return
+		std::map<std::string, std::string>::iterator it = conf.location[location].find("return");
+		if (it != conf.location[location].end())
+			redirection(it->second, error); // A FAIRE : GERER CAS D ERREUR+ ATTENTION AU BOUCLE INFINI EX meme location
 		// =====> Request is a directory (end with a "/")
-		if (dir == 1)
+		else if (dir == 1)
 			target_directory(conf, location, error);
 		//  =====> Request isn't a directory
 		else if (location.find("/cgi-bin") != location.npos)
@@ -420,10 +447,9 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 				error.fill_error(response, "404", conf);
 			}
 		}
-		else {
+		else
 			if (!open_targetfile(target))
 				error.fill_error(response, "404", conf);
-		}
 	}
 	send_response(socket_fd);
 }
@@ -447,10 +473,10 @@ bool	Request::open_targetfile(std::string & target) {
 void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 	
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
-	// for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = target + *it;
+		std::cout << "tmp = "<< tmp<< std::endl;
 		if (open_targetfile(tmp)) // =====> open le 1er index valide
-			return ;
+			return (std::cout << "return" << std::endl, (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(), (void)0);
@@ -507,6 +533,13 @@ void	Request::build_index() {
 	response.setContent_type("text/html"); // Type ok : l'index auto genere est html
 }
 
+void	Request::redirection(std::string const & ret, ErrorPages &error) {
+	std::string code = ret.substr(0, ret.find(' ')); // GERER CAS ERREUR
+	std::string redir = ret.substr(ret.find(' ') + 1); // GERER CAS ERREUR
+	redir = "http://" + host + ":" + port + "/" + redir;
+	error.fill_redir(response, code, redir);
+}
+
 /* ************************************************************************* */
 /* ********************************** POST ********************************* */
 /* ************************************************************************* */
@@ -517,7 +550,11 @@ void	Request::build_index() {
 
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
-	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty() || content_length == -1) {
+	if (miss_length && !body.empty()) {
+		error.fill_error(response, "411", conf);
+		return (send_response(socket_fd), false);
+	}
+	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty() || content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
 		error.fill_error(response, "400", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -581,9 +618,15 @@ void	Request::parse_request(in_addr_t s_addr) {
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
 	std::string tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
-	try { content_length = ft_stoi(tmp); }
-	catch (std::exception & e) { content_length = -1; }
-	std::string content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+	if (tmp.empty())
+		miss_length = true;
+	else {
+		miss_length = false;
+		try { content_length = ft_stoi(tmp); }
+		catch (std::exception & e) { content_length = -1; }
+	}
+	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+	body = extract_body(save_buffer);
 	std::cout << std::endl;
 	std::cout << "host : " << host << std ::endl;
 	std::cout << "port : " << port << std ::endl;
@@ -592,6 +635,7 @@ void	Request::parse_request(in_addr_t s_addr) {
 	std::cout << "version : " << version << std ::endl;
 	std::cout << "content_length : " << content_length << std ::endl;
 	std::cout << "connection : " << connection << std ::endl;
+	std::cout << "body : " << body << std ::endl;
 	std::cout << "*******************************" << std ::endl;
 	std::cout << "save_buffer : " << save_buffer << std ::endl;
 	std::cout << "*******************************" << std ::endl;
@@ -634,16 +678,11 @@ std::string Request::extract_elem(std::string const & elem, std::string const & 
 	return (extract_header(tmp));
 }
 
-std::string Request::extract_body(std::string const & delim, std::string & buff) {
+std::string Request::extract_body(std::string & buff) {
 	
-	(void) delim;
-	(void) buff;
-	// int begin, end = 0, sep_body;
-	// begin = buff.find("\n\r\n");
-	// if (begin == -1 || (sep_body > -1 && begin > sep_body))
-	// 	return (nofound);
-	// end = buff.find(delim, begin);
-	// std::string tmp (buff.substr(begin, end + 1));
-	// return (extract_header(tmp));
-	return ("oaoa");
+	int begin = buff.find("\n\r\n");
+	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
+		return ("");
+	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
+	return (tmp);
 }

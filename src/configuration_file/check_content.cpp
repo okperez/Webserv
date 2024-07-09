@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_content.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 10:42:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 12:15:02 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,8 +111,8 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
         throw ConfFileException ("Error: missing body size number");
     if (conf.root_dir.empty())
         check_for_root(conf.location);
-    if (conf.files == "")
-        conf.files = "index.html";
+    // if (conf.files == "")
+    //     conf.files = "index.html";
     if (conf.server_name.empty())
         conf.server_name = get_ip_address();
     for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf.location.begin(); it != conf.location.end(); it++)

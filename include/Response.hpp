@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/01 16:21:34 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:07:14 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ class Response
 		std::string 	_status;
 		std::string 	_content_type;
 		std::string 	_content_length;
+		std::string 	_location;
 		std::string 	_body;
 	
 		Response(const Response & orig);
@@ -37,6 +38,7 @@ class Response
 		void	setStatus(std::string const & code, std::string const & tittle);
 		void	setContent_type(std::string const & s);
 		void	setContent_length();
+		void	setLocation(std::string const & s);
 		void	setBody(std::string const & s);
 		void	setBody(std::ifstream &file);
 

@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 10:58:43 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:23:10 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,11 @@
 /* ************************************************************************* */
 
 ErrorPages::ErrorPages() {
+    map_error["301"] = " Moved Permanently";
     map_error["400"] = " Bad Request";
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
+	map_error["411"] = " Length Required";
     map_error["413"] = " Request Entity Too Large";
 	map_error["505"] = " HTTP Version not supported";
 }
@@ -68,45 +70,15 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
         file.open(conf.err_pgs[code].data());
         if (file.is_open())
 			response.setBody(file);
-		    // std::getline(file, body, '\0');
         else
 			err_not_found(response, code);
     }
-    // response = "HTTP/1.1 ";
-    // response += code;
-    // response += map_error[code];
 	response.setStatus(code, map_error[code]);
 	response.setContent_type("text/html"); // ATTENTION A MODI SELON TYPE FICHIER : css, jss...
-    // response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
 }
 
-// void	ErrorPages::fill_error(std::string &body, std::string &response, std::string code, t_conf &conf) {
+void	ErrorPages::fill_redir(Response &response, std::string const &code, std::string const &redir) {
     
-//     if (conf.err_pgs.find(code) == conf.err_pgs.end())
-// 		err_not_found(body, code);
-//     else {
-//         std::ifstream file;
-		
-//         file.open(conf.err_pgs[code]);
-//         if (file.is_open())
-// 		    std::getline(file, body, '\0');
-//         else
-// 			err_not_found(body, code);
-//     }
-//     response = "HTTP/1.1 ";
-//     response += code;
-//     response += map_error[code];
-//     response += "\r\nContent-Type: text/html\r\nContent-Length: "; // attention si css jss....
-// }
-
-
-// void	ErrorPages::err_not_found(std::string &body, std::string &code) {
-// 	body = "<!DOCTYPE html>\n<html>\n<head>\n\t<title>";
-// 	body += map_error[code];
-// 	body += "</title>\n</head>\n<body>\n\t<h1>";
-// 	body += code;
-// 	body += "</h1>\n\t<h1>";
-// 	body += map_error[code];
-// 	body += "</h1>\n</body>";
-// }
-
+	response.setStatus(code, map_error[code]);
+	response.setLocation(redir);
+}

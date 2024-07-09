@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/01 16:53:30 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:18:54 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ Response &Response::operator=(Response const & rhs) {
 	_content_type = rhs._content_type;
 	_content_length = rhs._content_length;
 	_body = rhs._body;
+	_location = rhs._location;
 	return (*this); 
 }
 
@@ -54,6 +55,11 @@ void	Response::setContent_length() {
 	stream << length;
 	stream >> _content_length;
 }
+
+void	Response::setLocation(std::string const & s) {
+	_location = s;
+}
+
 void	Response::setBody(std::string const & s) {
 	_body += s;	
 }
@@ -71,9 +77,13 @@ std::string Response::build_response() const {
 	std::string delim = "\r\n";
 	
 	response += _status + delim;
-	response += "Content-Type: " + _content_type + delim;
+	if (!_location.empty())
+		response += "Location: " + _location + delim;
+	if (!_content_type.empty())
+		response += "Content-Type: " + _content_type + delim;
 	response += "Content-Length: " + _content_length + delim + delim;
-	response += _body;
+	if (!_body.empty())
+		response += _body;
 	// std::cout << "response = |" << response << "|" << std::endl;
 	return (response);
 }
