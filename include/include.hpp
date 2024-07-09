@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 16:33:54 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:56:31 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,5 +36,6 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 
 #endif

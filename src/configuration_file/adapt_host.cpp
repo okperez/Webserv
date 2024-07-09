@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:08:19 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 12:19:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:25:42 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ std::string	int_to_str(int n) {
 /* Checke si adresse ip de l host a un format valid + supprime les 0 inutiles. ex : 127.001.001.1 => 127.1.1.1*/
 void	adapt_host(std::string &s) {
 	
-	int i;
 	int n;
 	char c;
 	

@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 15:45:54 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:15:11 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,10 +71,10 @@ void    handle_files(std::string str, t_conf & conf)
 
 void    set_flag(t_flag & flag)
 {
-    int loc = 0; 
-    int err_pgs = 0;
-    int ret = 0;
-    int ret_loc = 0;
+    flag.loc = 0; 
+    flag.err_pgs = 0;
+    flag.ret = 0;
+    flag.ret_loc = 0;
 }
 
 void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
@@ -82,7 +82,7 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
     int i = 0;
 
     set_flag(conf.flag);
-    for (auto it = cnf_file.begin(); it != cnf_file.end(); it++)
+    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
     {
         set_flags(*it, conf.flag.loc, conf.flag.err_pgs);
         if ((*it).find("listen ") != (*it).npos)

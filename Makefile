@@ -60,11 +60,11 @@ DEPS 		:= $(OBJS:.o=.d)
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CXX) $(CXX_FLAGS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
 $(OBJS_DIR)%.o:$(SRCS_DIR)%.cpp
 	mkdir -p $(@D)
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ $(MLX_FLAGS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 -include $(DEPS)
 

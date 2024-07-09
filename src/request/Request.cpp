@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/05 18:01:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 11:15:04 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,13 +266,14 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ************************************************************************* */
 
 
-void	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
+void	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf & conf)
 {
 	int		pid;
 	int		status;
 	int		fd[2];
 	int		rd;
 	char	buff[1024];
+	int		exit_status;
 	std::string	output;
 	
 	pipe(fd);
@@ -284,27 +285,37 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
-		if (execve(pathname, argv, envp) != 0)
-		{
-			perror("execve");
-			return ;
-		}
+			if (execve(pathname, argv, envp) != 0)
+			{
+				perror("execve");
+				exit (1);
+			}
 	}
 	else
 		waitpid(pid, &status, 0);
 	close(fd[1]);
-	while (1)
+	if (WIFEXITED(status))
+		exit_status = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		std::cout << "Rediriger vers page error 500\n";
+	if (exit_status != 1)
 	{
-		rd = read(fd[0], buff, sizeof(buff) - 1);
-		if (rd < 1)
-			break ;
-		buff[rd] = '\0';
+		while (1)
+		{
+			rd = read(fd[0], buff, sizeof(buff) - 1);
+			if (rd < 1)
+				break ;
+			buff[rd] = '\0';
+		}
+		close(fd[0]);
+		// std::cout << "BUFFER:\n" << buff << std::endl;
+		response.setBody(buff);
+		response.setStatus("200", " OK");
+		response.setContent_type("text/html");
 	}
-	close(fd[0]);
-	// std::cout << "BUFFER:\n" << buff << std::endl;
-	response.setBody(buff);
-	response.setStatus("200", " OK");
-	response.setContent_type("text/html");
+	else
+		throw ;
+		
 }
 
 void	Request::set_env(t_conf & conf, char ***env)
@@ -324,10 +335,11 @@ void    Request::handle_cgi(t_conf & conf)
 	char	**env;
 	char	**argv;
 
-	char const *exec = "./cgi-bin/form_handler.cgi";
-	
+	std::cout << "target in CGI" << target << std::endl;
 	std::string copy = target;
 	script_name = copy.substr(0, copy.find('?'));
+	std::string join = ("./" + script_name);
+	char const *exec = join.c_str();
 	copy.erase(0, copy.find('/') + 1);
 	copy.erase(0, copy.find('/') + 1);
 
@@ -358,8 +370,7 @@ void    Request::handle_cgi(t_conf & conf)
 	script_name.erase(0, script_name.find('/'));
 	script_name.insert(0, "./cgi-bin");
 	// std::cout << "script name = " << script_name << std::endl;
-	
-	exec_script(exec, argv, env);
+	exec_script(exec, argv, env, conf);
 	// for (int i = 0; i < 7; i++)
 	// 	std::cout << i << " " << env[i] << std::endl;
 	for (int i = 0; i < 7; i++)
@@ -393,7 +404,14 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		//  =====> Request isn't a directory
 		else if (location.find("/cgi-bin") != location.npos)
 		{
-			handle_cgi(conf);
+			try
+			{
+				handle_cgi(conf);
+			}
+			catch(const std::exception& e)
+			{
+				error.fill_error(response, "404", conf);
+			}
 		}
 		else {
 			if (!open_targetfile(target))

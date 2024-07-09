@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/05 14:08:53 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:09:03 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ typedef struct s_conf
   std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::string                                               autoindex;
   std::string                                               ret; // return
-  std::map<std::string, std::map<std::string, std::string>> location;
+  std::map<std::string, std::map<std::string, std::string> >location;
   std::map<std::string, std::string>					    err_pgs;
   std::list<std::string>                                    wrong_arg;
   s_flag                                                    flag;

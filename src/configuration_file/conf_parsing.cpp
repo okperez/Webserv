@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/07/05 11:09:52 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:13:43 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,15 +47,15 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
         }
         it++;
     }
-    std::cout << "Here parsing fail with server only in conf file\n";
-    for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    {
-        if (((*it) == "server" || (*it) == "server ") && *std::next(it) == "{")
-        {
-            *it = "server{";
-            it = cnf_file.erase(std::next(it));
-        }
-    }
+    // std::cout << "Here parsing fail with server only in conf file\n";
+    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+    // {
+        // if (((*it) == "server" || (*it) == "server ") && *std::next(it) == "{")
+        // {
+            // *it = "server{";
+            // it = cnf_file.erase(std::next(it));
+        // }
+    // }
 }
 
 int     count_server(std::list<std::string> & cnf_file)

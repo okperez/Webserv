@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_err_pgs.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 14:22:22 by operez            #+#    #+#             */
-/*   Updated: 2024/06/28 17:50:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 10:25:20 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 void    err_pgs_to_conf(std::list<std::string> & err_pgs, t_conf & conf)
 {
-    int                                 size = err_pgs.size();
     std::pair<std::string, std::string> pair;
 
     // std::cout << "bloc err" << std::endl;
@@ -30,7 +29,7 @@ void    err_pgs_to_conf(std::list<std::string> & err_pgs, t_conf & conf)
     std::cout << std::endl;
 }
 
-std::list<std::string>  extract_bloc_err_pgs(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin)
+std::list<std::string>  extract_bloc_err_pgs(std::list<std::string>::iterator begin)
 {
     std::list<std::string>::iterator    end;
     std::list<std::string>::iterator    it = begin;
@@ -57,7 +56,7 @@ void    handle_err_pgs(std::list<std::string> & cnf_file, t_conf & conf)
     {
         if ((*it).find("error_page {") != (*it).npos || (*it).find("error_page{") != (*it).npos)
         {
-            err_pgs = extract_bloc_err_pgs(cnf_file, it);
+            err_pgs = extract_bloc_err_pgs(it);
             err_pgs_to_conf(err_pgs, conf);
         }
     }

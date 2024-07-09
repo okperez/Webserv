@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 15:50:06 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 10:15:46 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
         if (!conf[i].ret.empty())
         std::cout << "return | " << conf[i].ret << std::endl;
         std::cout << std::endl;
-        for (std::map<std::string, std::map<std::string, std::string>>::iterator it = conf[i].location.begin(); it != conf[i].location.end(); it++)
+        for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf[i].location.begin(); it != conf[i].location.end(); it++)
         {
             std::cout << "Location " << (*it).first << std::endl;
             for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
