@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Listen.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 10:28:47 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 11:44:29 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,9 @@ class Listen
 
 		int	getFd() const;
 		std::vector<int>	getIconf() const;
-		const std::string	getPort() const;
-		const in_addr_t	getS_addr() const;
-		const std::string	getHost() const;
+		std::string	getPort() const;
+		in_addr_t	getS_addr() const;
+		std::string	getHost() const;
 		
 		void	addIconf(int i);
 		

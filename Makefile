@@ -1,5 +1,17 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: galambey <galambey@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2024/07/09 11:44:01 by galambey          #+#    #+#              #
+#    Updated: 2024/07/09 11:44:10 by galambey         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 NAME 			= 	webserv
-CXX 			= 	c++ -g3
+CXX 			= 	c++
 CXX_FLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
 
 ################################### SOURCES ###################################
@@ -23,7 +35,8 @@ SERV_SRCS		=	Server.cpp \
 					Listen.cpp
 
 EXCEPTION_DIR	=	exception/
-EXCEPTION_SRCS	=	ServerException.cpp
+EXCEPTION_SRCS	=	ServerException.cpp \
+					NotAnIntException.cpp
 
 REQUEST_DIR		=	request/
 REQUEST_SRCS	=	Request.cpp \

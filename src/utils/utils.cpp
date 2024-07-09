@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 11:01:35 by garance           #+#    #+#             */
-/*   Updated: 2024/07/02 11:33:11 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/09 10:42:19 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,8 @@ void	strtovect(std::string s, std::vector<std::string> & v, std::string const & 
 		if (found == std::string::npos)
 			return ;
 	}
+}
+
+char	strback(std::string const & s) {
+	return (s[s.length() - 1]);
 }

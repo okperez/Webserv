@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 10:09:03 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 11:49:07 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,12 @@ typedef struct s_conf
 {
   std::vector<std::string>                                  ipv4_port;
   std::vector<std::string>                                  ipv6_port;
-  std::string							                    max_body_size;
-  std::string											    host;
+  std::string												max_body_size; // A EFFACER UNE FOIS PASSER EN INT
+  int														limit_body_size; // max_body_size en int, une fois ok effacer
+  std::string												host;
   std::string                                               server_name;
   std::string                                               root_dir;
-  std::string                                               files; // A Transformer en vecteur de string : il peut y en avoir plusieurs
+  std::string                                               files;  // A EFFACER UNE FOIS PASSER EN VECTEUR // A Transformer en vecteur de string : il peut y en avoir plusieurs, une fois ok effacer
   std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::string                                               autoindex;
   std::string                                               ret; // return
@@ -69,6 +70,10 @@ class   ConfFileException : public std::exception
     {
         return (s);
     }
+};
+
+class	NotAnIntException : public std::exception {
+			const char *what() const throw();	
 };
 
 // // A EFFACER
@@ -133,9 +138,9 @@ void        clear_space(std::string & type);
 std::string extract_type(std::string buff);
 std::string extract_index(std::string buff);
 void	      str_tolower(std::string & s);
-
+int 		ft_stoi( std::string const & s );
 void        strtovect(std::string s, std::vector<std::string> & v, std::string const & delim);
-
+char		strback(std::string const & s);
 
 // /* ****************************** request.cpp ******************************** */
 

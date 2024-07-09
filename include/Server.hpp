@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/04 14:16:49 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 11:12:14 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,10 @@ class Server
 		/* ************************* BFR LAUNCHING ************************* */
 		/* ***************************************************************** */
 		
+		struct addrinfo	*get_addr_info(char *data);
 		bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host, int i);
 		// bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host);
-		void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port, std::string & host);
+		void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port);
 		// void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port);
 		void	listen_socket(int new_socket, int port);
 		
@@ -75,7 +76,9 @@ class Server
 		/* ***************************************************************** */
 		
 		// int	is_host(std::string host, std::string port, in_addr_t socket_s_addr, std::vector<int> *default_i);
-		int	is_host(std::string host, std::string port, in_addr_t socket_s_addr, int *default_i);
+		// int	is_host(std::string &host, std::string &port, in_addr_t socket_s_addr);
+		int	is_host(std::string host, std::string port, std::string socket_host);
+		int	unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
 		// int	is_server_name(std::string host, std::string port, in_addr_t socket_s_addr);
 		int	is_server_name(std::string host, std::string port, std::vector<int> &tmp);
 		int	pick_server(Request &request);

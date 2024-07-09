@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 11:40:08 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/09 11:54:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ Request::Request(char const *buffer, int read, int socket) {
 	std::cout << "End of Constructor Request" << std::endl;
 }
 
-Request::Request(const Request & orig) : status(orig.status), save_buffer(orig.save_buffer) , socket_fd(orig.socket_fd), dir(0) {
+Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) , dir(0) {
 	(void) orig;
 }
 
@@ -61,9 +61,12 @@ Request &Request::operator=(Request const & rhs) {
 	host = rhs.host;
 	port = rhs.port;
 	agent = rhs.agent;
-	media = rhs.media;
+	// media = rhs.media;
 	connection = rhs.connection;
 	socket_s_addr = rhs.socket_s_addr;
+	socket_ip = rhs.socket_ip;
+	_query_string = rhs._query_string;
+	_script_name = rhs._script_name;
 	
 	response = rhs.response;
 
@@ -86,8 +89,16 @@ in_addr_t Request::getSocket_s_addr() const {
 	return (socket_s_addr);
 }
 
+std::string Request::getSocket_ip() const {
+	return (socket_ip);
+}
+
 std::string Request::getHost() const {
 	return (host);
+}
+
+std::string Request::getPort() const {
+	return (port);
 }
 
 std::string Request::getConnection() const {
@@ -107,23 +118,10 @@ void	Request::addSave_buffer(const char *buffer) {
 }
 
 /* ************************************************************************* */
-/* ******************************** Parsing ******************************** */
+/* ******************************* Exception ******************************* */
 /* ************************************************************************* */
 
-void	Request::parse_request(in_addr_t s_addr) {
-	
-	socket_s_addr = s_addr;
-	method = extract_line(save_buffer, ' ');
-	target = extract_line(save_buffer, ' ');
-	if (target.back() == '/')
-		dir = 1;
-	version = extract_line(save_buffer, '\r');
-	host = extract_header(save_buffer);
-	agent = extract_header(save_buffer);
-	media = extract_header(save_buffer);
-	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-	// std::cout << "connection : " << connection << std ::endl;
-}
+
 
 /* ************************************************************************* */
 /* ******************************** Actions ******************************** */
@@ -138,13 +136,14 @@ void	Request::send_response(int socket_fd) {
 }
 
 //  parse request from client and send back response 
-int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
+int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
 {
+	if (!check_request(socket_fd, conf, error))
+		return (1);
 	int i = check_exist_method();
 	std::cout << "i = " << i << std::endl;
 	switch (i) {
 		case UNKNOWN : {
-			std::cout << "ERROR" << std::endl;
 			error.fill_error(response, "405", conf);
 			return (send_response(socket_fd), 1);
 		}
@@ -158,7 +157,8 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
 					return (send_response(socket_fd), 1);
 				}
 				else {
-					if (conf.root_dir.back() == '/')
+					if (strback(conf.root_dir) == '/')
+					// if (conf.root_dir.back() == '/')
 						target.replace(0, 1, conf.root_dir);
 					else	
 						target.insert(0, conf.root_dir);
@@ -173,7 +173,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error)
 				add_path(conf, index); // GET POST DELETE
 			}
 			std::cout << "target " << target << std::endl;
-			// CGI
+			cgi_parse_target();
 			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
 		}
 	}
@@ -189,12 +189,12 @@ Recherche pour la location de la plus precise a la moins precise dans le serveur
 // PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
 std::string Request::look_if_location(std::string &target, t_conf & conf) {
 
-	// std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	auto it = conf.location.find(target);
+	std::map< std::string, std::map<std::string, std::string> >::iterator it;
+	it = conf.location.find(target);
 	if (it != conf.location.end())
 		return (it->first);	
 	std::string s = target;
-	if (target.back() == '/')
+	if (strback(target) == '/')
 		s.erase(s.length() - 1, 1); 
 	else {
 		size_t found = s.rfind('/');
@@ -212,8 +212,8 @@ Cherche si une location = correspondante a la target existe, sinon appelle look_
 std::string Request::look_for_location(t_conf & conf) {
 	
 	std::string s = "=" + target;
-	// std::map< std::string, std::map<std::string, std::string> >::iterator it;
-	auto it = conf.location.find(s);
+	std::map< std::string, std::map<std::string, std::string> >::iterator it;
+	it = conf.location.find(s);
 	if (it != conf.location.end())
 		return (it->first);
 	return (look_if_location(target, conf)); //on recupere l index de la location :)
@@ -228,9 +228,9 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 		root = conf.root_dir;
 	else
 		root  = conf.location[index]["root"];
-	if(index.back() == '/' && root.back() != '/')
+	if(strback(index) == '/' && strback(root) != '/')
 		root += "/";
-	if (index.front() == '=')
+	if (index[0] == '=')
 		index.erase(0, 1);
 	target.replace(target.find(index), index.length(), root);
 	// std::cout << "target : " << target << std::endl;
@@ -264,7 +264,6 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ************************************************************************* */
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
-
 
 void	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf & conf)
 {
@@ -386,6 +385,11 @@ void    Request::handle_cgi(t_conf & conf)
 /* ********************************** GET ********************************** */
 /* ************************************************************************* */
 
+// A FAIRE : 
+//		setContenttype() en fonction du language du fichier  
+//		implementer directive return dans location ou server  
+//		voir si on arrive a envoyer une image  
+
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
 	// std::cout << "\nLOCATION = " << location << std::endl;
@@ -427,7 +431,7 @@ bool	Request::open_targetfile(std::string & target) {
 	
 	std::ifstream     file;
 	
-	file.open(target);
+	file.open(target.data());
 	if (file.is_open()) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
@@ -441,8 +445,8 @@ bool	Request::open_targetfile(std::string & target) {
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
 void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 	
-	// for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
-	for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
+	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
+	// for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = target + *it;
 		if (open_targetfile(tmp)) // =====> open le 1er index valide
 			return ;
@@ -455,13 +459,11 @@ void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
 void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	// std::map<std::string, std::string>::iterator it = conf.location[location].find("index");
-	auto it = conf.location[location].find("index");
+	std::map<std::string, std::string>::iterator it = conf.location[location].find("index");
 	if (it != conf.location[location].end()) { // =====> Index in location present
 		std::vector<std::string> index;
 		strtovect(it->second, index, " ");
-		// for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
-		for (auto jt = index.begin(); jt != index.end(); jt++) {
+		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
 			std::string tmp = target + *jt;
 			if (open_targetfile(tmp)) // =====> open le 1er index valide
 				return ;
@@ -505,6 +507,97 @@ void	Request::build_index() {
 }
 
 /* ************************************************************************* */
+/* ********************************** POST ********************************* */
+/* ************************************************************************* */
+
+/* ************************************************************************* */
+/* ******************************** Parsing ******************************** */
+/* ************************************************************************* */
+
+bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
+	
+	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty() || content_length == -1) {
+		error.fill_error(response, "400", conf);
+		return (send_response(socket_fd), false);
+	}
+	if (version != "HTTP/1.1") {
+		error.fill_error(response, "405", conf);
+		return (send_response(socket_fd), false);
+	}
+	if (content_length > conf.limit_body_size) {
+		error.fill_error(response, "413", conf);
+		return (send_response(socket_fd), false);
+	}
+	return (true);
+}
+
+void	Request::recover_ip_socket() {
+	u_int32_t n = ntohl(socket_s_addr);
+	std::stringstream iss;
+	for (int i = 24; i >= 0; i -= 8) {
+		int tmp = (n >> i) & 0xFF;
+		iss << tmp;
+		if (i > 0)
+			iss << '.';
+	}
+	socket_ip = iss.str();
+	std::cout << socket_ip << std::endl;
+}
+
+void	Request::cgi_parse_target() {
+	
+	size_t found = target.find('?');
+
+	if (found != std::string::npos) {
+		_script_name = target.substr(0, found);
+		if (found < target.length() - 1)
+			_query_string = target.substr(found + 1);
+	}
+}
+
+void	Request::parse_host() {
+	std::istringstream	iss(host);
+	
+	std::getline(iss, host, ':');
+	str_tolower(host);
+	std::getline(iss, port);
+}
+
+void	Request::parse_request(in_addr_t s_addr) {
+	
+	socket_s_addr = s_addr;
+	recover_ip_socket();
+	/* Parse first line */
+	method = extract_line(save_buffer, ' ');
+	target = extract_line(save_buffer, ' ');
+	if (strback(target) == '/')
+		dir = 1;
+	version = extract_line(save_buffer, '\r');
+	/* Extract Headers */
+	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
+	// media = extract_elem("Accept:", "\r", save_buffer, ""); // POUR L INSTANT PAS D UTILITE
+	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
+	host = extract_elem("Host:", "\r", save_buffer, "");
+	parse_host();
+	std::string tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
+	try { content_length = ft_stoi(tmp); }
+	catch (std::exception & e) { content_length = -1; }
+	std::string content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+	std::cout << std::endl;
+	std::cout << "host : " << host << std ::endl;
+	std::cout << "port : " << port << std ::endl;
+	std::cout << "method : " << method << std ::endl;
+	std::cout << "target : " << target << std ::endl;
+	std::cout << "version : " << version << std ::endl;
+	std::cout << "content_length : " << content_length << std ::endl;
+	std::cout << "connection : " << connection << std ::endl;
+	std::cout << "*******************************" << std ::endl;
+	std::cout << "save_buffer : " << save_buffer << std ::endl;
+	std::cout << "*******************************" << std ::endl;
+	std::cout << std::endl;
+}
+
+/* ************************************************************************* */
 /* ********************************* Utils ********************************* */
 /* ************************************************************************* */
 
@@ -530,10 +623,26 @@ std::string Request::extract_header(std::string & buff) const
 
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
-	int begin = buff.find(elem);
-	if (begin == -1)
+	int begin, end = 0, sep_body;
+	sep_body = buff.find("\n\r\n");
+	begin = buff.find(elem);
+	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
-	int end = buff.find(delim);
+	end = buff.find(delim, begin);
 	std::string tmp (buff.substr(begin, end + 1));
 	return (extract_header(tmp));
+}
+
+std::string Request::extract_body(std::string const & delim, std::string & buff) {
+	
+	(void) delim;
+	(void) buff;
+	// int begin, end = 0, sep_body;
+	// begin = buff.find("\n\r\n");
+	// if (begin == -1 || (sep_body > -1 && begin > sep_body))
+	// 	return (nofound);
+	// end = buff.find(delim, begin);
+	// std::string tmp (buff.substr(begin, end + 1));
+	// return (extract_header(tmp));
+	return ("oaoa");
 }
