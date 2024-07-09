@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   include.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 11:45:23 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:24:33 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@
 # include <signal.h>
 # include <dirent.h>
 # include <stdlib.h>
+# include <unistd.h>
 # include <sys/wait.h>
 # include <sys/types.h>
 

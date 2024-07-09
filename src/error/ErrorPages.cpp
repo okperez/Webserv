@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 10:58:43 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:04:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ ErrorPages::ErrorPages() {
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
     map_error["413"] = " Request Entity Too Large";
+    map_error["500"] = " Internal Server Error";
 	map_error["505"] = " HTTP Version not supported";
 }
 

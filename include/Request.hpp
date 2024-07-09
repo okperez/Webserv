@@ -3,19 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 11:50:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:10:09 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
-#include "Response.hpp"
+# include "Response.hpp"
+# include "Server.hpp"
 
 typedef struct s_conf t_conf;
+class Server;
 
 class Request
 {
@@ -30,8 +32,6 @@ class Request
 		 // REQUEST line
 		std::string   method;   // HTTP method (ex: GET)
 		std::string   target;   // Request target (ex: index.html)
-		std::string	  script_name;
-		std::string	  query_string;
 		int			  dir;		//target end with a / => Request is a directory
 		std::string   version;  // HTTP version (ex: HTTP/1.1)
 
@@ -43,7 +43,7 @@ class Request
 		// HEADER section
 		std::string		host;      		// Header that specifies the server's host and port
 		std::string		port;      		// Header that describes the pport used
-		std::string   agent;    		// Header that describes the client's user agent
+		std::string		agent;    		// Header that describes the client's user agent
 		// std::string   media;    		// Header that specifies which media types the client can accept
 		std::string		connection;    	// Header that specifies if we have to close the connection or keeping it alive
 		std::string		content_type;
@@ -51,14 +51,27 @@ class Request
 
 		// Response
 		Response	response;
+		Server		*server;
 		// std::string   body;
 		// std::string   content_type;
 		// size_t        lenght;
 		
 		Request();
+		
+	class   RequestException : public std::exception
+	{
+    public:
+    
+    char const * s;
+    RequestException(char const* str) : s(str) {}
+    virtual const char* what() const throw()
+    {
+        return (s);
+    }
+	};
 
 	public :
-		Request(char const *buffer, int read, int socket);
+		Request(char const *buffer, int read, int socket, Server * src_server);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -127,8 +140,8 @@ class Request
 		/* ***************************************************************** */
 		void	handle_cgi(t_conf & conf);
 		char**	set_env(t_conf & conf);
-		void	exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf & conf);
-
+		int		exec_script(char const *pathname, char *const argv[], char *const envp[]);
+		bool	is_accessible(char const *target);
 
 		/* ***************************************************************** */
 		/* ****************************** POST ***************************** */

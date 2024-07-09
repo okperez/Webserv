@@ -3,27 +3,28 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 11:59:25 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 18:13:36 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
-
+#include <sys/stat.h>
 /* ************************************************************************* */
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
 
 Request::Request() {}
 
-Request::Request(char const *buffer, int read, int socket) {
+Request::Request(char const *buffer, int read, int socket, Server * src_server) {
 	std::cout << "Constructor Request called" << std::endl;
 	// std::string buff = buffer;
 
 	// A UPDATE
 	socket_fd = socket;
+	server = src_server;
 	save_buffer = buffer;
 	dir = 0;
 	// response_content = "";
@@ -40,7 +41,7 @@ Request::Request(char const *buffer, int read, int socket) {
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) , dir(0) {
-	(void) orig;
+	*this = orig;
 }
 
 Request::~Request() {}
@@ -65,6 +66,7 @@ Request &Request::operator=(Request const & rhs) {
 	connection = rhs.connection;
 	socket_s_addr = rhs.socket_s_addr;
 	socket_ip = rhs.socket_ip;
+	server = rhs.server;
 	_query_string = rhs._query_string;
 	_script_name = rhs._script_name;
 	
@@ -265,7 +267,7 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
-void	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf & conf)
+int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
 {
 	int		pid;
 	int		status;
@@ -275,7 +277,6 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 	int		exit_status = 0;
 	std::string	output;
 	
-	(void) conf;
 	pipe(fd);
 	pid = fork();
 	if (pid == -1)
@@ -285,18 +286,23 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
-			if (execve(pathname, argv, envp) != 0)
-			{
-				perror("execve");
-				exit (1);
-			}
+		if (execve(pathname, argv, envp) != 0)
+		{
+			for (int i = 0; i < 7; i++)
+				delete [] envp[i];
+			delete [] envp;
+			delete [] argv;
+			delete [] server->fds;
+			perror("execve");
+			exit (1);
+		}
 	}
 	waitpid(pid, &status, 0);
 	close(fd[1]);
 	if (WIFEXITED(status))
 		exit_status = WEXITSTATUS(status);
 	else if (WIFSIGNALED(status))
-		std::cout << "Rediriger vers page error 500\n";
+		throw RequestException ("500");
 	if (exit_status != 1)
 	{
 		while (1)
@@ -307,34 +313,35 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
-		// std::cout << "BUFFER:\n" << buff << std::endl;
 		response.setBody(buff);
 		response.setStatus("200", " OK");
 		response.setContent_type("text/html");
 	}
 	else
-		throw ;
-		
+	{
+		close(fd[0]);
+		for (int i = 0; i < 7; i++)
+			delete [] envp[i];
+		delete [] envp;
+		delete [] argv;
+		throw RequestException ("404");
+	}
+	return (0);
 }
 
 char**	Request::set_env(t_conf & conf)
 {
 	char	**env;
 
-	std::cout << "target in CGI" << target << std::endl;
 	std::string copy = target;
-	script_name = copy.substr(0, copy.find('?'));
-	std::string join = ("./" + script_name);
-	char const *exec = join.c_str();
-	(void) exec;
 	copy.erase(0, copy.find('/') + 1);
 	copy.erase(0, copy.find('/') + 1);
 	env = new char* [8];
 	for (int i = 0; i < 7; i++)
 		env[i] = new char [1024];
 	strcpy(env[0], ("REQUEST_METHOD=" + method).c_str());
-	strcpy(env[1], ("QUERY_STRING=" + query_string).c_str());
-	strcpy(env[2], ("SCRIPT_NAME=" + script_name).c_str());
+	strcpy(env[1], ("QUERY_STRING=" + _query_string).c_str());
+	strcpy(env[2], ("SCRIPT_NAME=" + _script_name).c_str());
 	strcpy(env[3], ("SERVER_NAME=" + conf.server_name).c_str());
 	strcpy(env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
 	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
@@ -343,43 +350,37 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
+bool	Request::is_accessible(char const *target)
+{
+	struct stat path_stat;
+	stat(target, &path_stat);
+	if (access(target, X_OK) == -1)
+		return false;
+	return S_ISREG(path_stat.st_mode);
+}
+
 void    Request::handle_cgi(t_conf & conf)
 {
 	char		**env;
 	char		**argv;
 
-	char const *exec = "./cgi_script/form_handler.cgi";
-	
+	std::string join = ("./" + _script_name);
+	char const *exec = join.c_str();
+	if (!is_accessible(exec))
+		throw RequestException ("404");
 	std::string copy = target;
-	script_name = copy.substr(0, copy.find('?'));
+	_script_name = copy.substr(0, copy.find('?'));
 	copy.erase(0, copy.find('/') + 1);
 	copy.erase(0, copy.find('/') + 1);
-
     argv = new char * [2];
-    // argv[0] = (char*) exec;
     argv[0] = (char *) exec;
     argv[1] = NULL;
-    // strcpy(argv[0], "form_handler.cgi");
 	env = set_env(conf);
-	// char const *tmp = copy.substr(0, copy.rfind('?')).c_str();
-	// char *exec = new char [sizeof(tmp)];
-	// exec = strcpy(exec, tmp);
-	// std::cout << "Exec = " << exec << std::endl;
-	// char *const argv[] = {exec, NULL};
-	// char *argv[2] = {"form_handler.cgi", NULL};
-	copy.erase(0, copy.find('?') + 1);
-	query_string = copy.substr(0, copy.npos);
-	script_name.erase(0, script_name.find('/'));
-	script_name.insert(0, "./cgi-bin");
-	// std::cout << "script name = " << script_name << std::endl;
-	exec_script(exec, argv, env, conf);
-	// for (int i = 0; i < 7; i++)
-	// 	std::cout << i << " " << env[i] << std::endl;
+	exec_script(exec, argv, env);
 	for (int i = 0; i < 7; i++)
-		delete env[i];
-	delete env;
-	delete argv[0];
-	delete argv;
+		delete [] env[i];
+	delete [] env;
+	delete [] argv;
 }
 
 /* ************************************************************************* */
@@ -417,7 +418,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			}
 			catch(const std::exception& e)
 			{
-				error.fill_error(response, "404", conf);
+				error.fill_error(response, e.what(), conf);
 			}
 		}
 		else {

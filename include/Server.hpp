@@ -3,19 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 11:12:14 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 15:07:29 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-#define SERVER_HPP
+# define SERVER_HPP
 
-#include "include.hpp"
-#include "ErrorPages.hpp"
-#include "Request.hpp"
+# include "include.hpp"
+# include "ErrorPages.hpp"
+# include "Request.hpp"
 
 typedef struct s_conf t_conf;
 

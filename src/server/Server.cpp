@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 11:54:13 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 14:49:48 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -441,6 +441,6 @@ void	Server::read_request(int i, char *buffer, int read) {
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	Request 	request(buffer, read, fds[i].fd); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	Request 	request(buffer, read, fds[i].fd, this); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
 }
