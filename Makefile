@@ -6,13 +6,13 @@
 #    By: galambey <galambey@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/07/09 11:44:01 by galambey          #+#    #+#              #
-#    Updated: 2024/07/09 11:44:10 by galambey         ###   ########.fr        #
+#    Updated: 2024/07/09 11:55:44 by galambey         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME 			= 	webserv
 CXX 			= 	c++
-CXX_FLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
+CXXFLAGS		= 	-Wall -Wextra -Werror -g3 -MMD -std=c++98
 
 ################################### SOURCES ###################################
 

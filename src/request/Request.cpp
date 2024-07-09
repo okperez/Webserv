@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 11:54:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 11:59:25 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,9 +272,10 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 	int		fd[2];
 	int		rd;
 	char	buff[1024];
-	int		exit_status;
+	int		exit_status = 0;
 	std::string	output;
 	
+	(void) conf;
 	pipe(fd);
 	pid = fork();
 	if (pid == -1)
@@ -290,8 +291,7 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 				exit (1);
 			}
 	}
-	else
-		waitpid(pid, &status, 0);
+	waitpid(pid, &status, 0);
 	close(fd[1]);
 	if (WIFEXITED(status))
 		exit_status = WEXITSTATUS(status);
@@ -326,6 +326,7 @@ char**	Request::set_env(t_conf & conf)
 	script_name = copy.substr(0, copy.find('?'));
 	std::string join = ("./" + script_name);
 	char const *exec = join.c_str();
+	(void) exec;
 	copy.erase(0, copy.find('/') + 1);
 	copy.erase(0, copy.find('/') + 1);
 	env = new char* [8];
