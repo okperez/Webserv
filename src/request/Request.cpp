@@ -307,34 +307,10 @@ void	Request::exec_script(char const *pathname, char *const argv[], char *const 
 	response.setContent_type("text/html");
 }
 
-void	Request::set_env(t_conf & conf, char ***env)
-{
-	strcpy(*env[0], ("REQUEST_METHOD=" + method).c_str());
-	strcpy(*env[1], ("QUERY_STRING=" + query_string).c_str());
-	strcpy(*env[2], ("SCRIPT_NAME=" + script_name).c_str());
-	strcpy(*env[3], ("SERVER_NAME=" + conf.server_name).c_str());
-	strcpy(*env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
-	strcpy(*env[5], ("REMOTE_ADDR=" + conf.host).c_str());
-	strcpy(*env[6], ("HTTP_USER_AGENT=" + agent).c_str());
-	*env[7] = NULL;
-}
-
-void    Request::handle_cgi(t_conf & conf)
+char**	Request::set_env(t_conf & conf)
 {
 	char	**env;
-	char	**argv;
 
-	char const *exec = "./cgi-bin/form_handler.cgi";
-	
-	std::string copy = target;
-	script_name = copy.substr(0, copy.find('?'));
-	copy.erase(0, copy.find('/') + 1);
-	copy.erase(0, copy.find('/') + 1);
-
-    argv = new char * [2];
-    argv[0] = new char [50];
-    argv[1] = NULL;
-    strcpy(argv[0], "form_handler.cgi");
 	env = new char* [8];
 	for (int i = 0; i < 7; i++)
 		env[i] = new char [1024];
@@ -346,7 +322,25 @@ void    Request::handle_cgi(t_conf & conf)
 	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
 	strcpy(env[6], ("HTTP_USER_AGENT=" + agent).c_str());
 	env[7] = NULL;
-	// set_env(conf, &env);
+	return (env);
+}
+
+void    Request::handle_cgi(t_conf & conf)
+{
+	char		**env;
+	char		**argv;
+
+	char const *exec = "./cgi-bin/form_handler.cgi";
+	
+	std::string copy = target;
+	script_name = copy.substr(0, copy.find('?'));
+	copy.erase(0, copy.find('/') + 1);
+	copy.erase(0, copy.find('/') + 1);
+
+    // argv = new char * [2];
+    argv[0] = (char*) exec;
+    argv[1] = NULL;
+	env = set_env(conf);
 	// char const *tmp = copy.substr(0, copy.rfind('?')).c_str();
 	// char *exec = new char [sizeof(tmp)];
 	// exec = strcpy(exec, tmp);

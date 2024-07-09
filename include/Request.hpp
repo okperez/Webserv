@@ -113,7 +113,7 @@ class Request
 		/* ****************************** CGI ****************************** */
 		/* ***************************************************************** */
 		void	handle_cgi(t_conf & conf);
-		void	set_env(t_conf & conf, char ***env);
+		char**	set_env(t_conf & conf);
 		void	exec_script(char const *pathname, char *const argv[], char *const envp[]);
 
 
