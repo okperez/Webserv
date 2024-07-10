@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 11:14:34 by operez            #+#    #+#             */
-/*   Updated: 2024/07/03 17:03:23 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 10:49:00 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,6 @@ void    location_to_conf(std::list<std::string> & location, t_conf & conf)
         
     }
     conf.location.insert(make_pair(type, path));
-    std::cout << std::endl;
 }
 
 std::list<std::string>  extract_bloc_location(std::list<std::string> & cnf_file, std::list<std::string>::iterator begin, t_conf & conf)

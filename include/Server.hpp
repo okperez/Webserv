@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 15:07:29 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 10:07:01 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,8 +79,6 @@ class Server
 		// int	is_host(std::string &host, std::string &port, in_addr_t socket_s_addr);
 		int	is_host(std::string host, std::string port, std::string socket_host);
 		int	unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
-		// int	is_server_name(std::string host, std::string port, in_addr_t socket_s_addr);
-		int	is_server_name(std::string host, std::string port, std::vector<int> &tmp);
 		int	pick_server(Request &request);
 		void	read_request(int i, char *buffer, int read);	
 } ;

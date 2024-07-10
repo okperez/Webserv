@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 11:49:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 11:09:37 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,6 +124,7 @@ void        compare_server(std::vector<t_conf> & conf, int  & server_nbr);
 void        check_if_missing(t_conf & conf, std::list<std::string> & cnf_file);
 void        check_if_valid(std::string str, int loc, int err_pgs);
 void        handle_host(std::vector<t_conf> & conf);
+void        check_returns(std::vector<t_conf> & conf);
 
 /* ****************************** utils.cpp ******************************** */
 
@@ -133,11 +134,12 @@ void        print_all_struct(std::vector<t_conf> & conf, int count);
 std::string clear_str(std::list<std::string> cnf_file);
 bool        is_allow_methods(std::string str);
 int         print_error(char const *str);
+void        fill_map(std::map<int, std::string> & map, std::string str);
 bool        is_white_space(char c, char d);
 void        clear_space(std::string & type);
 std::string extract_type(std::string buff);
 std::string extract_index(std::string buff);
-void	      str_tolower(std::string & s);
+void	    str_tolower(std::string & s);
 int 		ft_stoi( std::string const & s );
 void        strtovect(std::string s, std::vector<std::string> & v, std::string const & delim);
 char		strback(std::string const & s);

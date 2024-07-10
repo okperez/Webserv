@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 10:15:11 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 11:25:18 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ void    handle_return(std::string str, t_conf & conf)
 {
     if (conf.flag.ret == 1)
         return ;
+    if (extract_conf(str, ';').empty())
+        throw ConfFileException ("Error: return value empty");
     conf.ret = extract_conf(str, ';');
     conf.flag.ret = 1;
 }

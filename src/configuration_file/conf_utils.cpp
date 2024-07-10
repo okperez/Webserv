@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   conf_utils.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:58:50 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 11:49:25 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 11:04:44 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,14 @@ void    print_all_struct(std::vector<t_conf> & conf, int count)
         }
         std::cout << "\n\n";
     }
+}
+
+void    fill_map(std::map<int, std::string> & map, std::string str)
+{
+    std::string key = str.substr(0, str.find(' '));
+    str.erase(0, str.find(' ') + 1);
+    std::string value = str.substr(0, str.npos);
+    map[ft_stoi(key)] = value; 
 }
 
 bool    is_allow_methods(std::string str)

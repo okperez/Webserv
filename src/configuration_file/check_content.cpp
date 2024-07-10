@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 12:14:23 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 11:31:08 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,43 @@ char*        get_ip_address(void)
     }
     char *ip = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0])); // VOIR AVEC ORLANDO SI FONCTION AUTORISEE
     return (ip);
+}
+
+void    extract_returns_values(std::vector<t_conf> & conf, std::vector<std::string> & r_values)
+{
+    for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++)
+    {
+        if (!(*it).ret.empty())
+            r_values.push_back((*it).ret);
+        for (std::map<std::string, std::map<std::string, std::string> >::iterator its = (*it).location.begin(); its != (*it).location.end(); its++)
+        {
+            for (std::map<std::string, std::string>::iterator itt = (*its).second.begin(); itt != (*its).second.end(); itt++)
+            {
+                if ((*itt).first == "return")
+                    r_values.push_back((*itt).second);
+            }
+        }
+    }
+}
+
+void    check_returns(std::vector<t_conf> & conf)
+{
+    std::vector<std::string> r_values;
+    std::map<int, std::string> map;
+    extract_returns_values(conf, r_values);
+    for (std::vector<std::string>::iterator it = r_values.begin(); it != r_values.end(); it++)
+    {
+        if ((*it).find(' ') == (*it).npos)
+            throw ConfFileException ("Error: return syntax");
+        fill_map(map, (*it));
+    }
+    for (std::map<int, std::string>::iterator it = map.begin(); it != map.end(); it++)
+    {
+        if ((*it).first < 300 || (*it).first > 308)
+            throw ConfFileException ("Error: return value out of range");
+        if ((*it).second.empty())
+            throw ConfFileException ("Error: return directory non defined");
+    }
 }
 
 void    check_for_root(std::map<std::string, std::map<std::string, std::string> > & location)
