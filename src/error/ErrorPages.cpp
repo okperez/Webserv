@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/09 18:23:10 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 10:31:26 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,22 @@
 /* ************************************************************************* */
 
 ErrorPages::ErrorPages() {
+    map_error["300"] = " Multiple Choices";
     map_error["301"] = " Moved Permanently";
+    map_error["302"] = " Found";
+    map_error["303"] = " See Other";
+    map_error["304"] = " Not Modified";
+    map_error["305"] = " Use Proxy";
+    map_error["306"] = " Switch Proxy";
+    map_error["307"] = " Temporary Redirect";
+    map_error["308"] = " Permanent Redirect";
     map_error["400"] = " Bad Request";
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
 	map_error["411"] = " Length Required";
     map_error["413"] = " Request Entity Too Large";
 	map_error["505"] = " HTTP Version not supported";
+	map_error["508"] = " Loop Detected";
 }
 
 ErrorPages::ErrorPages(const ErrorPages & orig) { (void) orig; }

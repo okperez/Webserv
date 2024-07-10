@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 11:45:23 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 11:09:31 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,5 +38,6 @@
 # include <stdlib.h>
 # include <sys/wait.h>
 # include <sys/types.h>
+# include <sys/stat.h>
 
 #endif

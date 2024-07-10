@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 17:18:54 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 10:44:53 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,10 +73,15 @@ void	Response::setBody(std::ifstream &file) {
 /* ************************************************************************* */
 
 std::string Response::build_response() const {
+	std::string title = "\e[36m";
+	std::string reset = "\e[0m";
 	std::string response = "HTTP/1.1 ";
 	std::string delim = "\r\n";
 	
 	response += _status + delim;
+	std::cout << title<< "********** RESPONSE **********" << std::endl;
+	std::cout << response;
+	std::cout << "******************************" << reset << std::endl;
 	if (!_location.empty())
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())
@@ -84,7 +89,6 @@ std::string Response::build_response() const {
 	response += "Content-Length: " + _content_length + delim + delim;
 	if (!_body.empty())
 		response += _body;
-	// std::cout << "response = |" << response << "|" << std::endl;
 	return (response);
 }
 
