@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/10 11:46:17 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 16:21:14 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Request::Request(char const *buffer, int read, int socket, Server * src_server) 
 	socket_fd = socket;
 	server = src_server;
 	save_buffer = buffer;
+	i_conf = -1;
 	if (read < BUFFER_SIZE)
 		status = RD_TO_RESPOND;
 	else
@@ -55,6 +56,7 @@ Request &Request::operator=(Request const & rhs) {
 	socket_s_addr = rhs.socket_s_addr;
 	socket_ip = rhs.socket_ip;
 	server = rhs.server;
+	i_conf = rhs.i_conf;
 	_query_string = rhs._query_string;
 	_script_name = rhs._script_name;
 	
@@ -66,6 +68,14 @@ Request &Request::operator=(Request const & rhs) {
 /* ************************************************************************* */
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
+
+// Response &Request::getsetResponse() {
+// 	return (response);
+// }
+
+int 		Request::getIconf() const {
+	return (i_conf);
+}
 
 int Request::getStatus() const {
 	return (status);
@@ -600,6 +610,12 @@ void	Request::cgi_parse_target() {
 		if (found < target.length() - 1)
 			_query_string = target.substr(found + 1);
 	}
+	else if (method == "POST") {
+		_script_name = target;
+		_query_string = body;
+	}
+	else
+		_script_name = target;
 }
 
 void	Request::parse_host() {
@@ -692,4 +708,13 @@ std::string Request::extract_body(std::string & buff) {
 		return ("");
 	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
 	return (tmp);
+}
+
+/* ************************************************************************* */
+/* ********************************* CLOSE ********************************* */
+/* ************************************************************************* */	
+
+void	Request::handle_pending_requests(ErrorPages & error) {
+	
+		error.fill_error(response, "500", conf);
 }

@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 11:42:47 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 16:18:08 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,9 +52,9 @@ class Request
 
 		// Response
 		Response	response;
+		
 		Server		*server;
-		// std::string   body;
-		// std::string   content_type;
+		int 		i_conf;
 		// size_t        lenght;
 		
 		Request();
@@ -83,6 +83,8 @@ class Request
 
 		std::string getSave_buffer() const; //A EFFACER
 		
+		// Response 	&getsetResponse();
+		int 		getIconf() const;
 		int 		getStatus() const;
 		int 		getSocket_fd() const;
 		in_addr_t 	getSocket_s_addr() const;
@@ -161,6 +163,12 @@ class Request
 		std::string extract_header(std::string & buff) const;
 		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
 		std::string extract_body(std::string & buff);
+
+		/* ***************************************************************** */
+		/* ***************************** CLOSE ***************************** */
+		/* ***************************************************************** */	
+		
+		void	handle_pending_requests(ErrorPages & error);
 } ;
 
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/06/29 12:12:38 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/10 16:08:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,28 @@ void	save_fds(struct pollfd *fds, int max) {
 		return;
 	}
 	close_fds(fds_save, nb);
+	throw (ServerException("exit"));
+}
+
+void	close_server(Server *server) {
+	for (int i = 0; i < MAX_CONNECTION; i++) {
+		server->fds[i].events = 0; // BLOQUE LES DEMANDE DE CONNECTION + ARRET DES LECTURES
+	}
+	server->handle_pending_requests();
+	
+	// for (std::vector<Listen>::iterator it = server->server_fd.begin(); it != server->server_fd.end(); it++) {
+	// 	it
+	// }
+}
+
+void	garbagge_server(Server *server) {
+	static Server *server_save;
+
+	if (server) {
+		server_save = server;
+		return ;
+	}
+	close_server(server_save);
 	throw (ServerException("exit"));
 }
 

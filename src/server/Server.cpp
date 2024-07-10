@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 14:49:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 16:17:50 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -443,4 +443,18 @@ void	Server::read_request(int i, char *buffer, int read) {
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
 	Request 	request(buffer, read, fds[i].fd, this); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
+}
+
+
+/* ************************************************************************* */
+/* ********************************* CLOSE ********************************* */
+/* ************************************************************************* */	
+
+void	Server::handle_pending_requests() {
+	
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		it->handle_pending_requests(error)
+		// Response &tmp = it->getsetResponse();
+		// error.fill_error(tmp, "500", conf[it->getIconf()]);
+	}
 }
