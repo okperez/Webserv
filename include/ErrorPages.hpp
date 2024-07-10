@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/01 15:05:34 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/09 17:38:20 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class ErrorPages
         
 		void	err_not_found(Response &response, std::string &code);
         void	fill_error(Response &response, /* std::string &body, std::string &response, */ std::string code, t_conf &conf);
-		
+		void	fill_redir(Response &response, std::string const &code, std::string const &redir);
         // void	err_not_found(std::string &body, std::string &code);
         // void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf);
 } ;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/09 18:10:09 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 11:42:47 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ class Request
 		 // REQUEST line
 		std::string   method;   // HTTP method (ex: GET)
 		std::string   target;   // Request target (ex: index.html)
-		int			  dir;		//target end with a / => Request is a directory
 		std::string   version;  // HTTP version (ex: HTTP/1.1)
 
 		// POUR CGI : PARSING TARGET
@@ -43,11 +42,13 @@ class Request
 		// HEADER section
 		std::string		host;      		// Header that specifies the server's host and port
 		std::string		port;      		// Header that describes the pport used
-		std::string		agent;    		// Header that describes the client's user agent
+		std::string   	agent;    		// Header that describes the client's user agent
 		// std::string   media;    		// Header that specifies which media types the client can accept
 		std::string		connection;    	// Header that specifies if we have to close the connection or keeping it alive
 		std::string		content_type;
 		int				content_length; // Header that specifies the length of the body
+		bool			miss_length;
+		std::string		body;
 
 		// Response
 		Response	response;
@@ -114,6 +115,7 @@ class Request
 		/* ***************************************************************** */
 		
 		std::string look_for_location(t_conf & conf);
+		std::string look_for_location(std::string &uri, t_conf & conf);
 		std::string look_if_location(std::string &target, t_conf & conf);
 		void		add_path(t_conf & conf, std::string &index);
 		
@@ -130,9 +132,13 @@ class Request
 		
 		void		build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
 		bool		open_targetfile(std::string & target);
+		bool		is_dir(std::string const &path);
 		void		target_directory(t_conf &conf, ErrorPages &error);
 		void		target_directory(t_conf &conf, std::string &location, ErrorPages &error);
 		void		build_index();
+		bool		is_valid_code(std::string const code);
+		bool		is_loop(std::string &redir, std::string const &location, t_conf & conf);
+		void		redirection(std::string const &ret, ErrorPages &error, std::string const &location, t_conf & conf);
 		
 
 		/* ***************************************************************** */
@@ -154,7 +160,7 @@ class Request
 		std::string extract_line(std::string & buff, char delim) const;
 		std::string extract_header(std::string & buff) const;
 		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
-		std::string extract_body(std::string const & delim, std::string & buff);
+		std::string extract_body(std::string & buff);
 } ;
 
 #endif
