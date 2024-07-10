@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 11:42:47 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 17:55:36 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,10 +144,13 @@ class Request
 		/* ***************************************************************** */
 		/* ****************************** CGI ****************************** */
 		/* ***************************************************************** */
-		void	handle_cgi(t_conf & conf);
-		char**	set_env(t_conf & conf);
-		int		exec_script(char const *pathname, char *const argv[], char *const envp[]);
-		bool	is_accessible(char const *target);
+		void			handle_cgi(t_conf & conf);
+		char**			set_env(t_conf & conf);
+		int				exec_script(char const *pathname, char *const argv[], char *const envp[]);
+		bool			is_accessible(char const *target);
+		void			check_extension(t_conf & conf, std::string target);
+
+
 
 		/* ***************************************************************** */
 		/* ****************************** POST ***************************** */

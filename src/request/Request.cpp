@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/10 13:38:22 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/10 17:59:03 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,6 +270,27 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
+char**	Request::set_env(t_conf & conf)
+{
+	char	**env;
+
+	std::string copy = target;
+	copy.erase(0, copy.find('/') + 1);
+	copy.erase(0, copy.find('/') + 1);
+	env = new char* [8];
+	for (int i = 0; i < 7; i++)
+		env[i] = new char [1024];
+	strcpy(env[0], ("REQUEST_METHOD=" + method).c_str());
+	strcpy(env[1], ("QUERY_STRING=" + _query_string).c_str());
+	strcpy(env[2], ("SCRIPT_NAME=" + _script_name).c_str());
+	strcpy(env[3], ("SERVER_NAME=" + conf.server_name).c_str());
+	strcpy(env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
+	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
+	strcpy(env[6], ("HTTP_USER_AGENT=" + agent).c_str());
+	env[7] = NULL;
+	return (env);
+}
+
 int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
 {
 	int		pid;
@@ -332,60 +353,63 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	return (0);
 }
 
-char**	Request::set_env(t_conf & conf)
-{
-	char	**env;
-
-	std::string copy = target;
-	copy.erase(0, copy.find('/') + 1);
-	copy.erase(0, copy.find('/') + 1);
-	env = new char* [8];
-	for (int i = 0; i < 7; i++)
-		env[i] = new char [1024];
-	strcpy(env[0], ("REQUEST_METHOD=" + method).c_str());
-	strcpy(env[1], ("QUERY_STRING=" + _query_string).c_str());
-	strcpy(env[2], ("SCRIPT_NAME=" + _script_name).c_str());
-	strcpy(env[3], ("SERVER_NAME=" + conf.server_name).c_str());
-	strcpy(env[4], ("SERVER_PORT=" + conf.ipv4_port[0]).c_str());
-	strcpy(env[5], ("REMOTE_ADDR=" + conf.host).c_str());
-	strcpy(env[6], ("HTTP_USER_AGENT=" + agent).c_str());
-	env[7] = NULL;
-	return (env);
+void	Request::check_extension(t_conf & conf, std::string target)
+{	
+	std::vector<std::string>	cgi_ext;
+	std::string					ext;
+	
+	for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf.location.begin(); it != conf.location.end(); it++)
+	{
+		for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
+		{
+			if ((*its).first.find("cgi_extension") != (*its).second.npos)
+				strtovect((*its).second, cgi_ext, " ");
+		}
+	}
+	target = target.erase(0, target.rfind('.') + 1);
+	ext = target.substr(0, target.find('?'));
+	if (std::count(cgi_ext.begin(), cgi_ext.end(), ext) == 0)
+		throw RequestException ("501");
 }
 
 bool	Request::is_accessible(char const *target)
 {
 	struct stat path_stat;
 	stat(target, &path_stat);
-	std::cout << "Target = " << target << std::endl;
 	if (access(target, X_OK) == -1)
 	{
-		std::cout << "OUT\n";
+		std::cout << target << std::endl;
 		return false;
 	}
 	return S_ISREG(path_stat.st_mode);
 }
 
-void    Request::handle_cgi(t_conf & conf)
+char const *	define_ext(std::string & target)
+{
+	std::cout << "TARGET = " << target << std::endl;
+	if (target.substr(target.rfind('.') + 1, 10) == "py")
+		return ("/usr/bin/python3");
+	else 
+		return ("/usr/bin/php");
+}
+
+void    		Request::handle_cgi(t_conf & conf)
 {
 	char		**env;
 	char		**argv;
 
-	if (_script_name.empty())
-		_script_name = target;
 	std::string join = ("./" + _script_name);
-	char const *exec = join.c_str();
-	if (!is_accessible(exec))
+	char const *pathname = join.c_str();
+	if (!is_accessible(pathname))
 		throw RequestException ("404");
-	std::string copy = target;
-	_script_name = copy.substr(0, copy.find('?'));
-	copy.erase(0, copy.find('/') + 1);
-	copy.erase(0, copy.find('/') + 1);
-    argv = new char * [2];
-    argv[0] = (char *) exec;
-    argv[1] = NULL;
+	check_extension(conf, target);
+	char const * interpreter = define_ext(target);
+    argv = new char * [3];
+	argv[0] = (char*) interpreter;
+    argv[1] = (char *) pathname;
+    argv[2] = NULL;
 	env = set_env(conf);
-	exec_script(exec, argv, env);
+	exec_script(argv[0], argv, env);
 	for (int i = 0; i < 7; i++)
 		delete [] env[i];
 	delete [] env;
@@ -598,14 +622,20 @@ void	Request::recover_ip_socket() {
 }
 
 void	Request::cgi_parse_target() {
-	
-	size_t found = target.find('?');
+    
+    size_t found = target.find('?');
 
-	if (found != std::string::npos) {
-		_script_name = target.substr(0, found);
-		if (found < target.length() - 1)
-			_query_string = target.substr(found + 1);
-	}
+    if (found != std::string::npos) {
+        _script_name = target.substr(0, found);
+        if (found < target.length() - 1)
+            _query_string = target.substr(found + 1);
+    }
+    else if (method == "POST") {
+        _script_name = target;
+        _query_string = body;
+    }
+    else
+        _script_name = target;
 }
 
 void	Request::parse_host() {
