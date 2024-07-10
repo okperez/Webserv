@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/10 11:46:17 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/10 13:38:22 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,8 +357,12 @@ bool	Request::is_accessible(char const *target)
 {
 	struct stat path_stat;
 	stat(target, &path_stat);
+	std::cout << "Target = " << target << std::endl;
 	if (access(target, X_OK) == -1)
+	{
+		std::cout << "OUT\n";
 		return false;
+	}
 	return S_ISREG(path_stat.st_mode);
 }
 
@@ -367,6 +371,8 @@ void    Request::handle_cgi(t_conf & conf)
 	char		**env;
 	char		**argv;
 
+	if (_script_name.empty())
+		_script_name = target;
 	std::string join = ("./" + _script_name);
 	char const *exec = join.c_str();
 	if (!is_accessible(exec))
