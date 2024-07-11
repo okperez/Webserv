@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 16:17:50 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 19:02:34 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,9 @@
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
 
-Server::Server() {}
+Server::Server() {
+	fds = NULL;
+}
 
 Server::Server(const Server & orig) { (void) orig; }
 
@@ -45,17 +47,6 @@ Server &Server::operator=(Server & rhs) {
 /* ************************************************************************* */
 /* ***************************** BFR LAUNCHING ***************************** */
 /* ************************************************************************* */
-
-// /*
-// Si une socket ecoute deja sur le port, retourne 1 pour continuer et ne pas creer la socket
-// */
-// bool	Server::check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host) {
-// 	for(auto it = server_fd.begin(); it != server_fd.end(); it++) {
-// 		if(it->getPort() == port && (it->getHost() == host || it->getHost() == "0.0.0.0"))
-// 			return (true);
-// 	}
-// 	return (false);
-// }
 
 /*
 Si une socket ecoute deja sur le port, retourne 1 pour continuer et ne pas creer la socket
@@ -166,6 +157,7 @@ void	Server::create_fds() {
 	// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->getFd();
+		it->setIndex(i);
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
 		i++;
 	}
@@ -183,16 +175,42 @@ void	Server::create_fds() {
 
 void	Server::launch_server(int max_socket) {
 	
+	int i = 0;
+	int ret;
+	
+	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR" << std::endl;
 	while (1)
 	{
-		// std::cout << "Waiting...\n";
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
-		int ret = poll(fds, max_socket, 50);
-		if (ret < 0) { //verifier leak + leak de fd
-			close_fds(fds, max_socket);
+		ret = poll(fds, max_socket, 50);
+		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
+			garbagge_server(NULL, PARENT);
 			throw(ServerException("Failed to poll."));
 		}
-		event_request();
+		try {
+			i++;
+			event_request();
+		}
+		catch (std::bad_alloc const & e) {
+			std::cerr << e.what() << std::endl;
+			continue ;
+		}
+		catch (std::length_error const & e) {
+			std::cerr << e.what() << std::endl;
+			continue ;
+		}
+		catch (std::out_of_range const & e) {
+			std::cerr << e.what() << std::endl;
+			continue ;
+		}
+		catch (std::exception const & e) {
+			std::string err = e.what();
+			if (err == "exit")
+				throw ;
+			else
+				std::cerr << e.what() << std::endl;
+			continue ;
+		}
 	}
 }
 
@@ -209,7 +227,6 @@ void	Server::event_request() {
 		if (fds[i].revents & POLLIN)
 		{	
 			/* event_request sur socket listening for clients */
-			// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
 					new_connection(it->getFd());
@@ -219,6 +236,8 @@ void	Server::event_request() {
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE); //secu si ==-1
+			if (n_bytes < 0)
+				std::cout << "A IMPLEMENTER" << std::endl;
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
 			/*A significant difference between HTTP/1.1 and earlier versions of
 			HTTP is that persistent connections are the default behavior of any
@@ -441,20 +460,43 @@ void	Server::read_request(int i, char *buffer, int read) {
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	Request 	request(buffer, read, fds[i].fd, this); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	Request 	request(buffer, read, fds[i].fd, this, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	requests.push_back(request);
 }
-
 
 /* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
 
+/* Si control C stop listen + close socket listen */
+void	Server::stop_listen() {
+	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end() ; it++) {
+		fds[it->getIndex()].events = 0;
+		close(fds[it->getIndex()].fd); // A VOIR SI CA MARCHE ICI
+		fds[it->getIndex()].fd =  -1;
+	}
+}
+
+void	Server::close_requests(int &socket) {
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (socket == it->getSocket_fd()) {
+			it->handle_pending_requests(error, socket);
+			return ;
+		}
+	}
+	Request tmp(NULL, 0, socket, this, &this->auth_media);
+	tmp.handle_pending_requests(error, socket);
+} 
+
 void	Server::handle_pending_requests() {
 	
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		it->handle_pending_requests(error)
-		// Response &tmp = it->getsetResponse();
-		// error.fill_error(tmp, "500", conf[it->getIconf()]);
+	if (fds) {
+		for (int i = 0; i < MAX_CONNECTION; i++) {
+			if (fds[i].fd > -1) {
+				close_requests(fds[i].fd);
+				close (fds[i].fd);
+			}
+		}
+		delete[] fds;
 	}
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 16:06:48 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 18:48:49 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "include.hpp"
 # include "ErrorPages.hpp"
+# include "Media.hpp"
 # include "Request.hpp"
 
 typedef struct s_conf t_conf;
@@ -22,7 +23,7 @@ typedef struct s_conf t_conf;
 class Server
 {
 	private : 
-		ErrorPages error;
+		ErrorPages 	error;
 
 		Server(const Server & orig);
 		Server &operator=(Server & rhs);
@@ -39,6 +40,7 @@ class Server
 		void	listen_socket(int new_socket, int port);
 		
 	public :
+		Media		auth_media;
 		std::vector<t_conf>	conf; // public si on n integre pas parsing dans classe
 		std::vector<Listen> server_fd; // a passer en private une fois good
 		std::vector<Request> requests; // a passer en private une fois good
@@ -84,6 +86,8 @@ class Server
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
+		void	stop_listen();
+		void	close_requests(int &socket);
 		void	handle_pending_requests();
 } ;
 

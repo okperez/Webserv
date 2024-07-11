@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 15:41:50 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 18:52:35 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,10 @@ class Response
 		/* ***************************************************************** */
 
 		void	setStatus(std::string const & code, std::string const & tittle);
-		void	setContent_type(std::string const & s);
+		void	setContent_type(std::string const & s, std::map<std::string, std::vector<std::string> > &media);
 		void	setContent_length();
 		void	setLocation(std::string const & s);
+		void	reinitBody();
 		void	setBody(std::string const & s);
 		void	setBody(std::ifstream &file);
 

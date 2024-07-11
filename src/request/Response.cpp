@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 15:41:25 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 17:18:34 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,16 @@ Response &Response::operator=(Response const & rhs) {
 void	Response::setStatus(std::string const & code, std::string const & tittle) {
 	_status = code + tittle;
 }
-void	Response::setContent_type(std::string const & s) {
-	_content_type = s;
+
+void		Response::setContent_type(std::string const &type, std::map<std::string, std::vector<std::string> > &media) {
+	for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
+		for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
+			if (*jt == type)
+				_content_type = it->first + "/" + type;
+	}
+	// ET SI PAS DE CORRESPONDANCE?
 }
+
 void	Response::setContent_length() {
 	std::stringstream stream;
 
@@ -62,6 +69,10 @@ void	Response::setLocation(std::string const & s) {
 
 void	Response::setBody(std::string const & s) {
 	_body += s;	
+}
+
+void	Response::reinitBody() {
+	_body = "";	
 }
 
 void	Response::setBody(std::ifstream &file) {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 10:58:14 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 18:57:47 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ int main(int argc, char **argv)
 		if (argc == 2)
 		{
 			Server server;
+			garbagge_server(&server, 2);
 			// std::vector<t_conf>	conf;
 			signal(SIGINT, sighandler);
 			if (handle_conf_file(argv[1], server.conf) == -1)
@@ -49,16 +50,27 @@ int main(int argc, char **argv)
 			
 			// return (1);
 			
-			std::vector<Listen> server_fd;
+			// std::vector<Listen> server_fd;
 			
 			/* Il va falloir qu on sache pour chaque fd quel serveur */
 			server.open_listen_socket();
 			server.create_fds(); //tableau de struct
-			save_fds(server.fds, server.server_fd.size() + MAX_CONNECTION); // A METTRE DANS DESTRUCTEUR DE SERVEUR OU PAS A VOIR
 			// launch_server(server.fds, server.server_fd, server.server_fd.size() + MAX_CONNECTION, server.conf);
 			server.launch_server(server.server_fd.size() + MAX_CONNECTION);
 			return (0);
 		}
+	}
+	catch (std::bad_alloc const & e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
+	}
+	catch (std::length_error const & e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
+	}
+	catch (std::out_of_range const & e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
 	}
 	catch (std::exception const & e) {
 		std::string err = e.what();

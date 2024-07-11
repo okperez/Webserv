@@ -1,56 +1,43 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Listen.hpp                                         :+:      :+:    :+:   */
+/*   Media.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 09:03:12 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/11 17:04:59 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef LISTEN_HPP
-# define LISTEN_HPP
+#ifndef MEDIA_HPP
+# define MEDIA_HPP
 
 #include "include.hpp"
 
-class Listen
+typedef struct s_conf t_conf;
+
+class Media
 {
 	private : 
-		const int			_fd; // socket_server
-		int					index;
-		std::vector<int>	_i_conf; // index du fichier conf => determiner quel serveur
-		const std::string	_port;
-		const in_addr_t		_s_addr;
-		const std::string 	_host;
+		std::map<std::string, std::vector<std::string> > types;
 	
-		Listen();
-		Listen &operator=(Listen & rhs);
+		Media(const Media & orig);
+		Media &operator=(Media & rhs);
 		
 	public :
-		Listen(const Listen & orig);
-		Listen(int fd, std::string &port, int _s_addr, std::string & host, int i);
-		~Listen();
+		Media();
+		~Media();
 
 		/* ***************************************************************** */
 		/* **************************** Accessor *************************** */
 		/* ***************************************************************** */
 
-		void				setIndex(int const i);
-		int					getIndex() const;
-		int					getFd() const;
-		std::vector<int>	getIconf() const;
-		std::string			getPort() const;
-		in_addr_t			getS_addr() const;
-		std::string			getHost() const;
-		
-		void	addIconf(int i);
-		
-		void	close_fd();
-
-		void	printlisten(); //A EFFACER
-		
+        /* ***************************************************************** */
+        /* **************************** Actions **************************** */
+        /* ***************************************************************** */
+        
+		bool	is_allow(std::string const &index, std::string const &content);
 } ;
 
 #endif

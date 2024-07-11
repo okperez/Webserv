@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: galambey <galambey@student.42.fr>          +#+  +:+       +#+         #
+#    By: garance <garance@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/07/09 11:44:01 by galambey          #+#    #+#              #
-#    Updated: 2024/07/09 11:55:44 by galambey         ###   ########.fr        #
+#    Updated: 2024/07/11 16:51:48 by garance          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,7 +32,8 @@ CONF_SRCS		=	conf_parsing.cpp \
 SERV_DIR		=	server/
 SERV_SRCS		=	Server.cpp \
 					close_server.cpp \
-					Listen.cpp
+					Listen.cpp \
+					Media.cpp
 
 EXCEPTION_DIR	=	exception/
 EXCEPTION_SRCS	=	ServerException.cpp \

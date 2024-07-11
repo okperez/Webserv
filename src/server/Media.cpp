@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Listen.cpp                                         :+:      :+:    :+:   */
+/*   Media.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 09:04:30 by garance          ###   ########.fr       */
+/*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
+/*   Updated: 2024/07/11 17:58:47 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,17 @@
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
 
-Listen::Listen() : _fd(0), _port(0), _s_addr(0), _host("") {}
-
-Listen::Listen(const Listen & orig) : _fd(orig._fd), _i_conf(orig._i_conf), _port(orig._port), _s_addr(orig._s_addr), _host(orig._host) { (void) orig; }
-
-// Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) , _i_conf(i) {}
-
-Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) {
-	_i_conf.push_back(i);
+Media::Media() {
+    types["text"].push_back("html");
+    types["text"].push_back("css");
+    types["text"].push_back("plain");
+    types["text"].push_back("*");
+    types["*"].push_back("*");
 }
 
-Listen::~Listen() {}
+Media::Media(const Media & orig) { (void) orig; }
+
+Media::~Media() {}
 
 /* ************************************************************************* */
 /* ************************** OPERATOR OVERLOADING ************************* */
@@ -34,7 +34,7 @@ Listen::~Listen() {}
 
 /* ************************** Assignment Operator  ************************* */
 
-Listen &Listen::operator=(Listen & rhs) {
+Media &Media::operator=(Media & rhs) {
 	(void) rhs;
 	return (*this); 
 }
@@ -43,53 +43,19 @@ Listen &Listen::operator=(Listen & rhs) {
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
 
-int	Listen::getFd() const {
-	return (_fd);
-}
-
-int	Listen::getIndex() const {
-	return (index);
-}
-
-
-std::vector<int>	Listen::getIconf() const {
-	return (_i_conf);
-}
-
-std::string	Listen::getPort() const {
-	return (_port);
-}
-
-in_addr_t	Listen::getS_addr() const {
-	return (_s_addr);
-}
-
-std::string	Listen::getHost() const {
-	return (_host);
-}
-
-void	Listen::addIconf(int i) {
-	_i_conf.push_back(i);
-}
-
-void	Listen::setIndex(int const i) {
-	index = i;
-}
 
 /* ************************************************************************* */
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-
-void	Listen::close_fd() { // UTILISE?
-	close(_fd);
-}
-
-void	Listen::printlisten() {
-	std::cout << "FD : " << _fd << std::endl;
-	for (std::vector<int>::iterator it= _i_conf.begin(); it != _i_conf.end(); it++)
-		std::cout << "ICONF : " << *it << std::endl;
-	std::cout << "PORT : " << _port << std::endl;
-	std::cout << "S_ADDR : " << _s_addr << std::endl;
-	std::cout << "HOST : " << _host << std::endl << std::endl;
+bool	Media::is_allow(std::string const &index, std::string const &content) {
+	
+	for (std::map<std::string, std::vector<std::string> >::iterator it = types.begin() ; it != types.end(); it++) {
+		if (it->first == index) {
+			for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
+				if (*jt == content)
+					return (true);
+		}
+	}
+	return (false);
 }

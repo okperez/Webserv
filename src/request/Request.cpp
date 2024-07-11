@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/10 16:21:14 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 17:09:19 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,13 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, int read, int socket, Server * src_server) {
+Request::Request(char const *buffer, int read, int socket, Server *src_server, Media *src_auth_media) {
 	// A UPDATE
 	socket_fd = socket;
 	server = src_server;
-	save_buffer = buffer;
+	auth_media = src_auth_media;
+	if (buffer)
+		save_buffer = buffer;
 	i_conf = -1;
 	if (read < BUFFER_SIZE)
 		status = RD_TO_RESPOND;
@@ -51,11 +53,12 @@ Request &Request::operator=(Request const & rhs) {
 	host = rhs.host;
 	port = rhs.port;
 	agent = rhs.agent;
-	// media = rhs.media;
+	media = rhs.media;
 	connection = rhs.connection;
 	socket_s_addr = rhs.socket_s_addr;
 	socket_ip = rhs.socket_ip;
 	server = rhs.server;
+	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
 	_query_string = rhs._query_string;
 	_script_name = rhs._script_name;
@@ -147,7 +150,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 	// std::cout << "i = " << i << std::endl;
 	switch (i) {
 		case UNKNOWN : {
-			error.fill_error(response, "405", conf);
+			error.fill_error(response, "405", conf, media);
 			return (send_response(socket_fd), 1);
 		}
 		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
@@ -156,7 +159,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			if (index.empty())
 			{
 				if (conf.root_dir.empty()) {
-					error.fill_error(response, "404", conf);
+					error.fill_error(response, "404", conf, media);
 					return (send_response(socket_fd), 1);
 				}
 				else {
@@ -169,7 +172,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			/* AVANT D AJOUTER LE PATH => check method ok */
 			else {
 				if (!check_allow_method(conf, index)) {
-					error.fill_error(response, "405", conf);
+					error.fill_error(response, "405", conf, media);
 					return (send_response(socket_fd), 1);
 				}
 				add_path(conf, index); // GET POST DELETE
@@ -328,7 +331,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		close(fd[0]);
 		response.setBody(buff);
 		response.setStatus("200", " OK");
-		response.setContent_type("text/html");
+		response.setContent_type("html", media);
 	}
 	else
 	{
@@ -420,7 +423,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		//  =====> Request isn't a directory
 		else {
 			if (!open_targetfile(target))
-				error.fill_error(response, "404", conf);
+				error.fill_error(response, "404", conf, media);
 		}
 	}
 	else {
@@ -441,12 +444,12 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			}
 			catch(const std::exception& e)
 			{
-				error.fill_error(response, e.what(), conf);
+				error.fill_error(response, e.what(), conf, media);
 			}
 		}
 		else
 			if (!open_targetfile(target))
-				error.fill_error(response, "404", conf);
+				error.fill_error(response, "404", conf, media);
 	}
 	send_response(socket_fd);
 }
@@ -459,8 +462,8 @@ bool	Request::open_targetfile(std::string & target) {
 	if (file.is_open()) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
-		response.setContent_type("text/html"); // A REVOIR CAR DEPENDS DU TYPE DU FICHIER!!
-		// a verifier text/html si css jss ou utilise avec curl ou http...
+		std::string	type = extract_extension(target);
+		response.setContent_type(type, media);
 		return (true);
 	}
 	return (false);
@@ -485,7 +488,7 @@ void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(), (void)0);
-	error.fill_error(response, "404", conf);
+	error.fill_error(response, "404", conf, media);
 }
 
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
@@ -503,7 +506,7 @@ void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &
 	}
 	it = conf.location[location].find("autoindex"); // =====> Index in location absent or index page doesn't exist
 	if (it == conf.location[location].end() || it->second != "on") // =====> Autoindex off or absent
-		return (error.fill_error(response, "404", conf), (void)0);
+		return (error.fill_error(response, "404", conf, media), (void)0);
 	else // =====> Autoindex on
 		build_index();
 }
@@ -535,7 +538,7 @@ void	Request::build_index() {
 	response.setBody("</body>");
 	response.setBody("</html>");
 	response.setStatus("200", " OK");
-	response.setContent_type("text/html"); // Type ok : l'index auto genere est html
+	response.setContent_type("html", media); // Type ok : l'index auto genere est html
 }
 
 bool	Request::is_loop(std::string &redir, std::string const &location, t_conf &conf) {
@@ -554,7 +557,7 @@ void	Request::redirection(std::string const &ret, ErrorPages &error, std::string
 	std::string redir = ret.substr(ret.find(' ') + 1);
 	redir = "/" + redir;
 	if (is_loop(redir, location, conf))
-		return (error.fill_error(response, "508", conf), (void)0);
+		return (error.fill_error(response, "508", conf, media), (void)0);
 	redir = "http://" + host + ":" + port + redir;
 	error.fill_redir(response, code, redir);
 }
@@ -567,22 +570,36 @@ void	Request::redirection(std::string const &ret, ErrorPages &error, std::string
 /* ******************************** Parsing ******************************** */
 /* ************************************************************************* */
 
+bool	Request::media_request_allowed() {
+	
+	for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
+		for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
+			if (auth_media->is_allow(it->first, *jt))
+				return (true);
+		}
+	return (false);
+}
+
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
 	if (miss_length && !body.empty()) {
-		error.fill_error(response, "411", conf);
+		error.fill_error(response, "411", conf, media);
 		return (send_response(socket_fd), false);
 	}
 	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty() || content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
-		error.fill_error(response, "400", conf);
+		error.fill_error(response, "400", conf, media);
 		return (send_response(socket_fd), false);
 	}
 	if (version != "HTTP/1.1") {
-		error.fill_error(response, "405", conf);
+		error.fill_error(response, "405", conf, media);
 		return (send_response(socket_fd), false);
 	}
 	if (content_length > conf.limit_body_size) {
-		error.fill_error(response, "413", conf);
+		error.fill_error(response, "413", conf, media);
+		return (send_response(socket_fd), false);
+	}
+	if (!media_request_allowed()) {
+		error.fill_error(response, "415", conf, media);
 		return (send_response(socket_fd), false);
 	}
 	return (true);
@@ -626,7 +643,30 @@ void	Request::parse_host() {
 	std::getline(iss, port);
 }
 
+void	Request::parse_media(std::string &s) {
+
+std::string tmp;
+size_t begin, end;
+
+while (1) {
+	tmp = s;
+	begin = tmp.find(";q=");
+	if (begin == std::string::npos)
+		break;
+	end = tmp.find(",", begin);
+	s = tmp.erase(begin, end - begin);
+}
+strtomap(s, media, ",", "/");
+// for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
+// 	std::cout << "MEDIA[" << it->first << "] = ";
+// 	for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
+// 		std::cout << *jt << " ";
+// 	std::cout << std::endl;
+// 	}
+}
+
 void	Request::parse_request(in_addr_t s_addr) {
+	std::string tmp;
 	
 	socket_s_addr = s_addr;
 	recover_ip_socket();
@@ -636,11 +676,13 @@ void	Request::parse_request(in_addr_t s_addr) {
 	version = extract_line(save_buffer, '\r');
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
-	// media = extract_elem("Accept:", "\r", save_buffer, ""); // POUR L INSTANT PAS D UTILITE
+	tmp = extract_elem("Accept:", "\r", save_buffer, "");
+	if (!tmp.empty())
+		parse_media(tmp);
 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
-	std::string tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
+	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
 	if (tmp.empty())
 		miss_length = true;
 	else {
@@ -710,11 +752,24 @@ std::string Request::extract_body(std::string & buff) {
 	return (tmp);
 }
 
+std::string Request::extract_extension(std::string const & s) {
+	
+	int found = s.find_last_of('.');
+	if (found == -1 || found == static_cast<int>(s.length() - 1))
+		std::cout << "A IMPLEMENTER" << std::endl;
+	return (s.substr(found + 1));
+}
+
 /* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
 
-void	Request::handle_pending_requests(ErrorPages & error) {
+void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	
-		error.fill_error(response, "500", conf);
+	response.reinitBody();
+	if (i_conf > -1)
+		error.fill_error(response, "500", server->conf[i_conf], media);
+	else
+		error.fill_error(response, "500", media);
+	send_response(socket);
 }

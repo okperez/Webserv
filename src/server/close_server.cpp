@@ -3,57 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 16:08:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 10:35:26 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
 
-void	close_connection(struct pollfd *fds, int i) {
-
-	std::cout << "Connection on socket " << fds[i].fd << " closed." << std::endl;
-	close(fds[i].fd);
-	fds[i].fd = -1;
-	fds[i].revents = 0;
-	fds[i].events = 0;
-}
-
-void	close_fds(struct pollfd *fds, int nb) {
-	for (int i = 0; i < nb; i++) {
-		if (fds[i].fd > -1)
-			close_connection(fds, i);
-	}
-	delete[] fds;
-}
-
-void	save_fds(struct pollfd *fds, int max) {
-	static	struct pollfd *fds_save;
-	static	int nb;
-	
-	if (fds) {
-		fds_save = fds;
-		nb = max;
-		return;
-	}
-	close_fds(fds_save, nb);
+static void	close_server(Server *server) {
+	server->stop_listen(); // BLOQUE LES DEMANDE DE CONNECTION
+	server->handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
 	throw (ServerException("exit"));
 }
 
-void	close_server(Server *server) {
-	for (int i = 0; i < MAX_CONNECTION; i++) {
-		server->fds[i].events = 0; // BLOQUE LES DEMANDE DE CONNECTION + ARRET DES LECTURES
-	}
-	server->handle_pending_requests();
-	
-	// for (std::vector<Listen>::iterator it = server->server_fd.begin(); it != server->server_fd.end(); it++) {
-	// 	it
-	// }
-}
-
-void	garbagge_server(Server *server) {
+void	garbagge_server(Server *server, int rule) {
 	static Server *server_save;
 
 	if (server) {
@@ -61,10 +26,14 @@ void	garbagge_server(Server *server) {
 		return ;
 	}
 	close_server(server_save);
-	throw (ServerException("exit"));
+	if (rule == PARENT)
+		throw (ServerException("exit"));
+	if (rule == CHILDREN)
+		exit(1);
 }
 
+/* A TESTER : TOUS LES SIGNAUX */
 void sighandler(int signal) {
 	std::cout << std::endl << "Interruption of server due to signal " << signal << "." << std::endl;
-	save_fds(NULL, 0);
+	garbagge_server(NULL, PARENT);
 }

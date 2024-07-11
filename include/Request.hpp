@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 16:18:08 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/11 18:51:40 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,21 +39,22 @@ class Request
 		std::string   _script_name;
 
 		
-		// HEADER section
-		std::string		host;      		// Header that specifies the server's host and port
-		std::string		port;      		// Header that describes the pport used
-		std::string   	agent;    		// Header that describes the client's user agent
-		// std::string   media;    		// Header that specifies which media types the client can accept
-		std::string		connection;    	// Header that specifies if we have to close the connection or keeping it alive
-		std::string		content_type;
-		int				content_length; // Header that specifies the length of the body
-		bool			miss_length;
-		std::string		body;
+		// HEADER REQUEST section
+		std::string											host;      		// Header that specifies the server's host and port
+		std::string											port;      		// Header that describes the pport used
+		std::string   										agent;    		// Header that describes the client's user agent
+		std::map<std::string, std::vector<std::string> >	media;    		// Header that specifies which media types the client can accept
+		std::string											connection;    	// Header that specifies if we have to close the connection or keeping it alive
+		std::string											content_type;// UTILISE??
+		int													content_length; // Header that specifies the length of the body
+		bool												miss_length;
+		std::string											body;
 
-		// Response
+		// RESPONSE
 		Response	response;
 		
 		Server		*server;
+		Media		*auth_media;
 		int 		i_conf;
 		// size_t        lenght;
 		
@@ -72,7 +73,7 @@ class Request
 	};
 
 	public :
-		Request(char const *buffer, int read, int socket, Server * src_server);
+		Request(char const *buffer, int read, int socket, Server *src_server, Media *src_auth_media);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -100,7 +101,9 @@ class Request
         /* ***************************************************************** */
 
 		void		parse_host();
+		void		parse_media(std::string &s);
 		void		cgi_parse_target();
+		bool		media_request_allowed();
 		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
 		void		parse_request(in_addr_t s_addr);
@@ -163,12 +166,13 @@ class Request
 		std::string extract_header(std::string & buff) const;
 		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
 		std::string extract_body(std::string & buff);
+		static std::string extract_extension(std::string const & s);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
-		void	handle_pending_requests(ErrorPages & error);
+		void	handle_pending_requests(ErrorPages & error, int & socket);
 } ;
 
 #endif
