@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/10 17:55:36 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/11 18:43:05 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 typedef struct s_conf t_conf;
 class Server;
+class Response;
 
 class Request
 {
@@ -150,7 +151,13 @@ class Request
 		bool			is_accessible(char const *target);
 		void			check_extension(t_conf & conf, std::string target);
 
-
+		/* ***************************************************************** */
+		/* **************************** Cookies **************************** */
+		/* ***************************************************************** */
+		void		setCookies(std::string fname, std::string lname);
+		void		handle_cookies(void);
+		void		setSession(void);
+		void		create_data_file(void);
 
 		/* ***************************************************************** */
 		/* ****************************** POST ***************************** */

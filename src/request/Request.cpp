@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/10 17:59:03 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/11 19:12:05 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -384,10 +384,10 @@ bool	Request::is_accessible(char const *target)
 	return S_ISREG(path_stat.st_mode);
 }
 
-char const *	define_ext(std::string & target)
+char const *	define_ext(std::string target)
 {
-	std::cout << "TARGET = " << target << std::endl;
-	if (target.substr(target.rfind('.') + 1, 10) == "py")
+	target.erase(0, target.find('.') + 1);
+	if (target.substr(0, target.find('?')) == "py")
 		return ("/usr/bin/python3");
 	else 
 		return ("/usr/bin/php");
@@ -405,7 +405,7 @@ void    		Request::handle_cgi(t_conf & conf)
 	check_extension(conf, target);
 	char const * interpreter = define_ext(target);
     argv = new char * [3];
-	argv[0] = (char*) interpreter;
+	argv[0] = (char *) interpreter;
     argv[1] = (char *) pathname;
     argv[2] = NULL;
 	env = set_env(conf);
@@ -414,6 +414,48 @@ void    		Request::handle_cgi(t_conf & conf)
 		delete [] env[i];
 	delete [] env;
 	delete [] argv;
+}
+
+/* ************************************************************************* */
+/* ******************************** Cookies ******************************** */
+/* ************************************************************************* */
+
+//pour acceder a request, passer le ptr sur server
+
+void	Request::create_data_file(void)
+{
+	std::ofstream	data("Data_user", std::ofstream::out);
+	std::string		copy = body;
+	std::string		output;
+
+	for (int i = 0; i < 2; i++)
+	{
+		data << copy.substr(0, copy.find('&')) << std::endl;
+		copy.erase(0, copy.find('&') + 1);
+	}
+}
+
+void	Request::setSession(void)
+{
+	create_data_file();
+}
+
+// void	Response::setCookies(std::string fname, std::string lname)
+// {
+	// std::string str[2];
+	// (void) lname;
+	// (void) fname;
+	// _cookie = "Set-Cookie: path=/form.html; HttpOnly";
+// }
+
+void	Request::handle_cookies(void)
+{
+	if (body.find("rememberMe=on") != body.npos)
+	{
+		std::cout << "OPEN SESSION\n";
+		setSession();
+	}
+	
 }
 
 /* ************************************************************************* */
@@ -468,6 +510,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			if (!open_targetfile(target))
 				error.fill_error(response, "404", conf);
 	}
+	handle_cookies();
 	send_response(socket_fd);
 }
 
