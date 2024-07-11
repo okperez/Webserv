@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/11 19:12:05 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/11 19:38:37 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -422,17 +422,24 @@ void    		Request::handle_cgi(t_conf & conf)
 
 //pour acceder a request, passer le ptr sur server
 
+void	Request::setTimestamp(std::ofstream	& data)
+{
+	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
+	std::time_t result = std::time(NULL);
+	data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
+}
+
 void	Request::create_data_file(void)
 {
 	std::ofstream	data("Data_user", std::ofstream::out);
 	std::string		copy = body;
-	std::string		output;
-
+	
 	for (int i = 0; i < 2; i++)
 	{
 		data << copy.substr(0, copy.find('&')) << std::endl;
 		copy.erase(0, copy.find('&') + 1);
 	}
+	setTimestamp(data);
 }
 
 void	Request::setSession(void)

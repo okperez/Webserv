@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 18:43:05 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/11 19:36:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,7 @@ class Request
 		void		handle_cookies(void);
 		void		setSession(void);
 		void		create_data_file(void);
+		void		setTimestamp(std::ofstream & data);
 
 		/* ***************************************************************** */
 		/* ****************************** POST ***************************** */
