@@ -1,9 +1,6 @@
 
 import os
 
-# Print the HTTP headers
-print("Content-Type: text/html\n")
-
 # Start the HTML
 print("<html>")
 print("<head>")

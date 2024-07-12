@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 10:18:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 17:57:26 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,6 +283,9 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
+//creer une session via un file.php
+//l'executer un file.php pour creer une session
+
 char**	Request::set_env(t_conf & conf)
 {
 	char	**env;
@@ -302,6 +305,16 @@ char**	Request::set_env(t_conf & conf)
 	strcpy(env[6], ("HTTP_USER_AGENT=" + agent).c_str());
 	env[7] = NULL;
 	return (env);
+}
+
+void	Request::get_output(char *buff)
+{
+	std::string str = buff;
+	if (str.find("Location") != str.npos)
+		std::cout << "trouve" << std::endl;
+	response.setBody(buff);
+	response.setStatus("200", " OK");
+	response.setContent_type("html", media);
 }
 
 int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
@@ -350,9 +363,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
-		response.setBody(buff);
-		response.setStatus("200", " OK");
-		response.setContent_type("html", media);
+		get_output(buff);
 	}
 	else
 	{
@@ -390,20 +401,16 @@ bool	Request::is_accessible(char const *target)
 	struct stat path_stat;
 	stat(target, &path_stat);
 	if (access(target, X_OK) == -1)
-	{
-		std::cout << target << std::endl;
 		return false;
-	}
 	return S_ISREG(path_stat.st_mode);
 }
 
 char const *	define_ext(std::string target)
 {
-	target.erase(0, target.find('.') + 1);
-	if (target.substr(0, target.find('?')) == "py")
-		return ("/usr/bin/python3");
-	else 
-		return ("/usr/bin/php");
+	std::map<std::string, char const *> extension;
+	setExtensions(extension);
+	std::string ext = target.erase(0, target.find('.') + 1);
+	return (extension[ext]);
 }
 
 void    		Request::handle_cgi(t_conf & conf)
@@ -435,6 +442,12 @@ void    		Request::handle_cgi(t_conf & conf)
 
 //pour acceder a request, passer le ptr sur server
 
+// checker whether a file is empty
+bool is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
+}
+
 void	Request::setTimestamp(std::ofstream	& data)
 {
 	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
@@ -444,9 +457,17 @@ void	Request::setTimestamp(std::ofstream	& data)
 
 void	Request::create_data_file(void)
 {
-	std::ofstream	data("Data_user", std::ofstream::out);
 	std::string		copy = body;
+	std::ofstream	data("Data_user", std::ofstream::out);
 	
+	// if (!is_empty(tmp))
+	// {
+		// data << "\n\n";
+		// data << "/* ************************************************************************* */";
+		// data << "/* ************************************************************************* */";
+		// data << "/* ************************************************************************* */";
+		// data << "\n\n";
+	// }
 	for (int i = 0; i < 2; i++)
 	{
 		data << copy.substr(0, copy.find('&')) << std::endl;
@@ -470,10 +491,13 @@ void	Request::setSession(void)
 
 void	Request::handle_cookies(void)
 {
-	if (body.find("rememberMe=on") != body.npos)
+	if (method == "POST")
 	{
-		std::cout << "OPEN SESSION\n";
-		setSession();
+		if (body.find("rememberMe=on") != body.npos)
+		{
+			std::cout << "OPEN SESSION\n";
+			setSession();
+		}
 	}
 	
 }

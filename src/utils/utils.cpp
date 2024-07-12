@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 11:01:35 by garance           #+#    #+#             */
-/*   Updated: 2024/07/11 14:12:45 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 14:43:46 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,4 +67,19 @@ void	strtomap(std::string s, std::map<std::string, std::vector<std::string> > & 
 
 char	strback(std::string const & s) {
 	return (s[s.length() - 1]);
+}
+void	setExtensions(std::map<std::string, char const *> & extensions)
+{
+	extensions["py"] = "/usr/bin/python3";
+	extensions["php"] = "/usr/bin/php";
+	extensions["rb"] = "/usr/bin/rb";
+	extensions["js"] = "/usr/bin/node";
+	extensions["pl"] = "/usr/bin/perl";
+	extensions["java"] = "/usr/bin/java";
+	extensions["swift"] = "/usr/bin/swift";
+	extensions["lua"] = "/usr/bin/lua";
+	extensions["r"] = "/usr/bin/R";
+	extensions["json"] = "/usr/bin/jq";
+	extensions["go"] = "/usr/bin/go";
+	extensions["rs"] = "/usr/bin/rustc";
 }

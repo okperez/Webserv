@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 10:18:59 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 17:51:00 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ void	Response::setBody(std::ifstream &file) {
 
 std::string Response::build_response()
 {
-	static int 		response_nbr;
 	std::string title = "\e[36m";
 	std::string reset = "\e[0m";
 	std::string response = "HTTP/1.1 ";
@@ -96,13 +95,8 @@ std::string Response::build_response()
 	std::cout << response;
 	std::cout << "******************************" << reset << std::endl;
 
-	if (response_nbr++ == 0)
-	{
-		_cookie = "Set-Cookie: fname=; path=/form.html; HttpOnly";
+	if (!_cookie.empty())
 		response += _cookie + delim;
-		_cookie = "Set-Cookie: lname=; path=/form.html; HttpOnly";
-		response += _cookie + delim;
-	}
 	if (!_location.empty())
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())

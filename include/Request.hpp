@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 10:15:59 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 18:01:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,11 +156,12 @@ class Request
 		int				exec_script(char const *pathname, char *const argv[], char *const envp[]);
 		bool			is_accessible(char const *target);
 		void			check_extension(t_conf & conf, std::string target);
+		void			get_output(char *buff);
+
 
 		/* ***************************************************************** */
 		/* **************************** Cookies **************************** */
 		/* ***************************************************************** */
-		void		setCookies(std::string fname, std::string lname);
 		void		handle_cookies(void);
 		void		setSession(void);
 		void		create_data_file(void);
@@ -186,5 +187,7 @@ class Request
 		
 		void	handle_pending_requests(ErrorPages & error, int & socket);
 } ;
+
+void	setExtensions(std::map<std::string, char const *> & extensions);
 
 #endif
