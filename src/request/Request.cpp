@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/11 17:09:19 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 09:40:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -586,7 +586,7 @@ bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 		error.fill_error(response, "411", conf, media);
 		return (send_response(socket_fd), false);
 	}
-	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty() || content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
+	if (/* method.empty() || version.empty() || target.empty() || host.empty() || port.empty() ||  */content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
 		error.fill_error(response, "400", conf, media);
 		return (send_response(socket_fd), false);
 	}
@@ -665,8 +665,7 @@ strtomap(s, media, ",", "/");
 // 	}
 }
 
-void	Request::parse_request(in_addr_t s_addr) {
-	std::string tmp;
+bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
 	
 	socket_s_addr = s_addr;
 	recover_ip_socket();
@@ -674,14 +673,24 @@ void	Request::parse_request(in_addr_t s_addr) {
 	method = extract_line(save_buffer, ' ');
 	target = extract_line(save_buffer, ' ');
 	version = extract_line(save_buffer, '\r');
+	host = extract_elem("Host:", "\r", save_buffer, "");
+	parse_host();
+	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty()) {
+		error.fill_error(response, "400", media);
+		return (send_response(socket_fd), false);
+	}
+	return (true);
+}
+
+void	Request::parse_request() {
+	std::string tmp;
+	
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
 	if (!tmp.empty())
 		parse_media(tmp);
 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-	host = extract_elem("Host:", "\r", save_buffer, "");
-	parse_host();
 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
 	if (tmp.empty())
 		miss_length = true;
@@ -768,8 +777,8 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	
 	response.reinitBody();
 	if (i_conf > -1)
-		error.fill_error(response, "500", server->conf[i_conf], media);
+		error.fill_error(response, "503", server->conf[i_conf], media);
 	else
-		error.fill_error(response, "500", media);
+		error.fill_error(response, "503", media);
 	send_response(socket);
 }

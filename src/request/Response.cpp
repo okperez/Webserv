@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 17:18:34 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 09:37:12 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ void		Response::setContent_type(std::string const &type, std::map<std::string, s
 			if (*jt == type)
 				_content_type = it->first + "/" + type;
 	}
-	// ET SI PAS DE CORRESPONDANCE?
+	// ET SI PAS DE CORRESPONDANCE? ATTENDRE ORLOU POUR MERGE ET RECUPERER MEDIA SANS SERVER
 }
 
 void	Response::setContent_length() {

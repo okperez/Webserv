@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/11 17:09:58 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 09:41:46 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ ErrorPages::ErrorPages() {
     map_error["413"] = " Request Entity Too Large";
     map_error["415"] = " Unsupported Media Type";
     map_error["500"] = " Internal Server Error";
+    map_error["503"] = " Service Unavailable";
 	map_error["505"] = " HTTP Version not supported";
 	map_error["508"] = " Loop Detected";
 }

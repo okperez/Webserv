@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 18:51:40 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 09:12:04 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,8 @@ class Request
 		bool		media_request_allowed();
 		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
-		void		parse_request(in_addr_t s_addr);
+		bool		parse_first_line(in_addr_t s_addr, ErrorPages &error);
+		void		parse_request();
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 19:02:34 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 09:21:16 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -279,16 +279,17 @@ void	Server::event_request() {
 					socklen_t namelen = sizeof(name);
 					getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
 					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
-					it->parse_request(socket->sin_addr.s_addr);
+					if (!it->parse_first_line(socket->sin_addr.s_addr, error))
+						return (requests.erase(it), (void) 0);
 					int i_conf = pick_server(*it);
 					i_conf = 0;
 					std::cout << "i_conf = " << i_conf << std::endl;
+					it->parse_request();
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
-					
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
 						for (int i = 0; i < MAX_CONNECTION; i++) {
 							if (fds[i].fd == it->getSocket_fd()) 
-								return (close_connection(i), (void) 0);
+								return (requests.erase(it), close_connection(i), (void) 0);
 						}				
 					}
 					requests.erase(it);
