@@ -3,27 +3,28 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 18:52:35 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 10:19:52 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-#include "include.hpp"
+# include "include.hpp"
+# include "Request.hpp"
 
 class Response
 {
 	private : 
-		std::string 	_status;
-		std::string 	_content_type;
-		std::string 	_content_length;
-		std::string 	_location;
-		std::string 	_body;
-	
+		std::string 						_status;
+		std::string 						_content_type;
+		std::string 						_content_length;
+		std::string 						_location;
+		std::string 						_body;
+		std::string							_cookie;
 		Response(const Response & orig);
 		
 	public :
@@ -43,10 +44,10 @@ class Response
 		void	setBody(std::string const & s);
 		void	setBody(std::ifstream &file);
 
-		std::string build_response() const;
+		std::string build_response();
 
 		//A EFFACER
-		void print() const;
+		void print();
 		
 } ;
 

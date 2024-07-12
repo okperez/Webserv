@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 09:37:12 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/12 10:18:59 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ Response &Response::operator=(Response const & rhs) {
 	_content_length = rhs._content_length;
 	_body = rhs._body;
 	_location = rhs._location;
+	_cookie = rhs._cookie;
 	return (*this); 
 }
 
@@ -83,16 +84,25 @@ void	Response::setBody(std::ifstream &file) {
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-std::string Response::build_response() const {
+std::string Response::build_response()
+{
+	static int 		response_nbr;
 	std::string title = "\e[36m";
 	std::string reset = "\e[0m";
 	std::string response = "HTTP/1.1 ";
 	std::string delim = "\r\n";
-	
 	response += _status + delim;
 	std::cout << title<< "********** RESPONSE **********" << std::endl;
 	std::cout << response;
 	std::cout << "******************************" << reset << std::endl;
+
+	if (response_nbr++ == 0)
+	{
+		_cookie = "Set-Cookie: fname=; path=/form.html; HttpOnly";
+		response += _cookie + delim;
+		_cookie = "Set-Cookie: lname=; path=/form.html; HttpOnly";
+		response += _cookie + delim;
+	}
 	if (!_location.empty())
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())
@@ -103,9 +113,10 @@ std::string Response::build_response() const {
 	return (response);
 }
 
-void	Response::print() const {
+void	Response::print() {
 	std::cout << "_start_line : " << _status << std::endl;
 	std::cout << "_content_type : " << _content_type << std::endl;
 	std::cout << "_content_length : " << _content_length << std::endl;
 	std::cout << "_body : " << _body << std::endl;
+	std::cout << "_cookie :" << _cookie << std::endl;
 }
