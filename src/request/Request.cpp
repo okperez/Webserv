@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 10:18:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 18:04:21 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Request::Request(char const *buffer, int read, int socket, Server *src_server, M
 	socket_fd = socket;
 	server = src_server;
 	auth_media = src_auth_media;
+	response.setAuthmedia(src_auth_media);
 	if (buffer)
 		save_buffer = buffer;
 	i_conf = -1;
@@ -150,7 +151,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 	// std::cout << "i = " << i << std::endl;
 	switch (i) {
 		case UNKNOWN : {
-			error.fill_error(response, "405", conf, media);
+			error.fill_error(response, "405", conf);
 			return (send_response(socket_fd), 1);
 		}
 		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
@@ -159,7 +160,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			if (index.empty())
 			{
 				if (conf.root_dir.empty()) {
-					error.fill_error(response, "404", conf, media);
+					error.fill_error(response, "404", conf);
 					return (send_response(socket_fd), 1);
 				}
 				else {
@@ -172,7 +173,7 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			/* AVANT D AJOUTER LE PATH => check method ok */
 			else {
 				if (!check_allow_method(conf, index)) {
-					error.fill_error(response, "405", conf, media);
+					error.fill_error(response, "405", conf);
 					return (send_response(socket_fd), 1);
 				}
 				add_path(conf, index); // GET POST DELETE
@@ -350,9 +351,9 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
+		response.setContent_type("html");
 		response.setBody(buff);
 		response.setStatus("200", " OK");
-		response.setContent_type("html", media);
 	}
 	else
 	{
@@ -501,8 +502,8 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			target_directory(conf, error);
 		//  =====> Request isn't a directory
 		else {
-			if (!open_targetfile(target))
-				error.fill_error(response, "404", conf, media);
+			if (!open_targetfile(target, error, conf))
+				error.fill_error(response, "404", conf);
 		}
 	}
 	else {
@@ -523,18 +524,18 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			}
 			catch(const std::exception& e)
 			{
-				error.fill_error(response, e.what(), conf, media);
+				error.fill_error(response, e.what(), conf);
 			}
 		}
 		else
-			if (!open_targetfile(target))
-				error.fill_error(response, "404", conf, media);
+			if (!open_targetfile(target, error, conf))
+				error.fill_error(response, "404", conf);
 	}
 	handle_cookies();
 	send_response(socket_fd);
 }
 
-bool	Request::open_targetfile(std::string & target) {
+bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
 	
 	std::ifstream     file;
 	
@@ -543,7 +544,10 @@ bool	Request::open_targetfile(std::string & target) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
 		std::string	type = extract_extension(target);
-		response.setContent_type(type, media);
+		if (!response.setContent_type(type)) {
+			response.reinitBody();
+			error.fill_error(response, "405", conf);
+		}
 		return (true);
 	}
 	return (false);
@@ -563,12 +567,12 @@ void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 	
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = target + *it;
-		if (open_targetfile(tmp)) // =====> open le 1er index valide
+		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 			return (std::cout << "return" << std::endl, (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(), (void)0);
-	error.fill_error(response, "404", conf, media);
+	error.fill_error(response, "404", conf);
 }
 
 /* Le champs index a la  priorite sur autoindex si les deux sont presents */
@@ -580,13 +584,13 @@ void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &
 		strtovect(it->second, index, " ");
 		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
 			std::string tmp = target + *jt;
-			if (open_targetfile(tmp)) // =====> open le 1er index valide
+			if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 				return ;
 		}
 	}
 	it = conf.location[location].find("autoindex"); // =====> Index in location absent or index page doesn't exist
 	if (it == conf.location[location].end() || it->second != "on") // =====> Autoindex off or absent
-		return (error.fill_error(response, "404", conf, media), (void)0);
+		return (error.fill_error(response, "404", conf), (void)0);
 	else // =====> Autoindex on
 		build_index();
 }
@@ -618,7 +622,7 @@ void	Request::build_index() {
 	response.setBody("</body>");
 	response.setBody("</html>");
 	response.setStatus("200", " OK");
-	response.setContent_type("html", media); // Type ok : l'index auto genere est html
+	response.setContent_type("html"); // Type ok : l'index auto genere est html
 }
 
 bool	Request::is_loop(std::string &redir, std::string const &location, t_conf &conf) {
@@ -637,7 +641,7 @@ void	Request::redirection(std::string const &ret, ErrorPages &error, std::string
 	std::string redir = ret.substr(ret.find(' ') + 1);
 	redir = "/" + redir;
 	if (is_loop(redir, location, conf))
-		return (error.fill_error(response, "508", conf, media), (void)0);
+		return (error.fill_error(response, "508", conf), (void)0);
 	redir = "http://" + host + ":" + port + redir;
 	error.fill_redir(response, code, redir);
 }
@@ -656,30 +660,30 @@ bool	Request::media_request_allowed() {
 		for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
 			if (auth_media->is_allow(it->first, *jt))
 				return (true);
-		}
+	}
 	return (false);
 }
 
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
 	if (miss_length && !body.empty()) {
-		error.fill_error(response, "411", conf, media);
+		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
 	}
 	if (/* method.empty() || version.empty() || target.empty() || host.empty() || port.empty() ||  */content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
-		error.fill_error(response, "400", conf, media);
+		error.fill_error(response, "400", conf);
 		return (send_response(socket_fd), false);
 	}
 	if (version != "HTTP/1.1") {
-		error.fill_error(response, "405", conf, media);
+		error.fill_error(response, "405", conf);
 		return (send_response(socket_fd), false);
 	}
 	if (content_length > conf.limit_body_size) {
-		error.fill_error(response, "413", conf, media);
+		error.fill_error(response, "413", conf);
 		return (send_response(socket_fd), false);
 	}
 	if (!media_request_allowed()) {
-		error.fill_error(response, "415", conf, media);
+		error.fill_error(response, "415", conf);
 		return (send_response(socket_fd), false);
 	}
 	return (true);
@@ -756,7 +760,7 @@ bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
 	if (method.empty() || version.empty() || target.empty() || host.empty() || port.empty()) {
-		error.fill_error(response, "400", media);
+		error.fill_error(response, "400");
 		return (send_response(socket_fd), false);
 	}
 	return (true);
@@ -857,8 +861,8 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	
 	response.reinitBody();
 	if (i_conf > -1)
-		error.fill_error(response, "503", server->conf[i_conf], media);
+		error.fill_error(response, "503", server->conf[i_conf]);
 	else
-		error.fill_error(response, "503", media);
+		error.fill_error(response, "503");
 	send_response(socket);
 }

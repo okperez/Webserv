@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign_up</title>
+    <link rel="stylesheet" type="text/css" href="/session.css">
+</head>
+<body>
+    <h1>Sign Up</h1>
+    <!-- <img src="/image.png" alt="Example Image"> -->
+    <!-- <script src="/script.js"></script> -->
+	<div id="center">
+		<form action="cgi-bin/sign_up.py" method="POST">
+		<!-- response.php selon le fichier qui contient le scrip pour generer la reponse  -->
+			<label id="text" for="user">User name :</label><br>
+			<input id="champs" type = "text" id="user" name="user"><br><br>
+			<label id="text" for="password">Password :</label><br>
+			<input id="champs" type = "text" id="password" name="password"><br><br>
+			<label id="remember">
+				<input type="checkbox" name="rememberMe"> Remember Me </label><br><br><br>
+			<input id="button2" type="submit" value="submit">
+		</form>
+	</div>
+</body>
+</html>

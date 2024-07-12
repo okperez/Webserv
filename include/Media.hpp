@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 17:04:59 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/12 17:38:40 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ class Media
         /* ***************************************************************** */
         
 		bool	is_allow(std::string const &index, std::string const &content);
+		std::string	match_type(std::string const &type);
+		
 } ;
 
 #endif
