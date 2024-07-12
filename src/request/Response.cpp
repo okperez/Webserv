@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 17:51:00 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 18:11:18 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ Response &Response::operator=(Response const & rhs) {
 	_body = rhs._body;
 	_location = rhs._location;
 	_cookie = rhs._cookie;
+	auth_media = rhs.auth_media;
 	return (*this); 
 }
 
@@ -43,16 +44,22 @@ Response &Response::operator=(Response const & rhs) {
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
 
+void	Response::setAuthmedia(Media *auth_media) {
+	this->auth_media = auth_media;
+}
+
 void	Response::setStatus(std::string const & code, std::string const & tittle) {
 	_status = code + tittle;
 }
 
-void		Response::setContent_type(std::string const &type, std::map<std::string, std::vector<std::string> > &media) {
-	for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
-		for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
-			if (*jt == type)
-				_content_type = it->first + "/" + type;
-	}
+bool	Response::setContent_type(std::string const &type) {
+	
+	std::cout << "TEST0 type = |"<< type << "|" << std::endl;
+	_content_type = auth_media->match_type(type);
+	std::cout << "TEST1" << std::endl;
+	if (_content_type.empty())
+		return (false);
+	return (true);
 	// ET SI PAS DE CORRESPONDANCE? ATTENDRE ORLOU POUR MERGE ET RECUPERER MEDIA SANS SERVER
 }
 

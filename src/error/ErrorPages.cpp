@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 10:20:45 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 16:45:09 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ ErrorPages::ErrorPages() {
     map_error["400"] = " Bad Request";
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
+	map_error["406"] = " Not Acceptable";
 	map_error["411"] = " Length Required";
     map_error["413"] = " Request Entity Too Large";
     map_error["415"] = " Unsupported Media Type";
@@ -63,7 +64,7 @@ ErrorPages &ErrorPages::operator=(ErrorPages & rhs) {
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-void	ErrorPages::err_not_found(Response &response, std::string &code, std::map<std::string, std::vector<std::string> > &media) {
+void	ErrorPages::err_not_found(Response &response, std::string &code) {
 	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n\t<title>");
 	response.setBody(map_error[code]);
 	response.setBody("</title>\n</head>\n<body>\n\t<h1>");
@@ -71,13 +72,13 @@ void	ErrorPages::err_not_found(Response &response, std::string &code, std::map<s
 	response.setBody("</h1>\n\t<h1>");
 	response.setBody(map_error[code]);
 	response.setBody("</h1>\n</body>\n</html>");
-	response.setContent_type("html", media); // ICI OK CAR GENERE AUTOMATIQUEMENT html
+	response.setContent_type("html"); // ICI OK CAR GENERE AUTOMATIQUEMENT html
 }
 
-void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf, std::map<std::string, std::vector<std::string> > &media) {
+void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) {
     
     if (conf.err_pgs.find(code) == conf.err_pgs.end())
-		err_not_found(response, code, media);
+		err_not_found(response, code);
     else {
         std::ifstream file;
 		
@@ -85,17 +86,17 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf, 
         if (file.is_open()) {
 			response.setBody(file);
 			std::string	type = Request::extract_extension(conf.err_pgs[code]);
-			response.setContent_type(type, media);
+			response.setContent_type(type);
 		}
         else
-			err_not_found(response, code, media);
+			err_not_found(response, code);
     }
 	response.setStatus(code, map_error[code]);
 }
 
-void	ErrorPages::fill_error(Response &response, std::string code, std::map<std::string, std::vector<std::string> > &media) {
+void	ErrorPages::fill_error(Response &response, std::string code) {
     
-    err_not_found(response, code, media);
+    err_not_found(response, code);
 	response.setStatus(code, map_error[code]);
 }
 

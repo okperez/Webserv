@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 18:01:57 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/12 18:11:03 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,7 +138,7 @@ class Request
 		/* ***************************************************************** */
 		
 		void		build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
-		bool		open_targetfile(std::string & target);
+		bool		open_targetfile(std::string & target, ErrorPages & error, t_conf &conf);
 		bool		is_dir(std::string const &path);
 		void		target_directory(t_conf &conf, ErrorPages &error);
 		void		target_directory(t_conf &conf, std::string &location, ErrorPages &error);
