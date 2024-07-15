@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 18:12:55 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 12:00:05 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,8 +135,12 @@ void	Request::send_response(int socket_fd) {
 	
 	response.setContent_length();
 	std::string response_content = response.build_response();
-	write(socket_fd, response_content.c_str(), response_content.size());
-	std::cout << "********** RESPONSE CONTENT **********" << std::endl;
+	int fd = write(socket_fd, response_content.c_str(), response_content.size());
+	if (fd == -1) {
+		status = ERASE;
+		throw(ServerException("Fail to write"));
+	}
+	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
 	std::cout << response_content << std::endl;
 	std::cout << "******************************" << std::endl;
 	status = SENT;
@@ -328,10 +332,10 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int		exit_status = 0;
 	std::string	output;
 	
-	pipe(fd);
+	pipe(fd); // Secu SI PIPE FAIL ?
 	pid = fork();
 	if (pid == -1)
-		perror("fork");
+		perror("fork"); // ATTENTION FONCTION INTERDITE ? cf sujet et voir avec Orlando
 	if (pid == 0)
 	{
 		dup2(fd[1], 1);
@@ -344,7 +348,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			delete [] envp;
 			delete [] argv;
 			delete [] server->fds;
-			perror("execve");
+			perror("execve"); // ATTENTION FONCTION INTERDITE ? cf sujet et voir avec Orlando
 			exit (1);
 		}
 	}
@@ -527,7 +531,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		//  =====> Request isn't a directory
 		else {
 			if (!open_targetfile(target, error, conf))
-				error.fill_error(response, "404", conf);
+				fill_error_errno(conf, error);
 		}
 	}
 	else {
@@ -553,7 +557,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		}
 		else
 			if (!open_targetfile(target, error, conf))
-				error.fill_error(response, "404", conf);
+				fill_error_errno(conf, error);
 	}
 	handle_cookies();
 	send_response(socket_fd);
@@ -563,14 +567,16 @@ bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &
 	
 	std::ifstream     file;
 	
-	file.open(target.data());
+	file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
 	if (file.is_open()) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
 		std::string	type = extract_extension(target);
+		if (type.empty())
+			type = "octet-stream";
 		if (!response.setContent_type(type)) {
 			response.reinitBody();
-			error.fill_error(response, "405", conf);
+			error.fill_error(response, "406", conf);
 		}
 		return (true);
 	}
@@ -579,8 +585,8 @@ bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &
 
 bool	Request::is_dir(std::string const &path) {
 	struct stat buf;
-	if (stat(path.data(), &buf) == -1)
-		std::cout << "A IMPLEMENTER CAS ERREUR" << std::endl;
+	if (stat(path.data(), &buf) == -1) // NO LEAK MEMMORY + FD ===> erreur not found renvoyee
+		return (false);
 	if (S_ISDIR(buf.st_mode))
 		return (true);
 	return (false);
@@ -595,7 +601,7 @@ void	Request::target_directory(t_conf &conf, ErrorPages &error) {
 			return (std::cout << "return" << std::endl, (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
-		return (build_index(), (void)0);
+		return (build_index(conf, error), (void)0);
 	error.fill_error(response, "404", conf);
 }
 
@@ -616,20 +622,21 @@ void	Request::target_directory(t_conf &conf, std::string &location, ErrorPages &
 	if (it == conf.location[location].end() || it->second != "on") // =====> Autoindex off or absent
 		return (error.fill_error(response, "404", conf), (void)0);
 	else // =====> Autoindex on
-		build_index();
+		build_index(conf, error);
 }
 
 /*  Quand Autoindex est on : Cree la page html de l'index */
-void	Request::build_index() {
+void	Request::build_index(t_conf &conf, ErrorPages &error) {
 	
-	DIR *tmp = opendir(target.data());
+	DIR *tmp = opendir(target.data()); // OK NO LEAKS MEMMORY + FD ====> ERROR SET SELON ERRNO
 	dirent *directory;
 	
-	/* A TESTER : RENTRER DANS UN DOSSIER NULL */
+	if (!tmp)
+		return (fill_error_errno(conf, error), (void) 0);
 	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
 	while (1) {
 		directory = readdir(tmp);
-		if (!directory)
+		if (!directory) // OK NO LEAKS MEMMORY + FD
 			break; // =====> readdir a fini de lister
 		std::string link = directory->d_name;
 		if (link == "." || link == "..")
@@ -652,8 +659,8 @@ void	Request::build_index() {
 bool	Request::is_loop(std::string &redir, std::string const &location, t_conf &conf) {
 	
 	std::string tmp = look_for_location(redir, conf);
-	std::cout << "redir = " << redir << std::endl; 
-	std::cout << "next location = " << tmp << std::endl; 
+	// std::cout << "redir = " << redir << std::endl; 
+	// std::cout << "next location = " << tmp << std::endl; 
 	if (tmp == location)
 		return (true);
 	return (false);
@@ -694,7 +701,7 @@ bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
 	}
-	if (/* method.empty() || version.empty() || target.empty() || host.empty() || port.empty() ||  */content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
+	if (content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
 		error.fill_error(response, "400", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -873,8 +880,24 @@ std::string Request::extract_extension(std::string const & s) {
 	
 	int found = s.find_last_of('.');
 	if (found == -1 || found == static_cast<int>(s.length() - 1))
-		std::cout << "A IMPLEMENTER" << std::endl;
+		return ("");
 	return (s.substr(found + 1));
+}
+
+/* ************************************************************************* */
+/* ********************************* ERROR ********************************* */
+/* ************************************************************************* */	
+
+void	Request::fill_error_errno(t_conf &conf, ErrorPages &error) {
+	if (errno == EACCES)
+		error.fill_error(response, "403", conf);
+	else
+		error.fill_error(response, "404", conf);
+}
+
+void	Request::fill_error(std::string const &code, ErrorPages &error) {
+	error.fill_error(response, code);
+	send_response(socket_fd);
 }
 
 /* ************************************************************************* */

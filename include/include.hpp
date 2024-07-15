@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   include.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 19:30:13 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/14 11:00:27 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <cstdlib>
 # include <string>
 # include <cstring>
+# include <cerrno>
 # include <algorithm>
 # include <vector>
 # include <map>

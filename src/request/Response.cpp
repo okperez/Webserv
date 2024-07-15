@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 18:11:18 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 11:27:00 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,13 +54,10 @@ void	Response::setStatus(std::string const & code, std::string const & tittle) {
 
 bool	Response::setContent_type(std::string const &type) {
 	
-	std::cout << "TEST0 type = |"<< type << "|" << std::endl;
 	_content_type = auth_media->match_type(type);
-	std::cout << "TEST1" << std::endl;
 	if (_content_type.empty())
 		return (false);
 	return (true);
-	// ET SI PAS DE CORRESPONDANCE? ATTENDRE ORLOU POUR MERGE ET RECUPERER MEDIA SANS SERVER
 }
 
 void	Response::setContent_length() {

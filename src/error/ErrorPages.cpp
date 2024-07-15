@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 16:45:09 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 11:34:58 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ ErrorPages::ErrorPages() {
     map_error["307"] = " Temporary Redirect";
     map_error["308"] = " Permanent Redirect";
     map_error["400"] = " Bad Request";
+    map_error["403"] = " Forbidden";
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
 	map_error["406"] = " Not Acceptable";
@@ -82,7 +83,7 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
     else {
         std::ifstream file;
 		
-        file.open(conf.err_pgs[code].data());
+        file.open(conf.err_pgs[code].data()); // OK NO LEAK + MEMMORY + ERROR SET
         if (file.is_open()) {
 			response.setBody(file);
 			std::string	type = Request::extract_extension(conf.err_pgs[code]);

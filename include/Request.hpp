@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 18:11:03 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 11:07:42 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ class Request
 		bool		is_dir(std::string const &path);
 		void		target_directory(t_conf &conf, ErrorPages &error);
 		void		target_directory(t_conf &conf, std::string &location, ErrorPages &error);
-		void		build_index();
+		void		build_index(t_conf &conf, ErrorPages &error);
 		bool		is_valid_code(std::string const code);
 		bool		is_loop(std::string &redir, std::string const &location, t_conf & conf);
 		void		redirection(std::string const &ret, ErrorPages &error, std::string const &location, t_conf & conf);
@@ -175,19 +175,26 @@ class Request
 		/* ***************************** Utils ***************************** */
 		/* ***************************************************************** */
 
-		std::string extract_line(std::string & buff, char delim) const;
-		std::string extract_header(std::string & buff) const;
-		std::string extract_elem(std::string const &elem, std::string const &delim, std::string & buff, std::string const & nofound) const;
-		std::string extract_body(std::string & buff);
+		std::string extract_line(std::string &buff, char delim) const;
+		std::string extract_header(std::string &buff) const;
+		std::string extract_elem(std::string const &elem, std::string const &delim, std::string &buff, std::string const & nofound) const;
+		std::string extract_body(std::string &buff);
 		static std::string extract_extension(std::string const & s);
+
+		/* ***************************************************************** */
+		/* ***************************** ERROR ***************************** */
+		/* ***************************************************************** */	
+
+		void	fill_error_errno(t_conf &conf, ErrorPages &error);
+		void	fill_error(std::string const &code, ErrorPages &error);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
-		void	handle_pending_requests(ErrorPages & error, int & socket);
+		void	handle_pending_requests(ErrorPages & error, int &socket);
 } ;
 
-void	setExtensions(std::map<std::string, char const *> & extensions);
+void	setExtensions(std::map<std::string, char const *> &extensions);
 
 #endif

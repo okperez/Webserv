@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_content.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/07/10 11:43:18 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 10:24:54 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,7 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
     if (conf.root_dir.empty())
         check_for_root(conf.location);
     if (conf.server_name.empty())
+        // conf.server_name = ""; // VOIR AVEC ORLANDO: => RESOUT LEAKS SI SERVER_NAME EMPTY + ON N UTILISE PAS DE FONCTIONS INTERDITES
         conf.server_name = get_ip_address();
     for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf.location.begin(); it != conf.location.end(); it++)
     {

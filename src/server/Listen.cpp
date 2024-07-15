@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 09:04:30 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/13 08:58:33 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,17 @@ Listen::Listen(const Listen & orig) : _fd(orig._fd), _i_conf(orig._i_conf), _por
 // Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) , _i_conf(i) {}
 
 Listen::Listen(int fd, std::string &port, int s_addr, std::string &host, int i) : _fd(fd), _port(port), _s_addr(s_addr), _host(host) {
-	_i_conf.push_back(i);
+	try {
+		_i_conf.push_back(i);
+	}
+	catch (std::bad_alloc const & e) {
+		close(_fd);
+		throw ;
+	}
+	catch (std::length_error const & e) {
+		close(_fd);
+		throw ;
+	}
 }
 
 Listen::~Listen() {}

@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/11 16:45:24 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/14 09:59:29 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,11 +117,11 @@ enum	e_rule {
 };
 
 enum	e_status_request {
-	NW,
 	READING,
 	RD_TO_RESPOND,
 	RD_TO_SEND,
 	SENT,
+    ERASE,
 };
 
 enum	e_method {
