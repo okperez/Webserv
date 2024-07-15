@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 18:03:59 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/14 12:13:46 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ Server &Server::operator=(Server & rhs) {
 /* ************************************************************************* */
 /* ***************************** BFR LAUNCHING ***************************** */
 /* ************************************************************************* */
+// NO LEAKS MEMMORY + FD OK ===> DANS BLOC BEFORE LAUNCHING
 
 /*
 Si une socket ecoute deja sur le port, retourne 1 pour continuer et ne pas creer la socket
@@ -62,14 +63,11 @@ bool	Server::check_port_binding(std::vector<Listen> &server_fd, std::string &por
 }
 
 /* Assigning a transport address to the socket */
-void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int port) {
+void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int port, struct addrinfo *res) {
 	
-	if (bind(new_socket, (struct sockaddr *) &server_addr, sizeof(server_addr)))
-	{
-		for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
-			it->close_fd();
-		std::cerr << "Failed to bind to port " << port << std::endl;
-		throw(ServerException(""));
+	if (bind(new_socket, (struct sockaddr *) &server_addr, sizeof(server_addr))) {
+		std::cerr << "Failed to bind to port " << port;
+		error_bfr_launch(new_socket, res, "");
 	}
 }
 
@@ -77,31 +75,30 @@ void	Server::bind_socket(int new_socket, struct sockaddr_in &server_addr, int po
 The listen system call tells a socket that it should be capable of accepting incoming connections:
 backlog, defines the maximum number of pending connections that can be queued up before connections are refused.
 */
-void	Server::listen_socket(int new_socket, int port) {
+void	Server::listen_socket(int new_socket, int port, struct addrinfo *res) {
 	
 	int connection_backlog = 10; // VOIR AVEC ORLANDO POURQUOI 10? A MODIFIER?
+	
 	if (listen(new_socket, connection_backlog) != 0) {
-		for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
-			it->close_fd();
-		std::cerr << "Failed to listen to port " << port << std::endl;
-		throw(ServerException(""));
+		std::cerr << "Failed to listen to port " << port;
+		error_bfr_launch(new_socket, res, "");
 	}
 	/* To set up non blocking listen socket */
 	int flags = fcntl(new_socket, F_GETFL, 0); // A VERIFIER POUR FNCTL SUJET + ORLANDO
-	fcntl(new_socket, F_SETFL, flags | O_NONBLOCK);
+	if (flags == -1)
+		error_bfr_launch(new_socket, res, "Failed to fcntl");
+	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
+		error_bfr_launch(new_socket, res, "Failed to fcntl");
 }
 
-struct addrinfo	*Server::get_addr_info(char *data) {
-	struct addrinfo hints, *res;
+struct addrinfo	*Server::get_addr_info(char *data, int new_socket) {
+	struct addrinfo hints, *res = NULL;
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;          			// address family
 	hints.ai_socktype = SOCK_STREAM;
-	int result = getaddrinfo(data, NULL, &hints, &res); // => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
-	if (result != 0) {
-		freeaddrinfo(res);
-		throw(ServerException("Non valid host"));
-	}
+	if (getaddrinfo(data, NULL, &hints, &res) != 0)	// => Permet de lier l'adresse IP de l hote au port et a la socket via la structure sockaddr_in
+		error_bfr_launch(new_socket, res, "Non valid host");
 	return (res);
 }
 
@@ -123,25 +120,31 @@ void	Server::open_listen_socket() {
 			iss >> port;
 			if (check_port_binding(server_fd, *jt, it->host, i))
 				continue;
-			int new_socket;
+			int new_socket = -1;
 			new_socket = socket(AF_INET, SOCK_STREAM, 0);   //socket set up for listening is used only for accepting connections, not for exchanging data
 			if (new_socket < 0)
-				throw (ServerException("Failed to create server socket")); // NO LEAKS OK
-			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &opt, 4)) {
-				close(new_socket);
-				throw (ServerException("Failed to create server socket")); // NO LEAKS OK
-			}
-			struct addrinfo *res = get_addr_info((char *)(it->host.data()));
+				error_bfr_launch(new_socket, NULL, "Failed to create server socket");
+			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &opt, 4))
+				error_bfr_launch(new_socket, NULL, "Failed to create server socket");
+			struct addrinfo *res = get_addr_info((char *)(it->host.data()), new_socket);
 			struct sockaddr_in *server = (struct sockaddr_in *)res->ai_addr;
 			if (it->host == "0.0.0.0")
 				server->sin_addr.s_addr = INADDR_ANY;
 			server->sin_port = htons(port);         			//The port number (the transport address)
-			this->bind_socket(new_socket, *server, port); // attention LEAK SI FAILED TO BIND
-			this->listen_socket(new_socket, port); // attention LEAK SI FAILED TO BIND
+			this->bind_socket(new_socket, *server, port, res);
+			this->listen_socket(new_socket, port, res);
 			Listen nw(new_socket, *jt, server->sin_addr.s_addr, it->host, i);
 			nw.printlisten(); // A EFFACER
 			freeaddrinfo(res);
-			server_fd.push_back(nw);
+			res = NULL;
+			try {
+				server_fd.push_back(nw); }
+			catch (std::bad_alloc const & e) {
+				close(new_socket);
+				throw ; }
+			catch (std::length_error const & e) {
+				close(new_socket);
+				throw ; }
 		}
 		i++;
 	}
@@ -179,6 +182,7 @@ void	Server::launch_server(int max_socket) {
 	int ret;
 	
 	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR" << std::endl;
+	std::cout << "A IMPLEMENTER REQUEST QUERYSTRING" << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
@@ -229,15 +233,15 @@ void	Server::event_request() {
 			/* event_request sur socket listening for clients */
 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
-					new_connection(it->getFd());
+					new_connection(it->getFd()); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 					return ;
 				}
 			}
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
-			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE); //secu si ==-1
-			if (n_bytes < 0)
-				std::cout << "A IMPLEMENTER" << std::endl;
+			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE);
+			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+				handle_error_function(fds[i].fd, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
 			/*A significant difference between HTTP/1.1 and earlier versions of
 			HTTP is that persistent connections are the default behavior of any
@@ -251,7 +255,6 @@ void	Server::event_request() {
 			has been signaled, the client MUST NOT send any more requests on that
 			connection.
 			*/
-				// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
 						requests.erase(it);
@@ -266,23 +269,24 @@ void	Server::event_request() {
 			have a self-defined message length (i.e., one not defined by closure
 			of the connection), as described in section 4.4.
 			*/
-				read_request(i, buffer, n_bytes);
+				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 			return ;
 		}
 	}
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
-			for (int j = 0; j < MAX_CONNECTION; j++) { // A TESTER AVEC SIEGE sinon effacer les 3
-				if (fds[j].fd == it->getSocket_fd()) { // A TESTER AVEC SIEGE
+			for (int j = 0; j < MAX_CONNECTION; j++) {
+				if (fds[j].fd == it->getSocket_fd()) {
 					struct sockaddr_storage name;
 					socklen_t namelen = sizeof(name);
-					getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen);
+					if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+						send_error(it, "500", "Fail getsockname", error);
 					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
+					// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
 					if (!it->parse_first_line(socket->sin_addr.s_addr, error))
 						return (requests.erase(it), (void) 0);
 					int i_conf = pick_server(*it);
-					i_conf = 0;
 					std::cout << "i_conf = " << i_conf << std::endl;
 					it->parse_request();
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
@@ -292,19 +296,21 @@ void	Server::event_request() {
 								return (requests.erase(it), close_connection(i), (void) 0);
 						}				
 					}
-					requests.erase(it);
-					return ;
+					return (requests.erase(it), (void) 0);
 				}
 			}
-			requests.erase(it); // A TESTER AVEC SIEGE
-			return ;
+			return (requests.erase(it), (void) 0);
 		}
+		else if (it->getStatus() == ERASE)
+			return (requests.erase(it), (void) 0);
 	}
 }
 
 /* ************************************************************************* */
 /* *************************** HANDLE CONNECTION *************************** */
 /* ************************************************************************* */
+
+// NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE ====> BLOC HANDLE CONNECTION 
 
 void	Server::new_connection(int server_fd) {
 	struct sockaddr_in client_addr;
@@ -315,10 +321,8 @@ void	Server::new_connection(int server_fd) {
 		// he accept system call grabs the first connection request on the queue of pending connections (set up in listen) and creates a new socket for that connection.
 		// By default, socket operations are synchronous, or blocking, and accept will block until a connection is present on the queue.
 	int socket_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-	if (socket_fd < 0) {
-		std::cout << "Client failed to connect." << std::endl;
-		return ;
-	}
+	if (socket_fd < 0)
+		throw (ServerException("Client failed to connect."));
 	for (int i = 1; i < MAX_CONNECTION; i++) {
 		if (fds[i].fd == -1) {
 			fds[i].fd = socket_fd;
@@ -330,7 +334,6 @@ void	Server::new_connection(int server_fd) {
 	close(socket_fd);
 	std::cerr << "Maximum of connection reached." << std::endl;
 	std::cerr << "Connection on socket " << socket_fd << " closed." << std::endl;
-
 }
 
 void	Server::close_connection(int i) {
@@ -437,11 +440,6 @@ body is expected. If a message body has been indicated, then it is read as a
 stream until an amount of octets equal to the message body length is read or the
 connection is closed.
 */
-/*
-  revoir choose_server avec info de ce site :
-  https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
-  */
-  // est ce qu on verifie que le port est bien ecoute + meme serveur name + meme host?
 void	Server::read_request(int i, char *buffer, int read) {
 	
 	for (int j = 0; j < BUFFER_SIZE; j++)
@@ -466,8 +464,44 @@ void	Server::read_request(int i, char *buffer, int read) {
 }
 
 /* ************************************************************************* */
+/* ********************************* ERROR ********************************* */
+/* ************************************************************************* */
+
+void	Server::send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
+	
+	it->fill_error(code, error);
+	requests.erase(it);
+	throw (ServerException(mess));
+}
+
+void	Server::handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error) {
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (socket == it->getSocket_fd())
+			send_error(it, code, mess, error);
+	}
+	Request tmp("", -1, socket, this, &auth_media);
+	tmp.fill_error(code, error);
+	throw (ServerException(mess));
+}
+
+/* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
+
+void	Server::error_bfr_launch(int new_socket, struct addrinfo *res, const char *s) {
+	if (new_socket > -1)
+		close(new_socket);
+	if (res)
+		freeaddrinfo(res);
+	for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
+		it->close_fd();
+	throw(ServerException(s));
+}
+
+void	Server::error_bfr_launch() {
+	for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
+		it->close_fd();
+}
 
 /* Si control C stop listen + close socket listen */
 void	Server::stop_listen() {
@@ -485,8 +519,8 @@ void	Server::close_requests(int &socket) {
 			return ;
 		}
 	}
-	Request tmp(NULL, 0, socket, this, &this->auth_media);
-	tmp.handle_pending_requests(error, socket);
+	// Request tmp(NULL, 0, socket, this, &this->auth_media);
+	// tmp.handle_pending_requests(error, socket);
 } 
 
 void	Server::handle_pending_requests() {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   conf_parsing.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/07/10 11:16:45 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/15 12:45:40 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,11 +64,11 @@ int     count_server(std::list<std::string> & cnf_file)
     int count = 0;
     
     std::string::size_type pos = 0;
-    std::string target = "server{";
-    while ((pos = str.find(target, pos )) != std::string::npos)
+    std::string uri = "server{";
+    while ((pos = str.find(uri, pos )) != std::string::npos)
     {
            ++ count;
-           pos += target.length();
+           pos += uri.length();
     }
     return (count);
 }   

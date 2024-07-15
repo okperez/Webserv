@@ -6,25 +6,11 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/07/10 11:43:18 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:42:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
-
-char*        get_ip_address(void)
-{
-    char hostname[256];
-    if (gethostname(hostname, sizeof(hostname)) == -1) {
-        std::cerr << "Error getting hostname" << std::endl;
-    }
-    struct hostent *host_entry = gethostbyname(hostname);
-    if (host_entry == NULL) {
-        std::cerr << "Error getting host entry" << std::endl;
-    }
-    char *ip = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0])); // VOIR AVEC ORLANDO SI FONCTION AUTORISEE
-    return (ip);
-}
 
 void    extract_returns_values(std::vector<t_conf> & conf, std::vector<std::string> & r_values)
 {
@@ -149,7 +135,7 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
     if (conf.root_dir.empty())
         check_for_root(conf.location);
     if (conf.server_name.empty())
-        conf.server_name = get_ip_address();
+        conf.server_name = "";
     for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf.location.begin(); it != conf.location.end(); it++)
     {
         for(std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)

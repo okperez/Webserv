@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 18:48:49 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/13 10:52:53 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,12 @@ class Server
 		/* ************************* BFR LAUNCHING ************************* */
 		/* ***************************************************************** */
 		
-		struct addrinfo	*get_addr_info(char *data);
+		struct addrinfo	*get_addr_info(char *data, int new_socket);
 		bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host, int i);
 		// bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host);
-		void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port);
+		void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port, struct addrinfo *res);
 		// void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port);
-		void	listen_socket(int new_socket, int port);
+		void	listen_socket(int new_socket, int port, struct addrinfo *res);
 		
 	public :
 		Media		auth_media;
@@ -83,9 +83,18 @@ class Server
 		void	read_request(int i, char *buffer, int read);
 
 		/* ***************************************************************** */
+		/* ***************************** ERROR ***************************** */
+		/* ***************************************************************** */
+
+		void	send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
+		void	handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error);
+
+		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
+		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
+		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
 		void	stop_listen();
 		void	close_requests(int &socket);
 		void	handle_pending_requests();
