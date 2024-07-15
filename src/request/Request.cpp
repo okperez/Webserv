@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/14 12:00:05 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/15 12:36:34 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -544,7 +544,8 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		else if (is_dir(target))
 			target_directory(conf, location, error);
 		//  =====> Request isn't a directory
-		else if (location.find("/cgi-bin") != location.npos)
+		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
+		// else if (location.find("/cgi-bin") != location.npos)
 		{
 			try
 			{
