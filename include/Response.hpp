@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 17:18:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/15 11:33:30 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ class Response
 		std::string 						_content_length;
 		std::string 						_location;
 		std::string 						_body;
-		std::string							_cookie;
+		std::vector<std::string>			_cookie;
 		Media								*auth_media;
 		
 		Response(const Response & orig);
@@ -48,6 +48,7 @@ class Response
 		void	reinitBody();
 		void	setBody(std::string const & s);
 		void	setBody(std::ifstream &file);
+		void	setCookie(std::string str);
 
 		std::string build_response();
 

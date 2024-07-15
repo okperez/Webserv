@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/12 18:11:18 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/15 11:16:16 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,11 @@ void	Response::setBody(std::ifstream &file) {
 	std::getline(file, _body, '\0');
 }
 
+void	Response::setCookie(std::string str)
+{
+	_cookie.push_back(str);
+}
+
 /* ************************************************************************* */
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
@@ -102,8 +107,8 @@ std::string Response::build_response()
 	std::cout << response;
 	std::cout << "******************************" << reset << std::endl;
 
-	if (!_cookie.empty())
-		response += _cookie + delim;
+	for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
+		response += (*it) + delim;
 	if (!_location.empty())
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())
@@ -119,5 +124,7 @@ void	Response::print() {
 	std::cout << "_content_type : " << _content_type << std::endl;
 	std::cout << "_content_length : " << _content_length << std::endl;
 	std::cout << "_body : " << _body << std::endl;
-	std::cout << "_cookie :" << _cookie << std::endl;
+	for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
+		std::cout << "_cookie: " << (*it) << std::endl;
+	// std::cout << "_cookie :" << _cookie << std::endl;
 }

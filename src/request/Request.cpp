@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 18:12:55 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:30:06 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,10 +310,35 @@ char**	Request::set_env(t_conf & conf)
 
 void	Request::get_output(char *buff)
 {
+	
 	std::string str = buff;
-	if (str.find("Location") != str.npos)
-		std::cout << "trouve" << std::endl;
-	response.setBody(buff);
+	while (1)
+	{
+		size_t pos_cookie = str.find(("Set-Cookie:"));
+		size_t pos_loc = str.find(("Location: http"));
+		if (pos_cookie != str.npos)
+		{
+			std::string extract = str.substr(pos_cookie, str.find('\n') - pos_cookie);
+			response.setCookie(extract);
+			str.erase(pos_cookie, str.find('\n') - pos_cookie + 1);
+			continue ;
+		}
+		else if (pos_loc != str.npos)
+		{
+			size_t pos_http = str.find(("http"));
+			str.erase(pos_loc, pos_http - pos_loc);
+			pos_http = str.find(("http"));
+			std::string extract = str.substr(pos_http, str.find('\n') - pos_http);
+			response.setLocation(extract);
+			str.erase(pos_http, str.find('\n') - pos_http + 1);
+		}
+		else
+		{
+			response.setBody(str);
+			break ;
+		}
+
+	}
 	response.setStatus("200", " OK");
 	response.setContent_type("html");
 }
@@ -378,19 +403,13 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	return (0);
 }
 
-void	Request::check_extension(t_conf & conf, std::string target)
+void	Request::check_extension(t_conf & conf, std::string target, std::string & index_loc)
 {	
 	std::vector<std::string>	cgi_ext;
 	std::string					ext;
 	
-	for (std::map<std::string, std::map<std::string, std::string> >::iterator it = conf.location.begin(); it != conf.location.end(); it++)
-	{
-		for (std::map<std::string, std::string>::iterator its = (*it).second.begin(); its != (*it).second.end(); its++)
-		{
-			if ((*its).first.find("cgi_extension") != (*its).second.npos)
-				strtovect((*its).second, cgi_ext, " ");
-		}
-	}
+	for (std::map<std::string, std::string>::iterator it = conf.location[index_loc].begin(); it != conf.location[index_loc].end(); it++)
+		strtovect((*it).second, cgi_ext, " ");
 	target = target.erase(0, target.rfind('.') + 1);
 	ext = target.substr(0, target.find('?'));
 	if (std::count(cgi_ext.begin(), cgi_ext.end(), ext) == 0)
@@ -414,16 +433,17 @@ char const *	define_ext(std::string target)
 	return (extension[ext]);
 }
 
-void    		Request::handle_cgi(t_conf & conf)
+void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 {
 	char		**env;
 	char		**argv;
 
+	// conf.location[index_loc]["cgi_extension"]
 	std::string join = ("./" + _script_name);
 	char const *pathname = join.c_str();
 	if (!is_accessible(pathname))
 		throw RequestException ("404");
-	check_extension(conf, target);
+	check_extension(conf, target, index_loc);
 	char const * interpreter = define_ext(target);
     argv = new char * [3];
 	argv[0] = (char *) interpreter;
@@ -544,7 +564,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		{
 			try
 			{
-				handle_cgi(conf);
+				handle_cgi(conf, location);
 			}
 			catch(const std::exception& e)
 			{
