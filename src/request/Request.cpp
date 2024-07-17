@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/17 09:37:57 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:55:44 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,20 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, int read, int socket, Server *src_server, Media *src_auth_media) {
+Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media) {
 	// A UPDATE
 	socket_fd = socket;
 	server = src_server;
+	error = src_error;
 	auth_media = src_auth_media;
 	response.setAuthmedia(src_auth_media);
 	if (buffer)
 		save_buffer = buffer;
 	i_conf = -1;
-	if (read < BUFFER_SIZE)
-		status = RD_TO_RESPOND;
-	else
-		status = READING;
+	// if (read < BUFFER_SIZE)
+	// 	status = RD_TO_RESPOND;
+	// else
+	status = NEW;
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) {
@@ -59,10 +60,14 @@ Request &Request::operator=(Request const & rhs) {
 	socket_s_addr = rhs.socket_s_addr;
 	socket_ip = rhs.socket_ip;
 	server = rhs.server;
+	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
 	_query_string = rhs._query_string;
 	_target = rhs._target;
+	miss_length = rhs.miss_length;
+	content_length = rhs.content_length;
+
 	
 	response = rhs.response;
 
@@ -89,6 +94,10 @@ int Request::getSocket_fd() const {
 	return (socket_fd);
 }
 
+size_t 		Request::getSave_buffer_length() const{
+	return (save_buffer.length());
+}
+
 in_addr_t Request::getSocket_s_addr() const {
 	return (socket_s_addr);
 }
@@ -105,6 +114,10 @@ std::string Request::getPort() const {
 	return (port);
 }
 
+std::string Request::getTransfer_encoding() const {
+	return (transfer_encoding);
+}
+
 std::string Request::getConnection() const {
 	return (connection);
 }
@@ -112,6 +125,11 @@ std::string Request::getConnection() const {
 std::string Request::getSave_buffer() const {
 	return (save_buffer);
 }
+
+std::string Request::getBody() const{
+	return (body);
+} //A EFFACER
+
 
 void	Request::setStatus(int status) {
 	this->status = status;
@@ -149,6 +167,7 @@ void	Request::send_response(int socket_fd) {
 //  parse request from client and send back response 
 int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
 {
+	std::cout << "handle request misslength = " << miss_length << std::endl;
 	if (!check_request(socket_fd, conf, error))
 		return (1);
 	int i = check_exist_method();
@@ -803,10 +822,17 @@ strtomap(s, media, ",", "/");
 // 	}
 }
 
-bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
-	
+void	Request::setIp_socket(in_addr_t s_addr) {
+
 	socket_s_addr = s_addr;
 	recover_ip_socket();
+}
+
+
+bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
+	
+	// socket_s_addr = s_addr;
+	// recover_ip_socket();
 	/* Parse first line */
 	method = extract_line(save_buffer, ' ');
 	uri = extract_line(save_buffer, ' ');
@@ -814,14 +840,36 @@ bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
 	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		error.fill_error(response, "400");
+		error->fill_error(response, "400");
 		return (send_response(socket_fd), false);
 	}
 	return (true);
 }
 
-void	Request::parse_request() {
+bool		Request::body_present() {
+	if (save_buffer.find("\n\r\n") != std::string::npos)
+		return (true);
+	return (false);
+}
+
+void	Request::parse_body() {
+	
+	body = extract_body(save_buffer);
+	std::cout << "body : " << body << std ::endl;
+	if (body.empty()) {
+		body = "";
+		std::cout << "A IMPLEMENTER si chunked" << std::endl;
+	}
+	if (transfer_encoding == "chunked")
+		extract_chunked_body();
+}
+
+bool	Request::parse_header() {
 	std::string tmp;
+	
+	if (!parse_first_line())
+		return (false);
+
 	
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
@@ -829,9 +877,11 @@ void	Request::parse_request() {
 	if (!tmp.empty())
 		parse_media(tmp);
 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
-	if (tmp.empty())
+	tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
+	if (tmp.empty()) {
 		miss_length = true;
+		content_length = 0;
+	}
 	else {
 		miss_length = false;
 		try { content_length = ft_stoi(tmp); }
@@ -839,27 +889,72 @@ void	Request::parse_request() {
 	}
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-	body = extract_body(save_buffer);
-	std::cout << "body : " << body << std ::endl;
-	if (body.empty())
-		std::cout << "A IMPLEMENTER si chunked" << std::endl;
-	if (transfer_encoding == "chunked")
-		extract_chunked_body();
+	
+	// body = extract_body(save_buffer);
+	// std::cout << "body : " << body << std ::endl;
+	// if (body.empty())
+	// 	std::cout << "A IMPLEMENTER si chunked" << std::endl;
+	// if (transfer_encoding == "chunked")
+	// 	extract_chunked_body();
+		
 	// std::cout << std::endl;
-	// std::cout << "host : " << host << std ::endl;
-	// std::cout << "port : " << port << std ::endl;
-	// std::cout << "method : " << method << std ::endl;
-	// std::cout << "uri : " << uri << std ::endl;
-	// std::cout << "version : " << version << std ::endl;
-	// std::cout << "content_length : " << content_length << std ::endl;
+	std::cout << "host : " << host << std ::endl;
+	std::cout << "port : " << port << std ::endl;
+	std::cout << "method : " << method << std ::endl;
+	std::cout << "uri : " << uri << std ::endl;
+	std::cout << "version : " << version << std ::endl;
+	std::cout << "content_length : " << content_length << std ::endl;
+	std::cout << "miss_length : " << miss_length << std ::endl;
 	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-	// std::cout << "connection : " << connection << std ::endl;
+	std::cout << "connection : " << connection << std ::endl;
 	// std::cout << "body : " << body << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
 	// std::cout << std::endl;
+	return (true);
 }
+
+// void	Request::parse_request() {
+// 	std::string tmp;
+	
+// 	/* Extract Headers */
+// 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
+// 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
+// 	if (!tmp.empty())
+// 		parse_media(tmp);
+// 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
+// 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
+// 	if (tmp.empty())
+// 		miss_length = true;
+// 	else {
+// 		miss_length = false;
+// 		try { content_length = ft_stoi(tmp); }
+// 		catch (std::exception & e) { content_length = -1; }
+// 	}
+// 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+// 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
+// 	body = extract_body(save_buffer);
+// 	std::cout << "body : " << body << std ::endl;
+// 	if (body.empty())
+// 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
+// 	if (transfer_encoding == "chunked")
+// 		extract_chunked_body();
+// 	// std::cout << std::endl;
+// 	// std::cout << "host : " << host << std ::endl;
+// 	// std::cout << "port : " << port << std ::endl;
+// 	// std::cout << "method : " << method << std ::endl;
+// 	// std::cout << "uri : " << uri << std ::endl;
+// 	// std::cout << "version : " << version << std ::endl;
+// 	// std::cout << "content_length : " << content_length << std ::endl;
+// 	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
+// 	// std::cout << "connection : " << connection << std ::endl;
+// 	// std::cout << "body : " << body << std ::endl;
+// 	// std::cout << "*******************************" << std ::endl;
+// 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
+// 	// std::cout << "*******************************" << std ::endl;
+// 	// std::cout << std::endl;
+// }
 
 /* ************************************************************************* */
 /* ********************************* Utils ********************************* */

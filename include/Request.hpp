@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/16 14:00:34 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:28:55 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,21 +23,21 @@ class Response;
 class Request
 {
 	private : 
-		int socket_fd;
-		in_addr_t	socket_s_addr;
-		std::string	socket_ip;
-		int status;
+		int 			socket_fd;
+		in_addr_t		socket_s_addr;
+		std::string		socket_ip;
+		int 			status;
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
 		// std::string		response_content;
 		
 		 // REQUEST line
-		std::string   method;   // HTTP method (ex: GET)
-		std::string   uri;   // Request uri (ex: index.html)
-		std::string   version;  // HTTP version (ex: HTTP/1.1)
+		std::string   	method;   // HTTP method (ex: GET)
+		std::string   	uri;   // Request uri (ex: index.html)
+		std::string   	version;  // HTTP version (ex: HTTP/1.1)
 
 		// POUR CGI : PARSING TARGET
-		std::string   _query_string;
-		std::string   _target;
+		std::string   	_query_string;
+		std::string   	_target;
 
 		
 		// HEADER REQUEST section
@@ -56,6 +56,7 @@ class Request
 		Response	response;
 		
 		Server		*server;
+		ErrorPages		*error;
 		Media		*auth_media;
 		int 		i_conf;
 		// size_t        lenght;
@@ -75,7 +76,7 @@ class Request
 	};
 
 	public :
-		Request(char const *buffer, int read, int socket, Server *src_server, Media *src_auth_media);
+		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -85,18 +86,22 @@ class Request
 		/* ***************************************************************** */
 
 		std::string getSave_buffer() const; //A EFFACER
+		std::string getBody() const; //A EFFACER
 		
 		// Response 	&getsetResponse();
 		int 		getIconf() const;
 		int 		getStatus() const;
 		int 		getSocket_fd() const;
+		size_t 		getSave_buffer_length() const;
 		in_addr_t 	getSocket_s_addr() const;
 		std::string getSocket_ip() const;
 		std::string getHost() const;
 		std::string getPort() const;
 		std::string getConnection() const;
+		std::string getTransfer_encoding() const;
 		void		addSave_buffer(const char *buffer);
 		void		setStatus(int status);
+		void		setIp_socket(in_addr_t s_addr);		
 		
         /* ***************************************************************** */
         /* **************************** Parsing **************************** */
@@ -108,8 +113,10 @@ class Request
 		bool		media_request_allowed();
 		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
-		bool		parse_first_line(in_addr_t s_addr, ErrorPages &error);
-		void		parse_request();
+		bool		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
+		bool		body_present();
+		void		parse_body();
+		bool		parse_header();
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */

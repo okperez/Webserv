@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/13 10:52:53 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/17 11:09:14 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,7 @@ class Server
 		int		is_host(std::string host, std::string port, std::string socket_host);
 		int		unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
 		int		pick_server(Request &request);
+		void	body_request_present(Request &request, int read);
 		void	read_request(int i, char *buffer, int read);
 
 		/* ***************************************************************** */

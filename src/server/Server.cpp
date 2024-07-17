@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 14:21:06 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:28:18 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,20 +274,29 @@ void	Server::event_request() {
 	}
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if (it->getStatus() == READING || it->getStatus() == RD_TO_RESPOND) {
+		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked") || it->getStatus() == RD_TO_RESPOND) {
 			for (int j = 0; j < MAX_CONNECTION; j++) {
 				if (fds[j].fd == it->getSocket_fd()) {
+					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
 					struct sockaddr_storage name;
 					socklen_t namelen = sizeof(name);
 					if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 						send_error(it, "500", "Fail getsockname", error);
 					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
 					// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
-					if (!it->parse_first_line(socket->sin_addr.s_addr, error))
-						return (requests.erase(it), (void) 0);
+					
+					it->setIp_socket(socket->sin_addr.s_addr);
+					// if (!it->parse_first_line(socket->sin_addr.s_addr, error))
+					// 	return (requests.erase(it), (void) 0);
+					
+					it->parse_body();
+					std::cout << "body = " << it->getBody() << std::endl;
+					
 					int i_conf = pick_server(*it);
 					std::cout << "i_conf = " << i_conf << std::endl;
-					it->parse_request();
+					
+					// it->parse_request();
+					
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
 						for (int i = 0; i < MAX_CONNECTION; i++) {
@@ -431,6 +440,20 @@ int	Server::pick_server(Request &request) {
 	return (is_host(request.getHost(), request.getPort(), request.getSocket_ip()));
 }
 
+void	Server::body_request_present(Request &request, int read) {
+	
+	if (request.body_present()) {
+		if (!request.parse_header())
+			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
+		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
+			request.setStatus(RD_TO_RESPOND);
+		// else if (request.getTransfer_encoding() != "chunked" /* && dans body 0 */)
+		// 	request.setStatus(RD_TO_RESPOND);
+		else
+			request.setStatus(READING);
+	}
+}
+
 /*
 The normal procedure for parsing an HTTP message is to read the start-line
 into a structure, read each header field line into a hash table by field name
@@ -450,15 +473,30 @@ void	Server::read_request(int i, char *buffer, int read) {
 		if (it->getSocket_fd() == fds[i].fd) {
 			if (it->getStatus() == READING) { // UTILE ICI ?
 				it->addSave_buffer(buffer);
-				if (read < BUFFER_SIZE) {
+				if (read < BUFFER_SIZE  && it->getTransfer_encoding() != "chunked") {
 					it->setStatus(RD_TO_RESPOND);
 				}
+				// else if (it->getTransfer_encoding() != "chunked" /* && dans body 0 */)
+				// 	it->setStatus(RD_TO_RESPOND);
 				return ;
+			}
+			else if (it->getStatus() == NEW) {
+				body_request_present(*it, read);
 			}
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	Request 	request(buffer, read, fds[i].fd, this, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	body_request_present(request, read);
+	// if (request.body_present()) {
+	// 	request.parse_request();
+	// 	if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
+	// 		request.setStatus(RD_TO_RESPOND);
+	// 	else if (request.getTransfer_encoding() != "chunked" /* && dans body 0 */)
+	// 		request.setStatus(RD_TO_RESPOND);
+	// 	else
+	// 		request.setStatus(READING);
+	// }
 	requests.push_back(request);
 }
 
@@ -478,7 +516,7 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", -1, socket, this, &auth_media);
+	Request tmp("", /* -1, */ socket, this, &error, &auth_media);
 	tmp.fill_error(code, error);
 	throw (ServerException(mess));
 }

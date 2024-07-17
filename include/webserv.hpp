@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/16 16:03:40 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 09:40:20 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,7 @@ enum	e_rule {
 };
 
 enum	e_status_request {
+	NEW,
 	READING,
 	RD_TO_RESPOND,
 	RD_TO_SEND,
