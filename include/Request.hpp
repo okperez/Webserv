@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 12:46:27 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/16 14:00:34 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,13 +41,14 @@ class Request
 
 		
 		// HEADER REQUEST section
-		std::string											host;      		// Header that specifies the server's host and port
-		std::string											port;      		// Header that describes the pport used
-		std::string   										agent;    		// Header that describes the client's user agent
-		std::map<std::string, std::vector<std::string> >	media;    		// Header that specifies which media types the client can accept
-		std::string											connection;    	// Header that specifies if we have to close the connection or keeping it alive
-		std::string											content_type;// UTILISE??
-		int													content_length; // Header that specifies the length of the body
+		std::string											host;      			// Header that specifies the server's host and port
+		std::string											port;      			// Header that describes the pport used
+		std::string   										agent;    			// Header that describes the client's user agent
+		std::map<std::string, std::vector<std::string> >	media;    			// Header that specifies which media types the client can accept
+		std::string											connection;    		// Header that specifies if we have to close the connection or keeping it alive
+		std::string											content_type;		// UTILISE??
+		std::string											transfer_encoding;	// for chunked request
+		int													content_length; 	// Header that specifies the length of the body
 		bool												miss_length;
 		std::string											body;
 
@@ -138,7 +139,7 @@ class Request
 		/* ***************************************************************** */
 		
 		void		build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
-		bool		open_urifile(std::string & uri, ErrorPages & error, t_conf &conf);
+		bool		open_targetfile(std::string & uri, ErrorPages & error, t_conf &conf);
 		bool		is_dir(std::string const &path);
 		void		uri_directory(t_conf &conf, ErrorPages &error);
 		void		uri_directory(t_conf &conf, std::string &location, ErrorPages &error);
@@ -175,11 +176,13 @@ class Request
 		/* ***************************** Utils ***************************** */
 		/* ***************************************************************** */
 
-		std::string extract_line(std::string &buff, char delim) const;
-		std::string extract_header(std::string &buff) const;
-		std::string extract_elem(std::string const &elem, std::string const &delim, std::string &buff, std::string const & nofound) const;
-		std::string extract_body(std::string &buff);
-		static std::string extract_extension(std::string const & s);
+		std::string 		extract_line(std::string &buff, char delim) const;
+		std::string 		extract_header(std::string &buff) const;
+		std::string 		extract_elem(std::string const &elem, std::string const &delim, std::string &buff, std::string const & nofound) const;
+		std::string 		getline(std::string &src, std::string const & delim) const;
+		std::string 		extract_body(std::string &buff);
+		void 				extract_chunked_body();
+		static std::string 	extract_extension(std::string const & s);
 
 		/* ***************************************************************** */
 		/* ***************************** ERROR ***************************** */

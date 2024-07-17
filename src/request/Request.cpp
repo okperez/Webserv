@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/15 13:56:31 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 09:37:57 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,19 +539,20 @@ void	Request::handle_cookies(void)
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	// std::cout << "\nLOCATION = " << location << std::endl;
-	// std::cout << "TARGET = " << uri << std::endl;
+	std::cout << "\nLOCATION = " << location << std::endl;
+	std::cout << "URI = " << uri << std::endl;
+	std::cout << "Target = " << _target << std::endl;
 	// std::cout << "DIR = " << dir << std::endl;
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
 			redirection(conf.ret, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> Request is a directory (end with a "/")
-		else if (is_dir(uri))
+		else if (is_dir(_target))
 			uri_directory(conf, error);
 		//  =====> Request isn't a directory
 		else {
-			if (!open_urifile(uri, error, conf))
+			if (!open_targetfile(_target, error, conf))
 				fill_error_errno(conf, error);
 		}
 	}
@@ -562,11 +563,11 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> Request is a directory (end with a "/")
 		
-		else if (is_dir(uri))
+		else if (is_dir(_target))
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
-		// else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
-		else if (location.find("/cgi-bin") != location.npos)
+		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
+		// else if (location.find("/cgi-bin") != location.npos)
 		{
 			try
 			{
@@ -578,22 +579,22 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			}
 		}
 		else
-			if (!open_urifile(uri, error, conf))
+			if (!open_targetfile(_target, error, conf))
 				fill_error_errno(conf, error);
 	}
 	handle_cookies();
 	send_response(socket_fd);
 }
 
-bool	Request::open_urifile(std::string & uri, ErrorPages & error, t_conf &conf) {
+bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
 	
 	std::ifstream     file;
 	
-	file.open(uri.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
+	file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
 	if (file.is_open()) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
-		std::string	type = extract_extension(uri);
+		std::string	type = extract_extension(target);
 		if (type.empty())
 			type = "octet-stream";
 		if (!response.setContent_type(type)) {
@@ -618,8 +619,8 @@ bool	Request::is_dir(std::string const &path) {
 void	Request::uri_directory(t_conf &conf, ErrorPages &error) {
 	
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
-		std::string tmp = uri + *it;
-		if (open_urifile(tmp, error, conf)) // =====> open le 1er index valide
+		std::string tmp = _target + *it;
+		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 			return (std::cout << "return" << std::endl, (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
@@ -635,8 +636,8 @@ void	Request::uri_directory(t_conf &conf, std::string &location, ErrorPages &err
 		std::vector<std::string> index;
 		strtovect(it->second, index, " ");
 		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
-			std::string tmp = uri + *jt;
-			if (open_urifile(tmp, error, conf)) // =====> open le 1er index valide
+			std::string tmp = _target + *jt;
+			if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 				return ;
 		}
 	}
@@ -650,7 +651,7 @@ void	Request::uri_directory(t_conf &conf, std::string &location, ErrorPages &err
 /*  Quand Autoindex est on : Cree la page html de l'index */
 void	Request::build_index(t_conf &conf, ErrorPages &error) {
 	
-	DIR *tmp = opendir(uri.data()); // OK NO LEAKS MEMMORY + FD ====> ERROR SET SELON ERRNO
+	DIR *tmp = opendir(_target.data()); // OK NO LEAKS MEMMORY + FD ====> ERROR SET SELON ERRNO
 	dirent *directory;
 	
 	if (!tmp)
@@ -723,7 +724,7 @@ bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
 	}
-	if (content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
+	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
 		error.fill_error(response, "400", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -735,7 +736,7 @@ bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 		error.fill_error(response, "413", conf);
 		return (send_response(socket_fd), false);
 	}
-	if (!media_request_allowed()) {
+	if (media.size() > 0 && !media_request_allowed()) {
 		error.fill_error(response, "415", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -837,7 +838,13 @@ void	Request::parse_request() {
 		catch (std::exception & e) { content_length = -1; }
 	}
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
 	body = extract_body(save_buffer);
+	std::cout << "body : " << body << std ::endl;
+	if (body.empty())
+		std::cout << "A IMPLEMENTER si chunked" << std::endl;
+	if (transfer_encoding == "chunked")
+		extract_chunked_body();
 	// std::cout << std::endl;
 	// std::cout << "host : " << host << std ::endl;
 	// std::cout << "port : " << port << std ::endl;
@@ -845,6 +852,7 @@ void	Request::parse_request() {
 	// std::cout << "uri : " << uri << std ::endl;
 	// std::cout << "version : " << version << std ::endl;
 	// std::cout << "content_length : " << content_length << std ::endl;
+	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
 	// std::cout << "connection : " << connection << std ::endl;
 	// std::cout << "body : " << body << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
@@ -889,6 +897,18 @@ std::string Request::extract_elem(std::string const & elem, std::string const & 
 	return (extract_header(tmp));
 }
 
+std::string Request::getline(std::string &src, std::string const & delim) const {
+	
+	std::string tmp;
+
+	int found = src.find(delim);
+	if (found == -1)
+		return (src);
+	tmp = src.substr(0, found);
+	src.erase(0, found + delim.length());
+	return (tmp);
+}
+
 std::string Request::extract_body(std::string & buff) {
 	
 	int begin = buff.find("\n\r\n");
@@ -896,6 +916,23 @@ std::string Request::extract_body(std::string & buff) {
 		return ("");
 	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
 	return (tmp);
+}
+
+void Request::extract_chunked_body() {
+	// int i = 0;
+	std::string tmp;
+	std::string new_body;
+	
+	while (1) {
+		if (body.empty())
+			return (body = new_body, (void)0) ;
+		tmp = getline(body, "\r\n");
+		std::cout << "tmp = |" << tmp << "|" << std::endl;
+		// if (i % 2 == 0) 
+		// 	get_length;
+		// else
+		// 	addbody;
+	}
 }
 
 std::string Request::extract_extension(std::string const & s) {
