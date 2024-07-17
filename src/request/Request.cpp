@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/15 13:56:31 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 14:42:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -314,8 +314,9 @@ char**	Request::set_env(t_conf & conf)
 
 void	Request::get_output(char *buff)
 {
-	
+	int	flag = 0;
 	std::string str = buff;
+	std::cout << "\nOUTPUT SCRIPT= " << buff << std::endl;
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -335,6 +336,8 @@ void	Request::get_output(char *buff)
 			std::string extract = str.substr(pos_http, str.find('\n') - pos_http);
 			response.setLocation(extract);
 			str.erase(pos_http, str.find('\n') - pos_http + 1);
+			response.setStatus("307", " Temporary Redirect");
+			flag = 1;
 		}
 		else
 		{
@@ -343,8 +346,8 @@ void	Request::get_output(char *buff)
 		}
 
 	}
-	// response.setStatus("307", " Temporary Redirect");
-	response.setStatus("200", "OK");
+	if (flag == 0)
+		response.setStatus("200", "OK");
 	response.setContent_type("html");
 }
 
@@ -356,8 +359,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int		rd;
 	char	buff[1024];
 	int		exit_status = 0;
-	std::string	output;
-	
+
 	pipe(fd); // Secu SI PIPE FAIL ?
 	pid = fork();
 	if (pid == -1)
@@ -408,33 +410,33 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	return (0);
 }
 
-void	Request::check_extension(t_conf & conf, std::string uri, std::string & index_loc)
+void	Request::check_extension(t_conf & conf, std::string pathname, std::string & index_loc)
 {	
 	std::vector<std::string>	cgi_ext;
 	std::string					ext;
 	
 	for (std::map<std::string, std::string>::iterator it = conf.location[index_loc].begin(); it != conf.location[index_loc].end(); it++)
 		strtovect((*it).second, cgi_ext, " ");
-	uri = uri.erase(0, uri.rfind('.') + 1);
-	ext = uri.substr(0, uri.find('?'));
+	pathname = pathname.erase(0, pathname.rfind('.') + 1);
+	ext = pathname.substr(0, pathname.find('?'));
 	if (std::count(cgi_ext.begin(), cgi_ext.end(), ext) == 0)
 		throw RequestException ("501");
 }
 
-bool	Request::is_accessible(char const *uri)
+bool	Request::is_accessible(char const *pathname)
 {
 	struct stat path_stat;
-	stat(uri, &path_stat);
-	if (access(uri, X_OK) == -1)
+	stat(pathname, &path_stat);
+	if (access(pathname, X_OK) == -1)
 		return false;
 	return S_ISREG(path_stat.st_mode);
 }
 
-char const *	define_ext(std::string uri)
+char const *	define_ext(std::string pathname)
 {
 	std::map<std::string, char const *> extension;
 	setExtensions(extension);
-	std::string ext = uri.erase(0, uri.find('.') + 1);
+	std::string ext = pathname.erase(0, pathname.rfind('.') + 1);
 	return (extension[ext]);
 }
 
@@ -443,18 +445,17 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 	char		**env;
 	char		**argv;
 
-	// conf.location[index_loc]["cgi_extension"]
 	std::string join = ("./" + _target);
 	char const *pathname = join.c_str();
 	if (!is_accessible(pathname))
 		throw RequestException ("404");
-	check_extension(conf, uri, index_loc);
-	char const * interpreter = define_ext(uri);
+	check_extension(conf, pathname, index_loc);
+	char const * interpreter = define_ext(pathname);
+	env = set_env(conf);
     argv = new char * [3];
 	argv[0] = (char *) interpreter;
     argv[1] = (char *) pathname;
     argv[2] = NULL;
-	env = set_env(conf);
 	exec_script(argv[0], argv, env);
 	for (int i = 0; i < 7; i++)
 		delete [] env[i];
@@ -469,64 +470,56 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 //pour acceder a request, passer le ptr sur server
 
 // checker whether a file is empty
-bool is_empty(std::ifstream& pFile)
-{
-    return pFile.peek() == std::ifstream::traits_type::eof();
-}
-
+// bool is_empty(std::ifstream& pFile)
+// {
+    // return pFile.peek() == std::ifstream::traits_type::eof();
+// }
+// 
 void	Request::setTimestamp(std::ofstream	& data)
 {
 	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
 	std::time_t result = std::time(NULL);
 	data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
 }
-
-void	Request::create_data_file(void)
-{
-	std::string		copy = body;
-	std::ofstream	data("Data_user", std::ofstream::out);
-	
+// 
+// void	Request::create_data_file(void)
+// {
+	// std::string		copy = body;
+	// std::ofstream	data("Data_user", std::ofstream::out);
+	// 
 	// if (!is_empty(tmp))
 	// {
-		// data << "\n\n";
-		// data << "/* ************************************************************************* */";
-		// data << "/* ************************************************************************* */";
-		// data << "/* ************************************************************************* */";
-		// data << "\n\n";
+	// 	data << "\n\n";
+	// 	data << "/* ************************************************************************* */";
+	// 	data << "/* ************************************************************************* */";
+	// 	data << "/* ************************************************************************* */";
+	// 	data << "\n\n";
 	// }
-	for (int i = 0; i < 2; i++)
-	{
-		data << copy.substr(0, copy.find('&')) << std::endl;
-		copy.erase(0, copy.find('&') + 1);
-	}
-	setTimestamp(data);
-}
-
-void	Request::setSession(void)
-{
-	create_data_file();
-}
-
-// void	Response::setCookies(std::string fname, std::string lname)
-// {
-	// std::string str[2];
-	// (void) lname;
-	// (void) fname;
-	// _cookie = "Set-Cookie: path=/form.html; HttpOnly";
+	// for (int i = 0; i < 2; i++)
+	// {
+		// data << copy.substr(0, copy.find('&')) << std::endl;
+		// copy.erase(0, copy.find('&') + 1);
+	// }
+	// setTimestamp(data);
 // }
-
-void	Request::handle_cookies(void)
-{
-	if (method == "POST")
-	{
-		if (body.find("rememberMe=on") != body.npos)
-		{
-			std::cout << "OPEN SESSION\n";
-			setSession();
-		}
-	}
-	
-}
+// 
+// void	Request::setSession(void)
+// {
+	// create_data_file();
+// }
+// 
+// void	Request::handle_cookies(void)
+// {
+	// if (method == "POST")
+	// {
+		// if (body.find("rememberMe=on") != body.npos)
+		// {
+			// std::cout << "OPEN SESSION\n";
+			// setSession();
+		// }
+	// }
+	// 
+// }
 
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */
@@ -565,8 +558,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		else if (is_dir(uri))
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
-		// else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
-		else if (location.find("/cgi-bin") != location.npos)
+		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
 		{
 			try
 			{
@@ -581,7 +573,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			if (!open_urifile(uri, error, conf))
 				fill_error_errno(conf, error);
 	}
-	handle_cookies();
+	// handle_cookies();
 	send_response(socket_fd);
 }
 

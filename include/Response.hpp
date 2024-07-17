@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 11:33:30 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/15 16:45:42 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,15 +40,16 @@ class Response
 		/* **************************** Accessor *************************** */
 		/* ***************************************************************** */
 
-		void	setAuthmedia(Media *auth_media);
-		void	setStatus(std::string const & code, std::string const & tittle);
-		bool	setContent_type(std::string const & s);
-		void	setContent_length();
-		void	setLocation(std::string const & s);
-		void	reinitBody();
-		void	setBody(std::string const & s);
-		void	setBody(std::ifstream &file);
-		void	setCookie(std::string str);
+		void						setAuthmedia(Media *auth_media);
+		void						setStatus(std::string const & code, std::string const & tittle);
+		bool						setContent_type(std::string const & s);
+		void						setContent_length();
+		void						setLocation(std::string const & s);
+		void						reinitBody();
+		void						setBody(std::string const & s);
+		void						setBody(std::ifstream &file);
+		void						setCookie(std::string str);
+		std::vector<std::string>	getCookie(void);
 
 		std::string build_response();
 

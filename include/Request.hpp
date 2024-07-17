@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 12:46:27 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/15 16:42:08 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,7 +157,7 @@ class Request
 		bool			is_accessible(char const *uri);
 		void			check_extension(t_conf & conf, std::string uri, std::string & index_loc);
 		void			get_output(char *buff);
-
+		char**			setArg(char const *pathname, char const *interpreter);
 
 		/* ***************************************************************** */
 		/* **************************** Cookies **************************** */
