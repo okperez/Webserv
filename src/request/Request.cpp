@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/17 11:55:44 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:57:13 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,6 @@ Request &Request::operator=(Request const & rhs) {
 	_target = rhs._target;
 	miss_length = rhs.miss_length;
 	content_length = rhs.content_length;
-
 	
 	response = rhs.response;
 

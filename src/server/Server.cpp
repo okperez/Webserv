@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/17 11:28:18 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:32:03 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -447,7 +447,7 @@ void	Server::body_request_present(Request &request, int read) {
 			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
 		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
 			request.setStatus(RD_TO_RESPOND);
-		// else if (request.getTransfer_encoding() != "chunked" /* && dans body 0 */)
+		// else if (request.getTransfer_encoding() == "chunked" /* && dans body 0 */)
 		// 	request.setStatus(RD_TO_RESPOND);
 		else
 			request.setStatus(READING);
