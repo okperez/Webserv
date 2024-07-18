@@ -1,0 +1,264 @@
+8.2.2 Monitoring Connections for Error Status Messages
+
+   An HTTP/1.1 (or later) client sending a message-body SHOULD monitor
+   the network connection for an error status while it is transmitting
+   the request. If the client sees an error status, it SHOULD
+   immediately cease transmitting the body. If the body is being sent
+   using a "chunked" encoding (section 3.6), a zero length chunk and
+   empty trailer MAY be used to prematurely mark the end of the message.
+   If the body was preceded by a Content-Length header, the client MUST
+   close the connection.
+
+14.39 TE
+
+   The TE request-header field indicates what extension transfer-codings
+   it is willing to accept in the response and whether or not it is
+   willing to accept trailer fields in a chunked transfer-coding. Its
+   value may consist of the keyword "trailers" and/or a comma-separated
+   list of extension transfer-coding names with optional accept
+   parameters (as described in section 3.6).
+
+       TE        = "TE" ":" #( t-codings )
+       t-codings = "trailers" | ( transfer-extension [ accept-params ] )
+
+   The presence of the keyword "trailers" indicates that the client is
+   willing to accept trailer fields in a chunked transfer-coding, as
+   defined in section 3.6.1. This keyword is reserved for use with
+   transfer-coding values even though it does not itself represent a
+   transfer-coding.
+
+   Examples of its use are:
+
+       TE: deflate
+       TE:
+       TE: trailers, deflate;q=0.5
+
+   The TE header field only applies to the immediate connection.
+   Therefore, the keyword MUST be supplied within a Connection header
+   field (section 14.10) whenever TE is present in an HTTP/1.1 message.
+
+   A server tests whether a transfer-coding is acceptable, according to
+   a TE field, using these rules:
+
+      1. The "chunked" transfer-coding is always acceptable. If the
+         keyword "trailers" is listed, the client indicates that it is
+         willing to accept trailer fields in the chunked response on
+         behalf of itself and any downstream clients. The implication is
+         that, if given, the client is stating that either all
+         downstream clients are willing to accept trailer fields in the
+         forwarded response, or that it will attempt to buffer the
+         response on behalf of downstream recipients.
+
+         Note: HTTP/1.1 does not define any means to limit the size of a
+         chunked response such that a client can be assured of buffering
+         the entire response.
+
+      2. If the transfer-coding being tested is one of the transfer-
+         codings listed in the TE field, then it is acceptable unless it
+         is accompanied by a qvalue of 0. (As defined in section 3.9, a
+         qvalue of 0 means "not acceptable.")
+
+      3. If multiple transfer-codings are acceptable, then the
+         acceptable transfer-coding with the highest non-zero qvalue is
+         preferred.  The "chunked" transfer-coding always has a qvalue
+         of 1.
+
+   If the TE field-value is empty or if no TE field is present, the only
+   transfer-coding  is "chunked". A message with no transfer-coding is
+   always acceptable.
+
+14.40 Trailer
+
+   The Trailer general field value indicates that the given set of
+   header fields is present in the trailer of a message encoded with
+   chunked transfer-coding.
+
+       Trailer  = "Trailer" ":" 1#field-name
+
+   An HTTP/1.1 message SHOULD include a Trailer header field in a
+   message using chunked transfer-coding with a non-empty trailer. Doing
+   so allows the recipient to know which header fields to expect in the
+   trailer.
+
+   If no Trailer header field is present, the trailer SHOULD NOT include
+   any header fields. See section 3.6.1 for restrictions on the use of
+   trailer fields in a "chunked" transfer-coding.
+
+   Message header fields listed in the Trailer header field MUST NOT
+   include the following header fields:
+
+      . Transfer-Encoding
+
+      . Content-Length
+
+      . Trailer
+
+14.41 Transfer-Encoding
+
+   The Transfer-Encoding general-header field indicates what (if any)
+   type of transformation has been applied to the message body in order
+   to safely transfer it between the sender and the recipient. This
+   differs from the content-coding in that the transfer-coding is a
+   property of the message, not of the entity.
+
+     Transfer-Encoding       = "Transfer-Encoding" ":" 1#transfer-coding
+
+   Transfer-codings are defined in section 3.6. An example is:
+
+     Transfer-Encoding: chunked
+
+   If multiple encodings have been applied to an entity, the transfer-
+   codings MUST be listed in the order in which they were applied.
+   Additional information about the encoding parameters MAY be provided
+   by other entity-header fields not defined by this specification.
+
+   Many older HTTP/1.0 applications do not understand the Transfer-
+   Encoding header.
+
+19.4.6 Introduction of Transfer-Encoding
+
+   HTTP/1.1 introduces the Transfer-Encoding header field (section
+   14.41). Proxies/gateways MUST remove any transfer-coding prior to
+   forwarding a message via a MIME-compliant protocol.
+
+   A process for decoding the "chunked" transfer-coding (section 3.6)
+   can be represented in pseudo-code as:
+
+       length := 0
+       read chunk-size, chunk-extension (if any) and CRLF
+       while (chunk-size > 0) {
+          read chunk-data and CRLF
+          append chunk-data to entity-body
+          length := length + chunk-size
+          read chunk-size and CRLF
+       }
+       read entity-header
+       while (entity-header not empty) {
+          append entity-header to existing header fields
+          read entity-header
+       }
+       Content-Length := length
+       Remove "chunked" from Transfer-Encoding
+
+19.6.3 Changes from RFC 2068
+
+   This specification has been carefully audited to correct and
+   disambiguate key word usage; RFC 2068 had many problems in respect to
+   the conventions laid out in RFC 2119 [34].
+
+   Clarified which error code should be used for inbound server failures
+   (e.g. DNS failures). (Section 10.5.5).
+
+   CREATE had a race that required an Etag be sent when a resource is
+   first created. (Section 10.2.2).
+
+   Content-Base was deleted from the specification: it was not
+   implemented widely, and there is no simple, safe way to introduce it
+   without a robust extension mechanism. In addition, it is used in a
+   similar, but not identical fashion in MHTML [45].
+
+   Transfer-coding and message lengths all interact in ways that
+   required fixing exactly when chunked encoding is used (to allow for
+   transfer encoding that may not be self delimiting); it was important
+   to straighten out exactly how message lengths are computed. (Sections
+   3.6, 4.4, 7.2.2, 13.5.2, 14.13, 14.16)
+
+   A content-coding of "identity" was introduced, to solve problems
+   discovered in caching. (section 3.5)
+
+   Quality Values of zero should indicate that "I don't want something"
+   to allow clients to refuse a representation. (Section 3.9)
+
+   The use and interpretation of HTTP version numbers has been clarified
+   by RFC 2145. Require proxies to upgrade requests to highest protocol
+   version they support to deal with problems discovered in HTTP/1.0
+   implementations (Section 3.1)
+
+   Charset wildcarding is introduced to avoid explosion of character set
+   names in accept headers. (Section 14.2)
+
+   A case was missed in the Cache-Control model of HTTP/1.1; s-maxage
+   was introduced to add this missing case. (Sections 13.4, 14.8, 14.9,
+   14.9.3)
+
+   The Cache-Control: max-age directive was not properly defined for
+   responses. (Section 14.9.3)
+
+   There are situations where a server (especially a proxy) does not
+   know the full length of a response but is capable of serving a
+   byterange request. We therefore need a mechanism to allow byteranges
+   with a content-range not indicating the full length of the message.
+   (Section 14.16)
+
+   Range request responses would become very verbose if all meta-data
+   were always returned; by allowing the server to only send needed
+   headers in a 206 response, this problem can be avoided. (Section
+   10.2.7, 13.5.3, and 14.27)
+
+   Fix problem with unsatisfiable range requests; there are two cases:
+   syntactic problems, and range doesn't exist in the document. The 416
+   status code was needed to resolve this ambiguity needed to indicate
+   an error for a byte range request that falls outside of the actual
+   contents of a document. (Section 10.4.17, 14.16)
+
+   Rewrite of message transmission requirements to make it much harder
+   for implementors to get it wrong, as the consequences of errors here
+   can have significant impact on the Internet, and to deal with the
+   following problems:
+
+      1. Changing "HTTP/1.1 or later" to "HTTP/1.1", in contexts where
+         this was incorrectly placing a requirement on the behavior of
+         an implementation of a future version of HTTP/1.x
+
+      2. Made it clear that user-agents should retry requests, not
+         "clients" in general.
+
+      3. Converted requirements for clients to ignore unexpected 100
+         (Continue) responses, and for proxies to forward 100 responses,
+         into a general requirement for 1xx responses.
+
+      4. Modified some TCP-specific language, to make it clearer that
+         non-TCP transports are possible for HTTP.
+
+      5. Require that the origin server MUST NOT wait for the request
+         body before it sends a required 100 (Continue) response.
+
+      6. Allow, rather than require, a server to omit 100 (Continue) if
+         it has already seen some of the request body.
+
+      7. Allow servers to defend against denial-of-service attacks and
+         broken clients.
+
+   This change adds the Expect header and 417 status code. The message
+   transmission requirements fixes are in sections 8.2, 10.4.18,
+   8.1.2.2, 13.11, and 14.20.
+
+   Proxies should be able to add Content-Length when appropriate.
+   (Section 13.5.2)
+
+   Clean up confusion between 403 and 404 responses. (Section 10.4.4,
+   10.4.5, and 10.4.11)
+
+   Warnings could be cached incorrectly, or not updated appropriately.
+   (Section 13.1.2, 13.2.4, 13.5.2, 13.5.3, 14.9.3, and 14.46) Warning
+   also needed to be a general header, as PUT or other methods may have
+   need for it in requests.
+
+   Transfer-coding had significant problems, particularly with
+   interactions with chunked encoding. The solution is that transfer-
+   codings become as full fledged as content-codings. This involves
+   adding an IANA registry for transfer-codings (separate from content
+   codings), a new header field (TE) and enabling trailer headers in the
+   future. Transfer encoding is a major performance benefit, so it was
+   worth fixing [39]. TE also solves another, obscure, downward
+   interoperability problem that could have occurred due to interactions
+   between authentication trailers, chunked encoding and HTTP/1.0
+   clients.(Section 3.6, 3.6.1, and 14.39)
+
+   The PATCH, LINK, UNLINK methods were defined but not commonly
+   implemented in previous versions of this specification. See RFC 2068
+   [33].
+
+   The Alternates, Content-Version, Derived-From, Link, URI, Public and
+   Content-Base header fields were defined in previous versions of this
+   specification, but not commonly implemented. See RFC 2068 [33].

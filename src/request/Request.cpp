@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/18 16:02:14 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/18 16:05:52 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,20 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, int read, int socket, Server *src_server, Media *src_auth_media) {
+Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media) {
 	// A UPDATE
 	socket_fd = socket;
 	server = src_server;
+	error = src_error;
 	auth_media = src_auth_media;
 	response.setAuthmedia(src_auth_media);
 	if (buffer)
 		save_buffer = buffer;
 	i_conf = -1;
-	if (read < BUFFER_SIZE)
-		status = RD_TO_RESPOND;
-	else
-		status = READING;
+	// if (read < BUFFER_SIZE)
+	// 	status = RD_TO_RESPOND;
+	// else
+	status = NEW;
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) {
@@ -46,26 +47,30 @@ Request::~Request() {}
 
 Request &Request::operator=(Request const & rhs) {
 	socket_fd = rhs.socket_fd;
+	socket_s_addr = rhs.socket_s_addr;
+	socket_ip = rhs.socket_ip;
 	status = rhs.status;
 	save_buffer = rhs.save_buffer;
 	method = rhs.method;
 	uri = rhs.uri;
 	version = rhs.version;
+	_query_string = rhs._query_string;
+	_target = rhs._target;
 	host = rhs.host;
 	port = rhs.port;
 	agent = rhs.agent;
 	media = rhs.media;
 	connection = rhs.connection;
-	socket_s_addr = rhs.socket_s_addr;
-	socket_ip = rhs.socket_ip;
+	content_type = rhs.content_type;
+	transfer_encoding = rhs.transfer_encoding;
+	content_length = rhs.content_length;
+	miss_length = rhs.miss_length;
+	body = rhs.body;
+	response = rhs.response;
 	server = rhs.server;
+	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
-	_query_string = rhs._query_string;
-	_target = rhs._target;
-	
-	response = rhs.response;
-
 	return (*this); 
 }
 
@@ -89,6 +94,10 @@ int Request::getSocket_fd() const {
 	return (socket_fd);
 }
 
+size_t 		Request::getSave_buffer_length() const{
+	return (save_buffer.length());
+}
+
 in_addr_t Request::getSocket_s_addr() const {
 	return (socket_s_addr);
 }
@@ -105,6 +114,10 @@ std::string Request::getPort() const {
 	return (port);
 }
 
+std::string Request::getTransfer_encoding() const {
+	return (transfer_encoding);
+}
+
 std::string Request::getConnection() const {
 	return (connection);
 }
@@ -112,6 +125,11 @@ std::string Request::getConnection() const {
 std::string Request::getSave_buffer() const {
 	return (save_buffer);
 }
+
+std::string Request::getBody() const{
+	return (body);
+} //A EFFACER
+
 
 void	Request::setStatus(int status) {
 	this->status = status;
@@ -149,6 +167,7 @@ void	Request::send_response(int socket_fd) {
 //  parse request from client and send back response 
 int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
 {
+	std::cout << "handle request misslength = " << miss_length << std::endl;
 	if (!check_request(socket_fd, conf, error))
 		return (1);
 	int i = check_exist_method();
@@ -497,19 +516,20 @@ void	Request::setTimestamp(std::ofstream	& data)
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	// std::cout << "\nLOCATION = " << location << std::endl;
-	// std::cout << "TARGET = " << uri << std::endl;
+	std::cout << "\nLOCATION = " << location << std::endl;
+	std::cout << "URI = " << uri << std::endl;
+	std::cout << "Target = " << _target << std::endl;
 	// std::cout << "DIR = " << dir << std::endl;
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
 			redirection(conf.ret, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> Request is a directory (end with a "/")
-		else if (is_dir(uri))
+		else if (is_dir(_target))
 			uri_directory(conf, error);
 		//  =====> Request isn't a directory
 		else {
-			if (!open_urifile(uri, error, conf))
+			if (!open_targetfile(_target, error, conf))
 				fill_error_errno(conf, error);
 		}
 	}
@@ -520,7 +540,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> Request is a directory (end with a "/")
 		
-		else if (is_dir(uri))
+		else if (is_dir(_target))
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
 		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
@@ -535,22 +555,22 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 			}
 		}
 		else
-			if (!open_urifile(uri, error, conf))
+			if (!open_targetfile(_target, error, conf))
 				fill_error_errno(conf, error);
 	}
 	// handle_cookies();
 	send_response(socket_fd);
 }
 
-bool	Request::open_urifile(std::string & uri, ErrorPages & error, t_conf &conf) {
+bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
 	
 	std::ifstream     file;
 	
-	file.open(uri.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
+	file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
 	if (file.is_open()) {
 		response.setBody(file);
 		response.setStatus("200", " OK");
-		std::string	type = extract_extension(uri);
+		std::string	type = extract_extension(target);
 		if (type.empty())
 			type = "octet-stream";
 		if (!response.setContent_type(type)) {
@@ -575,8 +595,8 @@ bool	Request::is_dir(std::string const &path) {
 void	Request::uri_directory(t_conf &conf, ErrorPages &error) {
 	
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
-		std::string tmp = uri + *it;
-		if (open_urifile(tmp, error, conf)) // =====> open le 1er index valide
+		std::string tmp = _target + *it;
+		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 			return (std::cout << "return" << std::endl, (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
@@ -592,8 +612,8 @@ void	Request::uri_directory(t_conf &conf, std::string &location, ErrorPages &err
 		std::vector<std::string> index;
 		strtovect(it->second, index, " ");
 		for (std::vector<std::string>::iterator jt = index.begin(); jt != index.end(); jt++) {
-			std::string tmp = uri + *jt;
-			if (open_urifile(tmp, error, conf)) // =====> open le 1er index valide
+			std::string tmp = _target + *jt;
+			if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
 				return ;
 		}
 	}
@@ -607,7 +627,7 @@ void	Request::uri_directory(t_conf &conf, std::string &location, ErrorPages &err
 /*  Quand Autoindex est on : Cree la page html de l'index */
 void	Request::build_index(t_conf &conf, ErrorPages &error) {
 	
-	DIR *tmp = opendir(uri.data()); // OK NO LEAKS MEMMORY + FD ====> ERROR SET SELON ERRNO
+	DIR *tmp = opendir(_target.data()); // OK NO LEAKS MEMMORY + FD ====> ERROR SET SELON ERRNO
 	dirent *directory;
 	
 	if (!tmp)
@@ -676,11 +696,12 @@ bool	Request::media_request_allowed() {
 
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
-	if (miss_length && !body.empty()) {
+	std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
+	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
 	}
-	if (content_length < 0 || static_cast<size_t>(content_length) != body.length()) {
+	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
 		error.fill_error(response, "400", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -692,7 +713,7 @@ bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 		error.fill_error(response, "413", conf);
 		return (send_response(socket_fd), false);
 	}
-	if (!media_request_allowed()) {
+	if (media.size() > 0 && !media_request_allowed()) {
 		error.fill_error(response, "415", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -759,10 +780,17 @@ strtomap(s, media, ",", "/");
 // 	}
 }
 
-bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
-	
+void	Request::setIp_socket(in_addr_t s_addr) {
+
 	socket_s_addr = s_addr;
 	recover_ip_socket();
+}
+
+
+bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
+	
+	// socket_s_addr = s_addr;
+	// recover_ip_socket();
 	/* Parse first line */
 	method = extract_line(save_buffer, ' ');
 	uri = extract_line(save_buffer, ' ');
@@ -770,14 +798,80 @@ bool	Request::parse_first_line(in_addr_t s_addr, ErrorPages &error) {
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
 	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		error.fill_error(response, "400");
+		error->fill_error(response, "400");
 		return (send_response(socket_fd), false);
 	}
 	return (true);
 }
 
-void	Request::parse_request() {
+bool		Request::body_present() {
+	if (save_buffer.find("\n\r\n") != std::string::npos)
+		return (true);
+	return (false);
+}
+
+// TESTER AVEC MAX INT + 1 OU MIN INT -1
+int	Request::ft_shextodec(std::string & s) {
+	std::istringstream iss(s);
+	int n;
+
+	iss >> std::hex >> n;
+	if (!iss.eof())
+		return (-1);
+	return (n);
+}
+
+int Request::extract_chunked_body(std::string &s) {
+	int i = 0;
 	std::string tmp;
+	std::string new_body;
+	int length = -1;
+	
+	while (1) {
+		if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+			return (length);
+		}
+		tmp = getline(s, "\r\n");
+		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+			return (length);
+		}
+			
+		std::cout << "tmp = |" << tmp << "|" << std::endl;
+		if (i % 2 == 0) {
+			// length = ft_stoi(tmp);
+			length = ft_shextodec(tmp);
+			if (length == -1)
+				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
+		}
+		else {
+			if (tmp.length() != static_cast<size_t>(length)) // check if ici on peut avoir un length == a -1 ou non
+				std::cout << "A IMPLEMENTER ERROR bad request ou bad length" << std::endl;
+			body += tmp;
+		}
+		i++;
+	}
+}
+
+void	Request::parse_body() {
+	
+	body = extract_body(save_buffer);
+	std::cout << "body : " << body << std ::endl;
+	if (body.empty()) {
+		body = "";
+		std::cout << "A IMPLEMENTER si chunked" << std::endl;
+	}
+	// if (transfer_encoding == "chunked")
+	// 	extract_chunked_body();
+}
+
+bool	Request::parse_header() {
+	std::string tmp;
+	
+	if (!parse_first_line())
+		return (false);
+
 	
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
@@ -785,30 +879,93 @@ void	Request::parse_request() {
 	if (!tmp.empty())
 		parse_media(tmp);
 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
-	if (tmp.empty())
+	tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
+	if (tmp.empty()) {
 		miss_length = true;
+		content_length = 0;
+	}
 	else {
 		miss_length = false;
 		try { content_length = ft_stoi(tmp); }
 		catch (std::exception & e) { content_length = -1; }
 	}
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
-	body = extract_body(save_buffer);
+	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
+	
+	if (transfer_encoding == "chunked") {
+		std::string s = extract_body(save_buffer);
+		int chunk = extract_chunked_body(s);
+		if (chunk == -1) // ==> body empty
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+		if (chunk == 0)
+			status = RD_TO_RESPOND;
+		else
+			status = READING;
+	}
+	// std::cout << "body : " << body << std ::endl;
+	// if (body.empty())
+	// 	std::cout << "A IMPLEMENTER si chunked" << std::endl;
+	// if (transfer_encoding == "chunked")
+	// 	extract_chunked_body();
+		
 	// std::cout << std::endl;
-	// std::cout << "host : " << host << std ::endl;
-	// std::cout << "port : " << port << std ::endl;
-	// std::cout << "method : " << method << std ::endl;
-	// std::cout << "uri : " << uri << std ::endl;
-	// std::cout << "version : " << version << std ::endl;
-	// std::cout << "content_length : " << content_length << std ::endl;
-	// std::cout << "connection : " << connection << std ::endl;
+	std::cout << "host : " << host << std ::endl;
+	std::cout << "port : " << port << std ::endl;
+	std::cout << "method : " << method << std ::endl;
+	std::cout << "uri : " << uri << std ::endl;
+	std::cout << "version : " << version << std ::endl;
+	std::cout << "content_length : " << content_length << std ::endl;
+	std::cout << "miss_length : " << miss_length << std ::endl;
+	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
+	std::cout << "connection : " << connection << std ::endl;
 	// std::cout << "body : " << body << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
 	// std::cout << std::endl;
+	return (true);
 }
+
+// void	Request::parse_request() {
+// 	std::string tmp;
+	
+// 	/* Extract Headers */
+// 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
+// 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
+// 	if (!tmp.empty())
+// 		parse_media(tmp);
+// 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
+// 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
+// 	if (tmp.empty())
+// 		miss_length = true;
+// 	else {
+// 		miss_length = false;
+// 		try { content_length = ft_stoi(tmp); }
+// 		catch (std::exception & e) { content_length = -1; }
+// 	}
+// 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+// 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
+// 	body = extract_body(save_buffer);
+// 	std::cout << "body : " << body << std ::endl;
+// 	if (body.empty())
+// 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
+// 	if (transfer_encoding == "chunked")
+// 		extract_chunked_body();
+// 	// std::cout << std::endl;
+// 	// std::cout << "host : " << host << std ::endl;
+// 	// std::cout << "port : " << port << std ::endl;
+// 	// std::cout << "method : " << method << std ::endl;
+// 	// std::cout << "uri : " << uri << std ::endl;
+// 	// std::cout << "version : " << version << std ::endl;
+// 	// std::cout << "content_length : " << content_length << std ::endl;
+// 	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
+// 	// std::cout << "connection : " << connection << std ::endl;
+// 	// std::cout << "body : " << body << std ::endl;
+// 	// std::cout << "*******************************" << std ::endl;
+// 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
+// 	// std::cout << "*******************************" << std ::endl;
+// 	// std::cout << std::endl;
+// }
 
 /* ************************************************************************* */
 /* ********************************* Utils ********************************* */
@@ -844,6 +1001,18 @@ std::string Request::extract_elem(std::string const & elem, std::string const & 
 	end = buff.find(delim, begin);
 	std::string tmp (buff.substr(begin, end + 1));
 	return (extract_header(tmp));
+}
+
+std::string Request::getline(std::string &src, std::string const & delim) const {
+	
+	std::string tmp;
+
+	int found = src.find(delim);
+	if (found == -1)
+		return (src);
+	tmp = src.substr(0, found);
+	src.erase(0, found + delim.length());
+	return (tmp);
 }
 
 std::string Request::extract_body(std::string & buff) {
