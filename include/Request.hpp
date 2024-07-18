@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/17 11:28:55 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/18 15:58:50 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,7 @@ class Request
 		void		recover_ip_socket();
 		bool		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
+		int 		extract_chunked_body(std::string &s);
 		void		parse_body();
 		bool		parse_header();
 		
@@ -183,12 +184,12 @@ class Request
 		/* ***************************** Utils ***************************** */
 		/* ***************************************************************** */
 
+		int					ft_shextodec(std::string & s);
 		std::string 		extract_line(std::string &buff, char delim) const;
 		std::string 		extract_header(std::string &buff) const;
 		std::string 		extract_elem(std::string const &elem, std::string const &delim, std::string &buff, std::string const & nofound) const;
 		std::string 		getline(std::string &src, std::string const & delim) const;
 		std::string 		extract_body(std::string &buff);
-		void 				extract_chunked_body();
 		static std::string 	extract_extension(std::string const & s);
 
 		/* ***************************************************************** */

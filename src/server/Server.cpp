@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/17 12:32:03 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/18 14:30:02 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,7 +289,8 @@ void	Server::event_request() {
 					// if (!it->parse_first_line(socket->sin_addr.s_addr, error))
 					// 	return (requests.erase(it), (void) 0);
 					
-					it->parse_body();
+					if (it->getTransfer_encoding() != "chunked")
+						it->parse_body();
 					std::cout << "body = " << it->getBody() << std::endl;
 					
 					int i_conf = pick_server(*it);
@@ -443,7 +444,7 @@ int	Server::pick_server(Request &request) {
 void	Server::body_request_present(Request &request, int read) {
 	
 	if (request.body_present()) {
-		if (!request.parse_header())
+		if (request.getStatus() == NEW && !request.parse_header())
 			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
 		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
 			request.setStatus(RD_TO_RESPOND);
@@ -472,12 +473,18 @@ void	Server::read_request(int i, char *buffer, int read) {
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getSocket_fd() == fds[i].fd) {
 			if (it->getStatus() == READING) { // UTILE ICI ?
-				it->addSave_buffer(buffer);
-				if (read < BUFFER_SIZE  && it->getTransfer_encoding() != "chunked") {
-					it->setStatus(RD_TO_RESPOND);
+				if (it->getTransfer_encoding() != "chunked") {
+					it->addSave_buffer(buffer);
+					if (read < BUFFER_SIZE)
+						it->setStatus(RD_TO_RESPOND);
 				}
-				// else if (it->getTransfer_encoding() != "chunked" /* && dans body 0 */)
-				// 	it->setStatus(RD_TO_RESPOND);
+				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
+					std::string tmp = buffer;
+					int chunk = it->extract_chunked_body(tmp);
+					if (chunk == 0) {
+						it->setStatus(RD_TO_RESPOND);
+					}
+				}
 				return ;
 			}
 			else if (it->getStatus() == NEW) {
@@ -498,6 +505,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 	// 		request.setStatus(READING);
 	// }
 	requests.push_back(request);
+	std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;
 }
 
 /* ************************************************************************* */

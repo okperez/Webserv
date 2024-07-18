@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/17 11:57:13 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/18 15:59:31 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,29 +47,30 @@ Request::~Request() {}
 
 Request &Request::operator=(Request const & rhs) {
 	socket_fd = rhs.socket_fd;
+	socket_s_addr = rhs.socket_s_addr;
+	socket_ip = rhs.socket_ip;
 	status = rhs.status;
 	save_buffer = rhs.save_buffer;
 	method = rhs.method;
 	uri = rhs.uri;
 	version = rhs.version;
+	_query_string = rhs._query_string;
+	_target = rhs._target;
 	host = rhs.host;
 	port = rhs.port;
 	agent = rhs.agent;
 	media = rhs.media;
 	connection = rhs.connection;
-	socket_s_addr = rhs.socket_s_addr;
-	socket_ip = rhs.socket_ip;
+	content_type = rhs.content_type;
+	transfer_encoding = rhs.transfer_encoding;
+	content_length = rhs.content_length;
+	miss_length = rhs.miss_length;
+	body = rhs.body;
+	response = rhs.response;
 	server = rhs.server;
 	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
-	_query_string = rhs._query_string;
-	_target = rhs._target;
-	miss_length = rhs.miss_length;
-	content_length = rhs.content_length;
-	
-	response = rhs.response;
-
 	return (*this); 
 }
 
@@ -738,7 +739,8 @@ bool	Request::media_request_allowed() {
 
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
-	if (miss_length && !body.empty()) {
+	std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
+	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
 	}
@@ -851,6 +853,50 @@ bool		Request::body_present() {
 	return (false);
 }
 
+// TESTER AVEC MAX INT + 1 OU MIN INT -1
+int	Request::ft_shextodec(std::string & s) {
+	std::istringstream iss(s);
+	int n;
+
+	iss >> std::hex >> n;
+	if (!iss.eof())
+		return (-1);
+	return (n);
+}
+
+int Request::extract_chunked_body(std::string &s) {
+	int i = 0;
+	std::string tmp;
+	std::string new_body;
+	int length = -1;
+	
+	while (1) {
+		if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+			return (length);
+		}
+		tmp = getline(s, "\r\n");
+		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+			return (length);
+		}
+			
+		std::cout << "tmp = |" << tmp << "|" << std::endl;
+		if (i % 2 == 0) {
+			// length = ft_stoi(tmp);
+			length = ft_shextodec(tmp);
+			if (length == -1)
+				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
+		}
+		else {
+			if (tmp.length() != static_cast<size_t>(length)) // check if ici on peut avoir un length == a -1 ou non
+				std::cout << "A IMPLEMENTER ERROR bad request ou bad length" << std::endl;
+			body += tmp;
+		}
+		i++;
+	}
+}
+
 void	Request::parse_body() {
 	
 	body = extract_body(save_buffer);
@@ -859,8 +905,8 @@ void	Request::parse_body() {
 		body = "";
 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
 	}
-	if (transfer_encoding == "chunked")
-		extract_chunked_body();
+	// if (transfer_encoding == "chunked")
+	// 	extract_chunked_body();
 }
 
 bool	Request::parse_header() {
@@ -889,7 +935,16 @@ bool	Request::parse_header() {
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
 	
-	// body = extract_body(save_buffer);
+	if (transfer_encoding == "chunked") {
+		std::string s = extract_body(save_buffer);
+		int chunk = extract_chunked_body(s);
+		if (chunk == -1) // ==> body empty
+			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+		if (chunk == 0)
+			status = RD_TO_RESPOND;
+		else
+			status = READING;
+	}
 	// std::cout << "body : " << body << std ::endl;
 	// if (body.empty())
 	// 	std::cout << "A IMPLEMENTER si chunked" << std::endl;
@@ -1010,23 +1065,6 @@ std::string Request::extract_body(std::string & buff) {
 		return ("");
 	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
 	return (tmp);
-}
-
-void Request::extract_chunked_body() {
-	// int i = 0;
-	std::string tmp;
-	std::string new_body;
-	
-	while (1) {
-		if (body.empty())
-			return (body = new_body, (void)0) ;
-		tmp = getline(body, "\r\n");
-		std::cout << "tmp = |" << tmp << "|" << std::endl;
-		// if (i % 2 == 0) 
-		// 	get_length;
-		// else
-		// 	addbody;
-	}
 }
 
 std::string Request::extract_extension(std::string const & s) {
