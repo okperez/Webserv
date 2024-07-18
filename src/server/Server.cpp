@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/18 16:04:45 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/18 16:12:09 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,10 @@ void	Server::launch_server(int max_socket) {
 	int i = 0;
 	int ret;
 	
-	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR" << std::endl;
+	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR =>> POUR EVITER BOUCLE INFINI REMPLACER VECT PAR DEQUE" << std::endl;
+	std::cout << "A IMPLEMENTER : CHUNK REQUEST : " << std::endl;
+	std::cout << "		- SECU OVERFLOW INT" << std::endl;
+	std::cout << "		- SECU " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
