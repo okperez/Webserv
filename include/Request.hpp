@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 16:42:08 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/18 14:21:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,8 +193,11 @@ class Request
 		/* ***************************************************************** */	
 		
 		void	handle_pending_requests(ErrorPages & error, int &socket);
-} ;
+};
 
 void	setExtensions(std::map<std::string, char const *> &extensions);
+void	deleteArgs(char *const argv[], char *const envp[]);
+void	deleteArr(char *const env[], int index);
+bool	is_empty(std::ifstream& pFile);
 
 #endif

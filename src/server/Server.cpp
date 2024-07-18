@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/14 12:13:46 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/18 12:38:11 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -533,5 +533,17 @@ void	Server::handle_pending_requests() {
 			}
 		}
 		delete[] fds;
+	}
+}
+
+void	Server::close_child_sockets() {
+	
+	if (fds) {
+		for (int i = 0; i < MAX_CONNECTION; i++) {
+			if (fds[i].fd > -1) {
+				close (fds[i].fd);
+				fds[i].fd = -1;
+			}
+		}
 	}
 }

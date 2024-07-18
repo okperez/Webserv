@@ -15,9 +15,10 @@ if ($file != 0)
         echo "Location: http://localhost:8080/welcome.html\n";
     }
     else
+    {
         echo "Location: http://localhost:8080/session.html\n";
+    }
 }
 else
-    "Location: http://localhost:8080/\n"
-// A CHANGER VERS PAGE ERREUR   
+    "1"
 ?>

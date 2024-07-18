@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/17 14:42:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/18 16:02:14 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,8 +315,11 @@ char**	Request::set_env(t_conf & conf)
 void	Request::get_output(char *buff)
 {
 	int	flag = 0;
+	// if (strlen(buff) == 0)
+		// response.setBody("/r/n");
 	std::string str = buff;
-	std::cout << "\nOUTPUT SCRIPT= " << buff << std::endl;
+	if (str == "1")
+		throw RequestException ("500");
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -344,7 +347,6 @@ void	Request::get_output(char *buff)
 			response.setBody(str);
 			break ;
 		}
-
 	}
 	if (flag == 0)
 		response.setStatus("200", "OK");
@@ -360,15 +362,17 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	char	buff[1024];
 	int		exit_status = 0;
 
-	pipe(fd); // Secu SI PIPE FAIL ?
+	if (pipe(fd) == -1)
+		throw RequestException ("500");
 	pid = fork();
 	if (pid == -1)
-		perror("fork"); // ATTENTION FONCTION INTERDITE ? cf sujet et voir avec Orlando
+		throw RequestException ("500");
 	if (pid == 0)
 	{
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
+		server->close_child_sockets();
 		if (execve(pathname, argv, envp) != 0)
 		{
 			for (int i = 0; i < 7; i++)
@@ -376,7 +380,6 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			delete [] envp;
 			delete [] argv;
 			delete [] server->fds;
-			perror("execve"); // ATTENTION FONCTION INTERDITE ? cf sujet et voir avec Orlando
 			exit (1);
 		}
 	}
@@ -385,27 +388,37 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	if (WIFEXITED(status))
 		exit_status = WEXITSTATUS(status);
 	else if (WIFSIGNALED(status))
+	{
+		close(fd[0]);
+		deleteArgs(argv, envp);
 		throw RequestException ("500");
-	if (exit_status != 1)
+	}
+	if (exit_status == 0)
 	{
 		while (1)
 		{
 			rd = read(fd[0], buff, sizeof(buff) - 1);
 			if (rd < 1)
+			{
+				buff[rd] = '\0';
 				break ;
+			}
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
 		get_output(buff);
 	}
+	else if (exit_status == 255)
+	{
+		close(fd[0]);
+		deleteArgs(argv, envp);
+		throw RequestException ("500");
+	}
 	else
 	{
 		close(fd[0]);
-		for (int i = 0; i < 7; i++)
-			delete [] envp[i];
-		delete [] envp;
-		delete [] argv;
-		throw RequestException ("404");
+		deleteArgs(argv, envp);
+		throw RequestException ("500");
 	}
 	return (0);
 }
@@ -442,13 +455,14 @@ char const *	define_ext(std::string pathname)
 
 void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 {
-	char		**env;
-	char		**argv;
+	char			**env;
+	char			**argv;
 
 	std::string join = ("./" + _target);
 	char const *pathname = join.c_str();
-	if (!is_accessible(pathname))
-		throw RequestException ("404");
+	std::ifstream	file(pathname, std::ifstream::in);
+	if (!is_accessible(pathname) || is_empty(file))
+		throw RequestException ("500");
 	check_extension(conf, pathname, index_loc);
 	char const * interpreter = define_ext(pathname);
 	env = set_env(conf);
@@ -457,69 +471,20 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
     argv[1] = (char *) pathname;
     argv[2] = NULL;
 	exec_script(argv[0], argv, env);
-	for (int i = 0; i < 7; i++)
-		delete [] env[i];
-	delete [] env;
-	delete [] argv;
+	deleteArgs(argv, env);
 }
 
-/* ************************************************************************* */
-/* ******************************** Cookies ******************************** */
-/* ************************************************************************* */
+bool is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
+}
 
-//pour acceder a request, passer le ptr sur server
-
-// checker whether a file is empty
-// bool is_empty(std::ifstream& pFile)
-// {
-    // return pFile.peek() == std::ifstream::traits_type::eof();
-// }
-// 
 void	Request::setTimestamp(std::ofstream	& data)
 {
 	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
 	std::time_t result = std::time(NULL);
 	data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
 }
-// 
-// void	Request::create_data_file(void)
-// {
-	// std::string		copy = body;
-	// std::ofstream	data("Data_user", std::ofstream::out);
-	// 
-	// if (!is_empty(tmp))
-	// {
-	// 	data << "\n\n";
-	// 	data << "/* ************************************************************************* */";
-	// 	data << "/* ************************************************************************* */";
-	// 	data << "/* ************************************************************************* */";
-	// 	data << "\n\n";
-	// }
-	// for (int i = 0; i < 2; i++)
-	// {
-		// data << copy.substr(0, copy.find('&')) << std::endl;
-		// copy.erase(0, copy.find('&') + 1);
-	// }
-	// setTimestamp(data);
-// }
-// 
-// void	Request::setSession(void)
-// {
-	// create_data_file();
-// }
-// 
-// void	Request::handle_cookies(void)
-// {
-	// if (method == "POST")
-	// {
-		// if (body.find("rememberMe=on") != body.npos)
-		// {
-			// std::cout << "OPEN SESSION\n";
-			// setSession();
-		// }
-	// }
-	// 
-// }
 
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */

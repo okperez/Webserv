@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 11:01:35 by garance           #+#    #+#             */
-/*   Updated: 2024/07/12 14:43:46 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/18 13:47:05 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,21 @@ void	strtomap(std::string s, std::map<std::string, std::vector<std::string> > & 
 char	strback(std::string const & s) {
 	return (s[s.length() - 1]);
 }
+
+void	deleteArgs(char *const argv[], char *const envp[])
+{
+		for (int i = 0; i < 7; i++)
+			delete [] envp[i];
+		delete [] envp;
+		delete [] argv;
+}
+
+void	deleteArr(char *const env[], int index)
+{
+	for (int i = 0; i < index; i++)
+		delete env[i];
+}
+
 void	setExtensions(std::map<std::string, char const *> & extensions)
 {
 	extensions["py"] = "/usr/bin/python3";
