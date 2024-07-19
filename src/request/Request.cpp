@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/19 09:29:49 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/19 11:00:53 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,13 +154,14 @@ void	Request::send_response(int socket_fd) {
 	response.setContent_length();
 	std::string response_content = response.build_response();
 	int fd = write(socket_fd, response_content.c_str(), response_content.size());
+	std::cout << "fd = " << fd << std::endl;  
 	if (fd == -1) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
 	}
-	// std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
-	// std::cout << response_content << std::endl;
-	// std::cout << "******************************" << std::endl;
+	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
+	std::cout << response_content << std::endl;
+	std::cout << "******************************" << std::endl;
 	status = SENT;
 }
 
@@ -547,6 +548,9 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		{
 			try
 			{
+				std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
+				std::cout << "body : " << std::endl << body << std::endl << std::endl;
+				std::cout << "ENTER IN CGI" << std::endl;
 				handle_cgi(conf, location);
 			}
 			catch(const std::exception& e)
@@ -789,6 +793,8 @@ void	Request::setIp_socket(in_addr_t s_addr) {
 
 bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	
+	std::string title = "\e[34m";
+	std::string reset = "\e[0m";
 	// socket_s_addr = s_addr;
 	// recover_ip_socket();
 	/* Parse first line */
@@ -801,6 +807,9 @@ bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 		error->fill_error(response, "400");
 		return (send_response(socket_fd), false);
 	}
+	std::cout << title << "*********** REQUEST **********" << std::endl;
+	std::cout << title << method << " " << uri << " " << version << std::endl;
+	std::cout << "******************************" << reset << std::endl;
 	return (true);
 }
 
@@ -846,6 +855,7 @@ int Request::extract_chunked_body(std::string &s) {
 				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
 		}
 		else {
+			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
 			if (tmp.length() != static_cast<size_t>(length)) // check if ici on peut avoir un length == a -1 ou non
 				std::cout << "A IMPLEMENTER ERROR bad request ou bad length" << std::endl;
 			body += tmp;

@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/19 09:33:12 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/19 10:15:46 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,6 +260,7 @@ void	Server::event_request() {
 			*/
 				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
+						std::cout << "EVENT_REQUEST ERASE 0" << std::endl;
 						requests.erase(it);
 						break;			
 					}
@@ -305,12 +306,15 @@ void	Server::event_request() {
 					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
 					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
 						for (int i = 0; i < MAX_CONNECTION; i++) {
-							if (fds[i].fd == it->getSocket_fd()) 
+							if (fds[i].fd == it->getSocket_fd()) {
+								std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
 								return (requests.erase(it), close_connection(i), (void) 0);
+							}
 						}				
 					}
 					std::cout << "EVENT_REQUEST POLLIN" << std::endl;
 					fds[i].events = POLLIN;	
+					std::cout << "EVENT_REQUEST ERASE 2" << std::endl;
 					return (requests.erase(it), (void) 0);
 				// }
 			// }
@@ -560,15 +564,6 @@ void	Server::read_request(int i, char *buffer, int read) {
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
 	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	body_request_present(request, read, i);
-	// if (request.body_present()) {
-	// 	request.parse_request();
-	// 	if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
-	// 		request.setStatus(RD_TO_RESPOND);
-	// 	else if (request.getTransfer_encoding() != "chunked" /* && dans body 0 */)
-	// 		request.setStatus(RD_TO_RESPOND);
-	// 	else
-	// 		request.setStatus(READING);
-	// }
 	requests.push_back(request);
 	// std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;
 }
@@ -580,6 +575,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 void	Server::send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
 	
 	it->fill_error(code, error);
+	std::cout << "END_ERROR ERASE " << std::endl;
 	requests.erase(it);
 	throw (ServerException(mess));
 }
@@ -589,7 +585,7 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", /* -1, */ socket, this, &error, &auth_media);
+	Request tmp("", socket, this, &error, &auth_media);
 	tmp.fill_error(code, error);
 	throw (ServerException(mess));
 }

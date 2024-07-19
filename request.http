@@ -3,10 +3,10 @@ Host: 127.0.0.1:8080
 Transfer-Encoding: chunked
 
 A
-fname=gagaa
+fname=gaga
 
-10
-lname=lala
+B
+&lname=lala
 
 0
 
