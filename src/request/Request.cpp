@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/18 16:05:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/19 13:51:29 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,7 +368,7 @@ void	Request::get_output(char *buff)
 		}
 	}
 	if (flag == 0)
-		response.setStatus("200", "OK");
+		response.setStatus("200", " OK");
 	response.setContent_type("html");
 }
 
@@ -414,12 +414,12 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	}
 	if (exit_status == 0)
 	{
-		while (1)
+		while (1) // Attention si on passe plusieurs fois dedand on efface le buff
 		{
-			rd = read(fd[0], buff, sizeof(buff) - 1);
+			rd = read(fd[0], buff, sizeof(buff) - 1); // read ici interdit car on ne passe pas par poll (cf sujet) => utiliser filestream plutot
 			if (rd < 1)
 			{
-				buff[rd] = '\0';
+				// buff[rd] = '\0';
 				break ;
 			}
 			buff[rd] = '\0';
