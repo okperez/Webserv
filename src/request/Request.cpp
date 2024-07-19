@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/19 11:37:23 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/19 13:25:05 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -369,7 +369,7 @@ void	Request::get_output(char *buff)
 		}
 	}
 	if (flag == 0)
-		response.setStatus("200", "OK");
+		response.setStatus("200", " OK");
 	response.setContent_type("html");
 }
 
@@ -416,12 +416,12 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	}
 	if (exit_status == 0)
 	{
-		while (1)
+		while (1) // ATTENTION A LA BOUCLE WHILE ==> si on passe deux fois on efface le buff
 		{
 			rd = read(fd[0], buff, sizeof(buff) - 1); // ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL
 			if (rd < 1)
 			{
-				buff[rd] = '\0';
+				// buff[rd] = '\0';
 				break ;
 			}
 			buff[rd] = '\0';
