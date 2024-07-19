@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/18 16:05:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/19 09:29:49 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,16 +158,16 @@ void	Request::send_response(int socket_fd) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
 	}
-	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
-	std::cout << response_content << std::endl;
-	std::cout << "******************************" << std::endl;
+	// std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
+	// std::cout << response_content << std::endl;
+	// std::cout << "******************************" << std::endl;
 	status = SENT;
 }
 
 //  parse request from client and send back response 
 int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
 {
-	std::cout << "handle request misslength = " << miss_length << std::endl;
+	// std::cout << "handle request misslength = " << miss_length << std::endl;
 	if (!check_request(socket_fd, conf, error))
 		return (1);
 	int i = check_exist_method();
@@ -516,9 +516,9 @@ void	Request::setTimestamp(std::ofstream	& data)
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	std::cout << "\nLOCATION = " << location << std::endl;
-	std::cout << "URI = " << uri << std::endl;
-	std::cout << "Target = " << _target << std::endl;
+	// std::cout << "\nLOCATION = " << location << std::endl;
+	// std::cout << "URI = " << uri << std::endl;
+	// std::cout << "Target = " << _target << std::endl;
 	// std::cout << "DIR = " << dir << std::endl;
 	if (location.empty()) {
 		// 	=====> Server has a return
@@ -597,7 +597,7 @@ void	Request::uri_directory(t_conf &conf, ErrorPages &error) {
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = _target + *it;
 		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
-			return (std::cout << "return" << std::endl, (void)0);
+			return (/* std::cout << "return" << std::endl, */ (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(conf, error), (void)0);
@@ -696,7 +696,7 @@ bool	Request::media_request_allowed() {
 
 bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
 	
-	std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
+	// std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		error.fill_error(response, "411", conf);
 		return (send_response(socket_fd), false);
@@ -730,7 +730,7 @@ void	Request::recover_ip_socket() {
 			iss << '.';
 	}
 	socket_ip = iss.str();
-	std::cout << socket_ip << std::endl;
+	// std::cout << socket_ip << std::endl;
 }
 
 void	Request::cgi_parse_uri() {
@@ -838,7 +838,7 @@ int Request::extract_chunked_body(std::string &s) {
 			return (length);
 		}
 			
-		std::cout << "tmp = |" << tmp << "|" << std::endl;
+		// std::cout << "tmp = |" << tmp << "|" << std::endl;
 		if (i % 2 == 0) {
 			// length = ft_stoi(tmp);
 			length = ft_shextodec(tmp);
@@ -857,7 +857,7 @@ int Request::extract_chunked_body(std::string &s) {
 void	Request::parse_body() {
 	
 	body = extract_body(save_buffer);
-	std::cout << "body : " << body << std ::endl;
+	// std::cout << "body : " << body << std ::endl;
 	if (body.empty()) {
 		body = "";
 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
@@ -909,15 +909,15 @@ bool	Request::parse_header() {
 	// 	extract_chunked_body();
 		
 	// std::cout << std::endl;
-	std::cout << "host : " << host << std ::endl;
-	std::cout << "port : " << port << std ::endl;
-	std::cout << "method : " << method << std ::endl;
-	std::cout << "uri : " << uri << std ::endl;
-	std::cout << "version : " << version << std ::endl;
-	std::cout << "content_length : " << content_length << std ::endl;
-	std::cout << "miss_length : " << miss_length << std ::endl;
-	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-	std::cout << "connection : " << connection << std ::endl;
+	// std::cout << "host : " << host << std ::endl;
+	// std::cout << "port : " << port << std ::endl;
+	// std::cout << "method : " << method << std ::endl;
+	// std::cout << "uri : " << uri << std ::endl;
+	// std::cout << "version : " << version << std ::endl;
+	// std::cout << "content_length : " << content_length << std ::endl;
+	// std::cout << "miss_length : " << miss_length << std ::endl;
+	// std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
+	// std::cout << "connection : " << connection << std ::endl;
 	// std::cout << "body : " << body << std ::endl;
 	// std::cout << "*******************************" << std ::endl;
 	// std::cout << "save_buffer : " << save_buffer << std ::endl;

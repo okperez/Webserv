@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 12:40:13 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/19 09:30:15 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,11 +117,11 @@ std::string Response::build_response()
 }
 
 void	Response::print() {
-	std::cout << "_start_line : " << _status << std::endl;
-	std::cout << "_content_type : " << _content_type << std::endl;
-	std::cout << "_content_length : " << _content_length << std::endl;
-	std::cout << "_body : " << _body << std::endl;
-	for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
-		std::cout << "_cookie: " << (*it) << std::endl;
+	// std::cout << "_start_line : " << _status << std::endl;
+	// std::cout << "_content_type : " << _content_type << std::endl;
+	// std::cout << "_content_length : " << _content_length << std::endl;
+	// std::cout << "_body : " << _body << std::endl;
+	// for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
+	// 	std::cout << "_cookie: " << (*it) << std::endl;
 	// std::cout << "_cookie :" << _cookie << std::endl;
 }
