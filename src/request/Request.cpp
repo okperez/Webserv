@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/19 11:00:53 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/19 11:37:23 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -393,6 +393,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		close(fd[0]);
 		close(fd[1]);
 		server->close_child_sockets();
+		std::cerr << "pathname" << std::endl << pathname << std::endl;
 		if (execve(pathname, argv, envp) != 0)
 		{
 			for (int i = 0; i < 7; i++)
@@ -417,7 +418,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	{
 		while (1)
 		{
-			rd = read(fd[0], buff, sizeof(buff) - 1);
+			rd = read(fd[0], buff, sizeof(buff) - 1); // ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL
 			if (rd < 1)
 			{
 				buff[rd] = '\0';

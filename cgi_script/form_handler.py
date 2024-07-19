@@ -2,6 +2,7 @@
 import os
 
 # Start the HTML
+print("<!DOCTYPE html>")
 print("<html>")
 print("<head>")
 print("<title>CGI Test</title>")
