@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/18 16:04:41 by galambey         ###   ########.fr       */
+/*   Updated: 2024/07/22 12:02:08 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,9 @@ class Request
 	};
 
 	public :
-		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media);
+		// int id;// => POUR DEBUG A EFFACER
+
+		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -111,11 +113,12 @@ class Request
 		void		parse_media(std::string &s);
 		void		cgi_parse_uri();
 		bool		media_request_allowed();
-		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
+		bool		check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
 		bool		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
 		int 		extract_chunked_body(std::string &s);
+		void		handle_multi_length();
 		void		parse_body();
 		bool		parse_header();
 		
@@ -123,7 +126,7 @@ class Request
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
 		
-        int  		handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
+        int  		handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		send_response(int socket_fd);
 		
 		/* ***************************************************************** */
@@ -197,13 +200,24 @@ class Request
 		/* ***************************************************************** */	
 
 		void	fill_error_errno(t_conf &conf, ErrorPages &error);
+
 		void	fill_error(std::string const &code, ErrorPages &error);
+		void	fill_significant_error(std::string const &code, ErrorPages &error);
+		void	fill_error(std::string const &code, ErrorPages &error, t_conf &conf);
+		void	fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
 		void	handle_pending_requests(ErrorPages & error, int &socket);
+
+		/* ************************************************************************* */	
+		/* ******************************** A EFFACER ****************************** */
+		/* ************************************************************************* */	
+
+		void	print_response();
+
 };
 
 void	setExtensions(std::map<std::string, char const *> &extensions);

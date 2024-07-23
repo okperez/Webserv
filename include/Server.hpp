@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/19 09:20:08 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/19 17:07:31 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,7 @@ class Server
 		
 		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
+		void	close_and_erase(std::vector<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
 		void	handle_pending_requests();

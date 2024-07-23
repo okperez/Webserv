@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/19 13:25:05 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/22 12:29:02 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,9 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media) {
-	// A UPDATE
+Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
+
+	std::cout << "REQUEST CONSTRUCTOR" << std::endl;
 	socket_fd = socket;
 	server = src_server;
 	error = src_error;
@@ -32,6 +33,8 @@ Request::Request(char const *buffer, /* int read, */ int socket, Server *src_ser
 	// 	status = RD_TO_RESPOND;
 	// else
 	status = NEW;
+	// this->id = id;
+	std::cout << "END REQUEST CONSTRUCTOR" << std::endl;
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) {
@@ -71,6 +74,7 @@ Request &Request::operator=(Request const & rhs) {
 	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
+	// id = rhs.id;
 	return (*this); 
 }
 
@@ -154,7 +158,6 @@ void	Request::send_response(int socket_fd) {
 	response.setContent_length();
 	std::string response_content = response.build_response();
 	int fd = write(socket_fd, response_content.c_str(), response_content.size());
-	std::cout << "fd = " << fd << std::endl;  
 	if (fd == -1) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
@@ -166,17 +169,19 @@ void	Request::send_response(int socket_fd) {
 }
 
 //  parse request from client and send back response 
-int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
+int  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
 	// std::cout << "handle request misslength = " << miss_length << std::endl;
-	if (!check_request(socket_fd, conf, error))
-		return (1);
+	if (!check_request(/* socket_fd,  */conf, error))
+		return (send_response(socket_fd), 1);
 	int i = check_exist_method();
 	// std::cout << "i = " << i << std::endl;
 	switch (i) {
 		case UNKNOWN : {
-			error.fill_error(response, "405", conf);
-			return (send_response(socket_fd), 1);
+			fill_error("405", error, conf);
+			return (1);
+			// error.fill_error(response, "405", conf);
+			// return (send_response(socket_fd), 1);
 		}
 		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
 			// std::cout << "uri " << uri << std::endl;
@@ -184,8 +189,10 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			if (index.empty())
 			{
 				if (conf.root_dir.empty()) {
-					error.fill_error(response, "404", conf);
-					return (send_response(socket_fd), 1);
+					fill_error("404", error, conf);
+					return (1);
+					// error.fill_error(response, "404", conf);
+					// return (send_response(socket_fd), 1);
 				}
 				else {
 					if (strback(conf.root_dir) == '/')
@@ -197,8 +204,10 @@ int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // 
 			/* AVANT D AJOUTER LE PATH => check method ok */
 			else {
 				if (!check_allow_method(conf, index)) {
-					error.fill_error(response, "405", conf);
-					return (send_response(socket_fd), 1);
+					fill_error("405", error, conf);
+					return (1);
+					// error.fill_error(response, "405", conf);
+					// return (send_response(socket_fd), 1);
 				}
 				add_path(conf, index); // GET POST DELETE
 			}
@@ -699,28 +708,40 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
+bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
 	
 	// std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
-		error.fill_error(response, "411", conf);
-		return (send_response(socket_fd), false);
+		fill_significant_error("411", error, conf);
+		return (false);
+		// error.fill_error(response, "411", conf);
+		// return (send_response(socket_fd), false);
 	}
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
-		error.fill_error(response, "400", conf);
-		return (send_response(socket_fd), false);
+		std::cout << "CHECK REQUEST SIGNIFIACANT ERROR" << std::endl;
+		fill_significant_error("400", error, conf);
+		response.print();
+		return (false);
+		// error.fill_error(response, "400", conf);
+		// return (send_response(socket_fd), false);
 	}
 	if (version != "HTTP/1.1") {
-		error.fill_error(response, "405", conf);
-		return (send_response(socket_fd), false);
+		fill_significant_error("405", error, conf);
+		return (false);
+		// error.fill_error(response, "405", conf);
+		// return (send_response(socket_fd), false);
 	}
-	if (content_length > conf.limit_body_size) {
-		error.fill_error(response, "413", conf);
-		return (send_response(socket_fd), false);
+	if (content_length > conf.limit_body_size) { // Significant error or not ?
+		fill_error("413", error, conf);
+		return (false);
+		// error.fill_error(response, "413", conf);
+		// return (send_response(socket_fd), false);
 	}
-	if (media.size() > 0 && !media_request_allowed()) {
-		error.fill_error(response, "415", conf);
-		return (send_response(socket_fd), false);
+	if (media.size() > 0 && !media_request_allowed()) { // Significant error or not ?
+		fill_error("415", error, conf);
+		return (false);
+		// error.fill_error(response, "415", conf);
+		// return (send_response(socket_fd), false);
 	}
 	return (true);
 }
@@ -804,18 +825,20 @@ bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	version = extract_line(save_buffer, '\r');
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
-	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		error->fill_error(response, "400");
-		return (send_response(socket_fd), false);
-	}
 	std::cout << title << "*********** REQUEST **********" << std::endl;
 	std::cout << title << method << " " << uri << " " << version << std::endl;
 	std::cout << "******************************" << reset << std::endl;
+	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
+		std::cout << "PARSE_FIRST_LINE ERROR 400" << std::endl;
+		error->fill_significant_error(response, "400");
+		return (/* send_response(socket_fd), */ false);
+	}
 	return (true);
 }
 
 bool		Request::body_present() {
-	if (save_buffer.find("\n\r\n") != std::string::npos)
+	
+	if (save_buffer.find("\r\n\r\n") != std::string::npos)
 		return (true);
 	return (false);
 }
@@ -837,23 +860,29 @@ int Request::extract_chunked_body(std::string &s) {
 	std::string new_body;
 	int length = -1;
 	
-	while (1) {
-		if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
+	if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
 			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
 			return (length);
-		}
+	}
+	while (1) {
 		tmp = getline(s, "\r\n");
 		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-			return (length);
+			if (i % 2 == 0) {
+				std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+				return (length);
+			}
+			else
+				return (length);
 		}
 			
 		// std::cout << "tmp = |" << tmp << "|" << std::endl;
 		if (i % 2 == 0) {
 			// length = ft_stoi(tmp);
 			length = ft_shextodec(tmp);
-			if (length == -1)
+			if (length == -1) {
 				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
+				return (length);
+			}
 		}
 		else {
 			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
@@ -875,6 +904,29 @@ void	Request::parse_body() {
 	}
 	// if (transfer_encoding == "chunked")
 	// 	extract_chunked_body();
+}
+
+void	Request::handle_multi_length() {
+	
+	std::string tmp;
+	int n;
+	
+	while (1) {
+		tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
+		if (tmp.empty())
+			return ;
+		try {
+			n = ft_stoi(tmp); 
+			if (n != content_length) {
+				content_length = -1;
+				return ;
+			}
+		}
+		catch (std::exception & e) {
+			content_length = -1;
+			return ;
+			}	
+	}
 }
 
 bool	Request::parse_header() {
@@ -900,6 +952,7 @@ bool	Request::parse_header() {
 		try { content_length = ft_stoi(tmp); }
 		catch (std::exception & e) { content_length = -1; }
 	}
+	handle_multi_length();
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
 	
@@ -1011,6 +1064,9 @@ std::string Request::extract_elem(std::string const & elem, std::string const & 
 		return (nofound);
 	end = buff.find(delim, begin);
 	std::string tmp (buff.substr(begin, end + 1));
+	buff.erase(begin, end);
+	if (buff.compare(0, 4, "\r\n\r\n") != 0)
+		buff.erase(begin, 2);
 	return (extract_header(tmp));
 }
 
@@ -1059,6 +1115,21 @@ void	Request::fill_error(std::string const &code, ErrorPages &error) {
 	send_response(socket_fd);
 }
 
+void	Request::fill_significant_error(std::string const &code, ErrorPages &error) {
+	error.fill_significant_error(response, code);
+	setStatus(CLOSE);
+}
+
+void	Request::fill_error(std::string const &code, ErrorPages &error, t_conf &conf) {
+	error.fill_error(response, code, conf);
+	send_response(socket_fd);
+}
+
+void	Request::fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf) {
+	error.fill_significant_error(response, code, conf);
+	setStatus(CLOSE);
+}
+
 /* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
@@ -1071,4 +1142,12 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	else
 		error.fill_error(response, "503");
 	send_response(socket);
+}
+
+/* ************************************************************************* */	
+/* ******************************** A EFFACER ****************************** */
+/* ************************************************************************* */	
+
+void	Request::print_response() {
+	response.print();
 }

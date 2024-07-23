@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/19 10:15:46 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/22 11:06:34 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,13 +276,21 @@ void	Server::event_request() {
 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 			return ;
 		}
-		if (fds[i].revents & POLLOUT)
+		else if (fds[i].revents & POLLOUT)
 		{
 			for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-				// if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked") || it->getStatus() == RD_TO_RESPOND) {
-			// for (int j = 0; j < MAX_CONNECTION; j++) {
-				// if (fds[j].fd == it->getSocket_fd()) {
+				if (it->getSocket_fd() == fds[i].fd) {
+					if (it->getStatus() == RD_TO_SEND) {
+						// std::cout << "it->id" << it->id << std::endl;
+						it->send_response(it->getSocket_fd());
+						std::cout << "EVENT_REQUEST POLLIN" << std::endl;
+						fds[i].events = POLLIN;	
+						std::cout << "EVENT_REQUEST ERASE" << std::endl;
+						return (requests.erase(it), (void) 0);
+						// return (close_and_erase(it), (void) 0);
+					}
 					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
+					// std::cout << "it->id" << it->id << std::endl;
 					struct sockaddr_storage name;
 					socklen_t namelen = sizeof(name);
 					if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
@@ -303,33 +311,41 @@ void	Server::event_request() {
 					
 					// it->parse_request();
 					
-					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
-					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-						for (int i = 0; i < MAX_CONNECTION; i++) {
-							if (fds[i].fd == it->getSocket_fd()) {
-								std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
-								return (requests.erase(it), close_connection(i), (void) 0);
-							}
-						}				
+					it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
+					if (it->getConnection() == "close" || it->getStatus() == CLOSE) { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
+						return (close_and_erase(it), (void) 0);
+						// for (int i = 0; i < MAX_CONNECTION; i++) {
+						// 	if (fds[i].fd == it->getSocket_fd()) {
+						// 		std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
+						// 		return (requests.erase(it), close_connection(i), (void) 0);
+						// 	}
+						// }				
 					}
 					std::cout << "EVENT_REQUEST POLLIN" << std::endl;
 					fds[i].events = POLLIN;	
 					std::cout << "EVENT_REQUEST ERASE 2" << std::endl;
 					return (requests.erase(it), (void) 0);
+				}
 				// }
 			// }
 			// return (requests.erase(it), (void) 0);
 		// }
 		// else if (it->getStatus() == ERASE)
 		// 	return (requests.erase(it), (void) 0);
-	}
+			}
 		}
+		// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++)
+		// if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked"))
+		// 	for (int j = 0; j < MAX_CONNECTION; j++)
+		// 		if (fds[j].fd == it->getSocket_fd())
+		// 			fds[j].events = POLLOUT;
 	}
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++)
 		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked"))
 			for (int j = 0; j < MAX_CONNECTION; j++)
 				if (fds[j].fd == it->getSocket_fd())
 					fds[j].events = POLLOUT;
+	
 	
 	
 	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
@@ -504,19 +520,27 @@ int	Server::pick_server(Request &request) {
 
 void	Server::body_request_present(Request &request, int read, int i) {
 	
+	std::cout << "ENTREE BODY REQUEST PRESENT" << std::endl;
 	if (request.body_present()) {
-		if (request.getStatus() == NEW && !request.parse_header())
+		if (request.getStatus() == NEW && !request.parse_header()) {
+			std::cout << "BODY_PRESENT POLLOUT ERROR" << std::endl;
+			fds[i].events = POLLOUT;
+			request.setStatus(RD_TO_SEND);
 			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
+		}
 		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
 			std::cout << "BODY_PRESENT POLLOUT" << std::endl;
 			fds[i].events = POLLOUT;
 			// request.setStatus(RD_TO_RESPOND);
 		}
-		// else if (request.getTransfer_encoding() == "chunked" /* && dans body 0 */)
-		// 	request.setStatus(RD_TO_RESPOND);
+		else if (request.getTransfer_encoding() == "chunked" && request.getStatus() == RD_TO_RESPOND)
+			fds[i].events = POLLOUT;
+			// request.setStatus(RD_TO_RESPOND);
 		else
 			request.setStatus(READING);
 	}
+	else
+		std::cout << "body absent" << std::endl;
 }
 
 /*
@@ -529,12 +553,14 @@ connection is closed.
 */
 void	Server::read_request(int i, char *buffer, int read) {
 	
-	// for (int j = 0; j < BUFFER_SIZE; j++)
-	// 	std::cout << buffer[j];
-	// std::cout << std::endl;
+	std::cout << "************************ READ REQUEST fds[i].fd = " << fds[i].fd << std::endl;
+	for (int j = 0; j < BUFFER_SIZE; j++)
+		std::cout << buffer[j];
+	std::cout << std::endl;
 
 	// Si une requete a deja ete cree : 
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		std::cout << "t->getSocket_fd() = " << it->getSocket_fd() << std::endl;
 		if (it->getSocket_fd() == fds[i].fd) {
 			if (it->getStatus() == READING) { // UTILE ICI ?
 				if (it->getTransfer_encoding() != "chunked") {
@@ -554,17 +580,25 @@ void	Server::read_request(int i, char *buffer, int read) {
 						fds[i].events = POLLOUT;
 					}
 				}
-				return ;
 			}
 			else if (it->getStatus() == NEW) {
+				
+				it->addSave_buffer(buffer);
+				// std::cout << "request id rentre dans body request 2 : " << it->id << std::endl;
 				body_request_present(*it, read, i);
 			}
+			return ;
 		}
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	// static int j = 0; // A EFFACER
+	std::cout << "CREATION REQUEST" << std::endl;
+	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	// j++;
+	// std::cout << "request id rentre dans body request 1 : " << request.id << std::endl;
 	body_request_present(request, read, i);
 	requests.push_back(request);
+	
 	// std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;
 }
 
@@ -585,7 +619,7 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", socket, this, &error, &auth_media);
+	Request tmp("", socket, this, &error, &auth_media/* , 0 */);
 	tmp.fill_error(code, error);
 	throw (ServerException(mess));
 }
@@ -607,6 +641,15 @@ void	Server::error_bfr_launch(int new_socket, struct addrinfo *res, const char *
 void	Server::error_bfr_launch() {
 	for(std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++)
 		it->close_fd();
+}
+
+void	Server::close_and_erase(std::vector<Request>::iterator it) {
+	for (int i = 0; i < MAX_CONNECTION; i++) {
+		if (fds[i].fd == it->getSocket_fd()) {
+			std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
+			return (requests.erase(it), close_connection(i), (void) 0);
+		}
+	}
 }
 
 /* Si control C stop listen + close socket listen */

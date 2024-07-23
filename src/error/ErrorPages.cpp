@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/15 14:26:02 by operez           ###   ########.fr       */
+/*   Updated: 2024/07/22 12:17:03 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,12 +99,27 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
 			err_not_found(response, code);
     }
 	response.setStatus(code, map_error[code]);
+	response.setError(true);
+}
+
+void	ErrorPages::fill_significant_error(Response &response, std::string code, t_conf &conf) {
+	fill_error(response, code, conf);
+	response.setConnectiontoclose();
+	response.print();
 }
 
 void	ErrorPages::fill_error(Response &response, std::string code) {
     
     err_not_found(response, code);
 	response.setStatus(code, map_error[code]);
+	response.setError(true);
+}
+
+void	ErrorPages::fill_significant_error(Response &response, std::string code) {
+    
+    fill_error(response, code);
+	response.setConnectiontoclose();
+	response.print();
 }
 
 void	ErrorPages::fill_redir(Response &response, std::string const &code, std::string const &redir) {
