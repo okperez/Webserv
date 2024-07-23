@@ -1,7 +1,7 @@
 <?php
 
 $file = file_get_contents('Data_user');
-if ($file != 0)
+if ($file != false && strlen($file) > 0)
 {
     $fname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "fname"), strpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "fname"));
     $lname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "lname"), strrpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "lname"));
@@ -20,5 +20,5 @@ if ($file != 0)
     }
 }
 else
-    "1"
+    echo "1"
 ?>

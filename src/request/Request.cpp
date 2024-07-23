@@ -334,11 +334,12 @@ char**	Request::set_env(t_conf & conf)
 void	Request::get_output(char *buff)
 {
 	int	flag = 0;
-	// if (strlen(buff) == 0)
-		// response.setBody("/r/n");
 	std::string str = buff;
 	if (str == "1")
+	{
+		std::cout << "5" << std::endl;
 		throw RequestException ("500");
+	}
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -382,10 +383,14 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int		exit_status = 0;
 
 	if (pipe(fd) == -1)
+	{
 		throw RequestException ("500");
+	}
 	pid = fork();
 	if (pid == -1)
+	{
 		throw RequestException ("500");
+	}
 	if (pid == 0)
 	{
 		dup2(fd[1], 1);
