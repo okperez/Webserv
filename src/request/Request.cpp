@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/22 12:29:02 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/23 11:59:38 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -719,6 +719,7 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 	}
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
 		std::cout << "CHECK REQUEST SIGNIFIACANT ERROR" << std::endl;
+		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
 		fill_significant_error("400", error, conf);
 		response.print();
 		return (false);
@@ -896,6 +897,7 @@ int Request::extract_chunked_body(std::string &s) {
 
 void	Request::parse_body() {
 	
+	std::cout << "parse_body save buffer = |" << save_buffer << "|\n" ;
 	body = extract_body(save_buffer);
 	// std::cout << "body : " << body << std ::endl;
 	if (body.empty()) {
@@ -941,13 +943,17 @@ bool	Request::parse_header() {
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
 	if (!tmp.empty())
 		parse_media(tmp);
-	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
+	connection = extract_elem("Connection:", "\r\n", save_buffer, "keep-alive");
+	std::cout << "save_buffer AVANT extract 1rst contentlength = |" << save_buffer << "|\n";
 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
+	std::cout << "save_buffer APRES extract 1rst contentlength = |" << save_buffer << "|\n";
 	if (tmp.empty()) {
+		std::cout << "IF|\n";
 		miss_length = true;
 		content_length = 0;
 	}
 	else {
+		std::cout << "ELSE\n";
 		miss_length = false;
 		try { content_length = ft_stoi(tmp); }
 		catch (std::exception & e) { content_length = -1; }
@@ -1058,13 +1064,15 @@ std::string Request::extract_header(std::string & buff) const
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
 	int begin, end = 0, sep_body;
-	sep_body = buff.find("\n\r\n");
+	sep_body = buff.find("\r\n\r\n");
 	begin = buff.find(elem);
 	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
 	end = buff.find(delim, begin);
+	
 	std::string tmp (buff.substr(begin, end + 1));
-	buff.erase(begin, end);
+	std::cout << end - begin << std::endl; 
+	buff.erase(begin, end - begin - 1);
 	if (buff.compare(0, 4, "\r\n\r\n") != 0)
 		buff.erase(begin, 2);
 	return (extract_header(tmp));
@@ -1084,10 +1092,10 @@ std::string Request::getline(std::string &src, std::string const & delim) const 
 
 std::string Request::extract_body(std::string & buff) {
 	
-	int begin = buff.find("\n\r\n");
+	int begin = buff.find("\r\n\r\n");
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
-	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
+	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
 	return (tmp);
 }
 
