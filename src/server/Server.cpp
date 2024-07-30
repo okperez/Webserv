@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/22 11:06:34 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/30 12:20:29 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,13 +280,14 @@ void	Server::event_request() {
 		{
 			for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 				if (it->getSocket_fd() == fds[i].fd) {
-					if (it->getStatus() == RD_TO_SEND) {
+					if (it->getStatus() == ERROR) {
 						// std::cout << "it->id" << it->id << std::endl;
 						it->send_response(it->getSocket_fd());
 						std::cout << "EVENT_REQUEST POLLIN" << std::endl;
 						fds[i].events = POLLIN;	
 						std::cout << "EVENT_REQUEST ERASE" << std::endl;
-						return (requests.erase(it), (void) 0);
+						return (close_and_erase(it), (void) 0);
+						// return (requests.erase(it), (void) 0);
 						// return (close_and_erase(it), (void) 0);
 					}
 					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
@@ -523,12 +524,11 @@ void	Server::body_request_present(Request &request, int read, int i) {
 	std::cout << "ENTREE BODY REQUEST PRESENT" << std::endl;
 	if (request.body_present()) {
 		if (request.getStatus() == NEW && !request.parse_header()) {
-			std::cout << "BODY_PRESENT POLLOUT ERROR" << std::endl;
+			request.fill_significant_error("400", error);
 			fds[i].events = POLLOUT;
-			request.setStatus(RD_TO_SEND);
-			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
+			request.setStatus(ERROR);
 		}
-		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
+		else if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
 			std::cout << "BODY_PRESENT POLLOUT" << std::endl;
 			fds[i].events = POLLOUT;
 			// request.setStatus(RD_TO_RESPOND);
@@ -574,6 +574,11 @@ void	Server::read_request(int i, char *buffer, int read) {
 				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
 					std::string tmp = buffer;
 					int chunk = it->extract_chunked_body(tmp);
+					if (chunk == -1) {
+						it->fill_significant_error("400", error);
+						fds[i].events = POLLOUT;
+						it->setStatus(ERROR);
+					}
 					if (chunk == 0) {
 						// it->setStatus(RD_TO_RESPOND);
 						std::cout << "READ_REQUEST 2 POLLOUT" << std::endl;
@@ -597,6 +602,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 	// j++;
 	// std::cout << "request id rentre dans body request 1 : " << request.id << std::endl;
 	body_request_present(request, read, i);
+	std::cout << "request body = |" << request.getBody() << "|\n" ;
 	requests.push_back(request);
 	
 	// std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;

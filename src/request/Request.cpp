@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/23 11:59:38 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/30 12:23:25 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,7 @@ void	Request::send_response(int socket_fd) {
 	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
 	std::cout << response_content << std::endl;
 	std::cout << "******************************" << std::endl;
-	status = SENT;
+	// status = SENT;
 }
 
 //  parse request from client and send back response 
@@ -178,7 +178,8 @@ int  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &erro
 	// std::cout << "i = " << i << std::endl;
 	switch (i) {
 		case UNKNOWN : {
-			fill_error("405", error, conf);
+			fill_significant_error("405", error, conf);
+			// fill_error("405", error, conf);
 			return (1);
 			// error.fill_error(response, "405", conf);
 			// return (send_response(socket_fd), 1);
@@ -204,7 +205,8 @@ int  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &erro
 			/* AVANT D AJOUTER LE PATH => check method ok */
 			else {
 				if (!check_allow_method(conf, index)) {
-					fill_error("405", error, conf);
+					fill_significant_error("405", error, conf);
+					// fill_error("405", error, conf);
 					return (1);
 					// error.fill_error(response, "405", conf);
 					// return (send_response(socket_fd), 1);
@@ -561,6 +563,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 				std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
 				std::cout << "body : " << std::endl << body << std::endl << std::endl;
 				std::cout << "ENTER IN CGI" << std::endl;
+				std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
 				handle_cgi(conf, location);
 			}
 			catch(const std::exception& e)
@@ -720,7 +723,7 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
 		std::cout << "CHECK REQUEST SIGNIFIACANT ERROR" << std::endl;
 		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
-		fill_significant_error("400", error, conf);
+		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
 		response.print();
 		return (false);
 		// error.fill_error(response, "400", conf);
@@ -733,13 +736,13 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		// return (send_response(socket_fd), false);
 	}
 	if (content_length > conf.limit_body_size) { // Significant error or not ?
-		fill_error("413", error, conf);
+		fill_significant_error("413", error, conf);
 		return (false);
 		// error.fill_error(response, "413", conf);
 		// return (send_response(socket_fd), false);
 	}
 	if (media.size() > 0 && !media_request_allowed()) { // Significant error or not ?
-		fill_error("415", error, conf);
+		fill_significant_error("415", error, conf);
 		return (false);
 		// error.fill_error(response, "415", conf);
 		// return (send_response(socket_fd), false);
@@ -818,20 +821,28 @@ bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	
 	std::string title = "\e[34m";
 	std::string reset = "\e[0m";
-	// socket_s_addr = s_addr;
-	// recover_ip_socket();
 	/* Parse first line */
 	method = extract_line(save_buffer, ' ');
+	// std::cout << "***************************************" << std::endl;
+	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
+	// std::cout << "method = |" << method << "|" << std::endl;
 	uri = extract_line(save_buffer, ' ');
+	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
+	// std::cout << "uri = |" << uri << "|" << std::endl;
 	version = extract_line(save_buffer, '\r');
+	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
+	// std::cout << "version = |" << version << "|" << std::endl;
 	host = extract_elem("Host:", "\r", save_buffer, "");
+	// std::cout << "host = |" << host << "|" << std::endl;
 	parse_host();
+	// std::cout << "host = |" << host << "|" << std::endl;
+	std::cout << "***************************************" << std::endl;
 	std::cout << title << "*********** REQUEST **********" << std::endl;
 	std::cout << title << method << " " << uri << " " << version << std::endl;
 	std::cout << "******************************" << reset << std::endl;
 	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		std::cout << "PARSE_FIRST_LINE ERROR 400" << std::endl;
-		error->fill_significant_error(response, "400");
+		// std::cout << "PARSE_FIRST_LINE ERROR 400" << std::endl;
+		// error->fill_significant_error(response, "400");
 		return (/* send_response(socket_fd), */ false);
 	}
 	return (true);
@@ -855,57 +866,115 @@ int	Request::ft_shextodec(std::string & s) {
 	return (n);
 }
 
+// int Request::extract_chunked_body(std::string &s) {
+// 	int i = 0;
+// 	std::string tmp;
+// 	std::string new_body;
+// 	int length = -1;
+	
+// 	std::cout << "extract_chunked_body\n";
+// 	if (s.empty()) {
+// 			return (-2);
+// 	}
+// 	while (1) {
+// 	// for (int i = 0; i < 3; i++) {
+// 		std::cout << "i = " << i << std::endl;
+// 		tmp = getline(s, "\r\n");
+// 		std::cout << "tmp = |" << tmp << "|\n"; 
+// 		std::cout << "s = |" << s << "|\n"; 
+// 		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
+// 			// if (i == 0)
+// 			// 	return (-2);
+// 			// if (i == 1)
+
+// 			// if (i == 2)
+			
+// 			if (i % 2 == 0) {
+// 				std::cout << "2 A IMPLEMENTER COMMENT ON GERE? i = " << i << std::endl;
+// 				std::cout << "SORTIE i%0" << std::endl;
+// 				return (-2);
+// 				// return (length);
+// 			}
+// 			else {
+// 				std::cout << "SORTIE i%1" << std::endl;
+// 				return (length);
+// 			}
+// 		}
+			
+// 		// std::cout << "tmp = |" << tmp << "|" << std::endl;
+// 		if (i % 2 == 0) {
+// 			// length = ft_stoi(tmp);
+// 			length = ft_shextodec(tmp);
+// 			if (length == -1) {
+// 				error->fill_significant_error(response, "400");
+// 				return (length);
+// 			}
+// 		}
+// 		else {
+// 			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
+// 			if (tmp.length() != static_cast<size_t>(length)) {
+// 				error->fill_significant_error(response, "400");
+// 				return (-1);
+// 			}
+// 			body += tmp;
+// 			std::cout << "chunked body = |" << body << "|\n";
+// 		}
+// 		i++;
+// 	}
+// 	// return (-2); //  A CHECKER
+// }
+
 int Request::extract_chunked_body(std::string &s) {
-	int i = 0;
 	std::string tmp;
 	std::string new_body;
 	int length = -1;
 	
-	if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-			return (length);
+	std::cout << "extract_chunked_body\n";
+	if (s.empty()) {
+			return (-2);
 	}
-	while (1) {
+	for (int i = 0; i < 2; i++) {
 		tmp = getline(s, "\r\n");
-		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
-			if (i % 2 == 0) {
-				std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-				return (length);
+		if (tmp.empty()) {
+			if (i == 0) {
+				if (s.empty())
+					return (-2);
+				else
+					return (/* error->fill_significant_error(response, "400"), */ -1);
 			}
+			else if (length == 0) 
+				return (0);
 			else
-				return (length);
+				return (/* error->fill_significant_error(response, "400"), */ -1);
 		}
-			
-		// std::cout << "tmp = |" << tmp << "|" << std::endl;
-		if (i % 2 == 0) {
-			// length = ft_stoi(tmp);
+		if (i == 0) {
 			length = ft_shextodec(tmp);
 			if (length == -1) {
-				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
-				return (length);
+				// error->fill_significant_error(response, "400");
+				return (-1);
 			}
 		}
 		else {
 			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
-			if (tmp.length() != static_cast<size_t>(length)) // check if ici on peut avoir un length == a -1 ou non
-				std::cout << "A IMPLEMENTER ERROR bad request ou bad length" << std::endl;
+			if (tmp.length() != static_cast<size_t>(length))
+				return (/* error->fill_significant_error(response, "400"), */ -1);
 			body += tmp;
+			if (s != "\r\n")
+				return (/* error->fill_significant_error(response, "400"), */ -1);
+			else
+				return (length);
 		}
-		i++;
 	}
+	return (-2);
 }
 
 void	Request::parse_body() {
 	
-	std::cout << "parse_body save buffer = |" << save_buffer << "|\n" ;
+	// std::cout << "parse_body save buffer = |" << save_buffer << "|\n" ;
 	body = extract_body(save_buffer);
-	// std::cout << "body : " << body << std ::endl;
 	if (body.empty()) {
 		body = "";
-		std::cout << "A IMPLEMENTER si chunked" << std::endl;
 	}
-	// if (transfer_encoding == "chunked")
-	// 	extract_chunked_body();
 }
 
 void	Request::handle_multi_length() {
@@ -931,29 +1000,26 @@ void	Request::handle_multi_length() {
 	}
 }
 
+// UNNIQUEMENT erreur "400" ==> mettre exception
 bool	Request::parse_header() {
 	std::string tmp;
 	
+	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos)
+		return (/* error->fill_significant_error(response, "400"), */ false);
 	if (!parse_first_line())
 		return (false);
-
-	
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
 	if (!tmp.empty())
 		parse_media(tmp);
 	connection = extract_elem("Connection:", "\r\n", save_buffer, "keep-alive");
-	std::cout << "save_buffer AVANT extract 1rst contentlength = |" << save_buffer << "|\n";
 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
-	std::cout << "save_buffer APRES extract 1rst contentlength = |" << save_buffer << "|\n";
 	if (tmp.empty()) {
-		std::cout << "IF|\n";
 		miss_length = true;
 		content_length = 0;
 	}
 	else {
-		std::cout << "ELSE\n";
 		miss_length = false;
 		try { content_length = ft_stoi(tmp); }
 		catch (std::exception & e) { content_length = -1; }
@@ -964,78 +1030,17 @@ bool	Request::parse_header() {
 	
 	if (transfer_encoding == "chunked") {
 		std::string s = extract_body(save_buffer);
+		// std::cout << "s = |" << s << "|\n" << std::endl;
 		int chunk = extract_chunked_body(s);
-		if (chunk == -1) // ==> body empty
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
+		if (chunk == -1)
+			return (/* error->fill_significant_error(response, "400"), */ false);
 		if (chunk == 0)
 			status = RD_TO_RESPOND;
 		else
 			status = READING;
 	}
-	// std::cout << "body : " << body << std ::endl;
-	// if (body.empty())
-	// 	std::cout << "A IMPLEMENTER si chunked" << std::endl;
-	// if (transfer_encoding == "chunked")
-	// 	extract_chunked_body();
-		
-	// std::cout << std::endl;
-	// std::cout << "host : " << host << std ::endl;
-	// std::cout << "port : " << port << std ::endl;
-	// std::cout << "method : " << method << std ::endl;
-	// std::cout << "uri : " << uri << std ::endl;
-	// std::cout << "version : " << version << std ::endl;
-	// std::cout << "content_length : " << content_length << std ::endl;
-	// std::cout << "miss_length : " << miss_length << std ::endl;
-	// std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-	// std::cout << "connection : " << connection << std ::endl;
-	// std::cout << "body : " << body << std ::endl;
-	// std::cout << "*******************************" << std ::endl;
-	// std::cout << "save_buffer : " << save_buffer << std ::endl;
-	// std::cout << "*******************************" << std ::endl;
-	// std::cout << std::endl;
 	return (true);
 }
-
-// void	Request::parse_request() {
-// 	std::string tmp;
-	
-// 	/* Extract Headers */
-// 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
-// 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
-// 	if (!tmp.empty())
-// 		parse_media(tmp);
-// 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-// 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
-// 	if (tmp.empty())
-// 		miss_length = true;
-// 	else {
-// 		miss_length = false;
-// 		try { content_length = ft_stoi(tmp); }
-// 		catch (std::exception & e) { content_length = -1; }
-// 	}
-// 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
-// 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-// 	body = extract_body(save_buffer);
-// 	std::cout << "body : " << body << std ::endl;
-// 	if (body.empty())
-// 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
-// 	if (transfer_encoding == "chunked")
-// 		extract_chunked_body();
-// 	// std::cout << std::endl;
-// 	// std::cout << "host : " << host << std ::endl;
-// 	// std::cout << "port : " << port << std ::endl;
-// 	// std::cout << "method : " << method << std ::endl;
-// 	// std::cout << "uri : " << uri << std ::endl;
-// 	// std::cout << "version : " << version << std ::endl;
-// 	// std::cout << "content_length : " << content_length << std ::endl;
-// 	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-// 	// std::cout << "connection : " << connection << std ::endl;
-// 	// std::cout << "body : " << body << std ::endl;
-// 	// std::cout << "*******************************" << std ::endl;
-// 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
-// 	// std::cout << "*******************************" << std ::endl;
-// 	// std::cout << std::endl;
-// }
 
 /* ************************************************************************* */
 /* ********************************* Utils ********************************* */
@@ -1063,18 +1068,31 @@ std::string Request::extract_header(std::string & buff) const
 
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
+	std::cout << "\nEXTRACT ELEM\n";
+	std::cout << "buff[0] = " << (int)buff[0] << std::endl;
+	std::cout << "buff[1] = " << (int)buff[1] << std::endl;
 	int begin, end = 0, sep_body;
 	sep_body = buff.find("\r\n\r\n");
 	begin = buff.find(elem);
 	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
 	end = buff.find(delim, begin);
+	std::cout << "buff[" << begin << "] = " << (int)buff[begin] << std::endl;
+	std::cout << "buff[" << end << "] = " << (int)buff[end] << std::endl;
 	
-	std::string tmp (buff.substr(begin, end + 1));
-	std::cout << end - begin << std::endl; 
-	buff.erase(begin, end - begin - 1);
-	if (buff.compare(0, 4, "\r\n\r\n") != 0)
+	std::string tmp (buff.substr(begin, end - begin));
+	std::cout << tmp.length() << " = " << end - begin << "?" << std::endl; 
+	buff.erase(begin, end - begin);
+	std::cout << "After erase :\n";
+	std::cout << "buff[begin] = " << (int)buff[begin] << std::endl;
+	std::cout << "buff[begin + 1] = " << (int)buff[begin + 1] << std::endl;
+	std::cout << "buff = |" << buff << "|" << std::endl;
+	if (buff.compare(begin, 4, "\r\n\r\n") != 0 || buff.compare(begin, 6, "\r\n\r\n\r\n") == 0) {
+		std::cout << "erase /r/n\n";
 		buff.erase(begin, 2);
+	}
+	std::cout << "tmp = |" << tmp << "|\n";
+	std::cout << "EXTRACT ELEM END\n\n";
 	return (extract_header(tmp));
 }
 
@@ -1095,7 +1113,18 @@ std::string Request::extract_body(std::string & buff) {
 	int begin = buff.find("\r\n\r\n");
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
+	std::cout << "buff = " << buff << std::endl;
 	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
+	if (transfer_encoding != "chunked") {
+	int found;
+	while (1) {
+		found = tmp.find("\r\n");
+		if (found == -1)
+			break;
+		tmp.erase(found, 2);
+	}
+	}
+	std::cout << "body = " << tmp << std::endl;
 	return (tmp);
 }
 
