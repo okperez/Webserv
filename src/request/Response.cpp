@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/22 11:04:43 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/30 14:47:18 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void	Response::setLocation(std::string const & s) {
 }
 
 void	Response::setConnectiontoclose() {
-	std::cout << "Im in" << std::endl;
+	// std::cout << "Im in" << std::endl;
 	_connection = "close";
 }
 
@@ -126,7 +126,7 @@ std::string Response::build_response()
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())
 		response += "Content-Type: " + _content_type + delim;
-	std::cout << "connection = " << _connection << std::endl;
+	// std::cout << "connection = " << _connection << std::endl;
 	if (!_connection.empty())
 		response += "Connection: " + _connection + delim;
 	response += "Content-Length: " + _content_length + delim + delim;

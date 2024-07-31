@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/22 12:17:03 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/31 12:22:24 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ ErrorPages::ErrorPages() {
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
 	map_error["406"] = " Not Acceptable";
+	map_error["408"] = " Request Timeout";
 	map_error["411"] = " Length Required";
     map_error["413"] = " Request Entity Too Large";
     map_error["415"] = " Unsupported Media Type";
@@ -105,7 +106,7 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
 void	ErrorPages::fill_significant_error(Response &response, std::string code, t_conf &conf) {
 	fill_error(response, code, conf);
 	response.setConnectiontoclose();
-	response.print();
+	// response.print();
 }
 
 void	ErrorPages::fill_error(Response &response, std::string code) {
@@ -119,7 +120,7 @@ void	ErrorPages::fill_significant_error(Response &response, std::string code) {
     
     fill_error(response, code);
 	response.setConnectiontoclose();
-	response.print();
+	// response.print();
 }
 
 void	ErrorPages::fill_redir(Response &response, std::string const &code, std::string const &redir) {

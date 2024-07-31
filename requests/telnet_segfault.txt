@@ -6,7 +6,7 @@ Transfer-Encoding: chunked
 A
 fname=gaga
 
-B1
+B
 &lname=lala
 
 0

@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/30 12:20:29 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/31 12:24:05 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,13 +183,13 @@ void	Server::launch_server(int max_socket) {
 	int ret;
 	
 	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR =>> POUR EVITER BOUCLE INFINI REMPLACER VECT PAR DEQUE" << std::endl;
-	std::cout << "A IMPLEMENTER : CHUNK REQUEST : " << std::endl;
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
 	std::cout << "		- SECU " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
 		ret = poll(fds, max_socket, 50);
+		// std::cout << "\e[31mPASSE PAR POLL\e[0m" << std::endl;
 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
 			garbagge_server(NULL, PARENT);
 			throw(ServerException("Failed to poll."));
@@ -260,7 +260,7 @@ void	Server::event_request() {
 			*/
 				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
-						std::cout << "EVENT_REQUEST ERASE 0" << std::endl;
+						// std::cout << "EVENT_REQUEST ERASE 0" << std::endl;
 						requests.erase(it);
 						break;			
 					}
@@ -285,10 +285,8 @@ void	Server::event_request() {
 						it->send_response(it->getSocket_fd());
 						std::cout << "EVENT_REQUEST POLLIN" << std::endl;
 						fds[i].events = POLLIN;	
-						std::cout << "EVENT_REQUEST ERASE" << std::endl;
+						// std::cout << "EVENT_REQUEST ERASE" << std::endl;
 						return (close_and_erase(it), (void) 0);
-						// return (requests.erase(it), (void) 0);
-						// return (close_and_erase(it), (void) 0);
 					}
 					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
 					// std::cout << "it->id" << it->id << std::endl;
@@ -300,96 +298,38 @@ void	Server::event_request() {
 					// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
 					
 					it->setIp_socket(socket->sin_addr.s_addr);
-					// if (!it->parse_first_line(socket->sin_addr.s_addr, error))
-					// 	return (requests.erase(it), (void) 0);
-					
 					if (it->getTransfer_encoding() != "chunked")
 						it->parse_body();
-					// std::cout << "body = " << it->getBody() << std::endl;
-					
 					int i_conf = pick_server(*it);
-					// std::cout << "i_conf = " << i_conf << std::endl;
-					
-					// it->parse_request();
-					
 					it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
 					if (it->getConnection() == "close" || it->getStatus() == CLOSE) { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-						return (close_and_erase(it), (void) 0);
-						// for (int i = 0; i < MAX_CONNECTION; i++) {
-						// 	if (fds[i].fd == it->getSocket_fd()) {
-						// 		std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
-						// 		return (requests.erase(it), close_connection(i), (void) 0);
-						// 	}
-						// }				
+						return (close_and_erase(it), (void) 0);			
 					}
 					std::cout << "EVENT_REQUEST POLLIN" << std::endl;
 					fds[i].events = POLLIN;	
-					std::cout << "EVENT_REQUEST ERASE 2" << std::endl;
+					// std::cout << "EVENT_REQUEST ERASE 2" << std::endl;
 					return (requests.erase(it), (void) 0);
 				}
-				// }
-			// }
-			// return (requests.erase(it), (void) 0);
-		// }
-		// else if (it->getStatus() == ERASE)
-		// 	return (requests.erase(it), (void) 0);
 			}
 		}
-		// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++)
-		// if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked"))
-		// 	for (int j = 0; j < MAX_CONNECTION; j++)
-		// 		if (fds[j].fd == it->getSocket_fd())
-		// 			fds[j].events = POLLOUT;
 	}
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++)
-		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked"))
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
 			for (int j = 0; j < MAX_CONNECTION; j++)
-				if (fds[j].fd == it->getSocket_fd())
+				if (fds[j].fd == it->getSocket_fd()) {
+					std::cout << "EVENT_REQUEST POLLOUT" << std::endl;
 					fds[j].events = POLLOUT;
-	
-	
-	
-	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
-	// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-	// 	if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked") || it->getStatus() == RD_TO_RESPOND) {
-	// 		for (int j = 0; j < MAX_CONNECTION; j++) {
-	// 			if (fds[j].fd == it->getSocket_fd()) {
-	// 				std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
-	// 				struct sockaddr_storage name;
-	// 				socklen_t namelen = sizeof(name);
-	// 				if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-	// 					send_error(it, "500", "Fail getsockname", error);
-	// 				struct sockaddr_in *socket = (struct sockaddr_in *)&name;
-	// 				// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
-					
-	// 				it->setIp_socket(socket->sin_addr.s_addr);
-	// 				// if (!it->parse_first_line(socket->sin_addr.s_addr, error))
-	// 				// 	return (requests.erase(it), (void) 0);
-					
-	// 				if (it->getTransfer_encoding() != "chunked")
-	// 					it->parse_body();
-	// 				std::cout << "body = " << it->getBody() << std::endl;
-					
-	// 				int i_conf = pick_server(*it);
-	// 				std::cout << "i_conf = " << i_conf << std::endl;
-					
-	// 				// it->parse_request();
-					
-	// 				it->handle_request(it->getSocket_fd(), conf[i_conf], error);
-	// 				if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-	// 					for (int i = 0; i < MAX_CONNECTION; i++) {
-	// 						if (fds[i].fd == it->getSocket_fd()) 
-	// 							return (requests.erase(it), close_connection(i), (void) 0);
-	// 					}				
-	// 				}
-	// 				return (requests.erase(it), (void) 0);
-	// 			}
-	// 		}
-	// 		return (requests.erase(it), (void) 0);
-	// 	}
-	// 	else if (it->getStatus() == ERASE)
-	// 		return (requests.erase(it), (void) 0);
-	// }
+				}
+			continue;
+		}
+		time_t now;
+		time(&now);
+		if (difftime(now, mktime(it->getT_creation())) > 10) {
+			it->fill_significant_error("408", error);
+			it->send_response(it->getSocket_fd());
+			return (close_and_erase(it), (void) 0);
+		}
+	}
 }
 
 /* ************************************************************************* */
@@ -523,18 +463,38 @@ void	Server::body_request_present(Request &request, int read, int i) {
 	
 	std::cout << "ENTREE BODY REQUEST PRESENT" << std::endl;
 	if (request.body_present()) {
-		if (request.getStatus() == NEW && !request.parse_header()) {
-			request.fill_significant_error("400", error);
-			fds[i].events = POLLOUT;
-			request.setStatus(ERROR);
+		if (request.getStatus() == NEW) {
+			try { 
+				request.parse_header();
+			}
+			catch (std::exception const &e) {
+				std::string err = e.what();
+				if (err == "exit")
+					throw;
+				request.fill_significant_error(err, error);
+				std::cout << "BODY PRESENT POLLOUT" << std::endl;
+				fds[i].events = POLLOUT;
+				request.setStatus(ERROR);
+				return ;
+			}
+			// request.fill_significant_error("400", error);
+			// fds[i].events = POLLOUT;
+			// request.setStatus(ERROR);
 		}
-		else if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
+		// if (request.getStatus() == NEW && !request.parse_header()) {
+		// 	request.fill_significant_error("400", error);
+		// 	fds[i].events = POLLOUT;
+		// 	request.setStatus(ERROR);
+		// }
+		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
 			std::cout << "BODY_PRESENT POLLOUT" << std::endl;
 			fds[i].events = POLLOUT;
 			// request.setStatus(RD_TO_RESPOND);
 		}
-		else if (request.getTransfer_encoding() == "chunked" && request.getStatus() == RD_TO_RESPOND)
+		else if (request.getTransfer_encoding() == "chunked" && request.getStatus() == RD_TO_RESPOND) {
+			std::cout << "BODY PRESENT POLLOUT" << std::endl;
 			fds[i].events = POLLOUT;
+		}
 			// request.setStatus(RD_TO_RESPOND);
 		else
 			request.setStatus(READING);
@@ -562,27 +522,34 @@ void	Server::read_request(int i, char *buffer, int read) {
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		std::cout << "t->getSocket_fd() = " << it->getSocket_fd() << std::endl;
 		if (it->getSocket_fd() == fds[i].fd) {
+			time_t now;
+			time(&now);
+			it->setT_creation(now);
 			if (it->getStatus() == READING) { // UTILE ICI ?
 				if (it->getTransfer_encoding() != "chunked") {
 					it->addSave_buffer(buffer);
 					if (read < BUFFER_SIZE) {
-						// it->setStatus(RD_TO_RESPOND);
 						std::cout << "READ_REQUEST 1 POLLOUT" << std::endl;
 						fds[i].events = POLLOUT;
 					}
 				}
 				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
 					std::string tmp = buffer;
-					int chunk = it->extract_chunked_body(tmp);
-					if (chunk == -1) {
+					try {
+						int chunk = it->extract_chunked_body(tmp);
+						if (chunk == 0) {
+							std::cout << "READ_REQUEST 2 POLLOUT" << std::endl;
+							fds[i].events = POLLOUT;
+						}
+					}
+					catch (std::exception const &e) {
+						std::string err = e.what();
+						if (err == "exit")
+							throw ;
 						it->fill_significant_error("400", error);
+						std::cout << "READ_REQUEST 3 POLLOUT" << std::endl;
 						fds[i].events = POLLOUT;
 						it->setStatus(ERROR);
-					}
-					if (chunk == 0) {
-						// it->setStatus(RD_TO_RESPOND);
-						std::cout << "READ_REQUEST 2 POLLOUT" << std::endl;
-						fds[i].events = POLLOUT;
 					}
 				}
 			}
@@ -597,12 +564,12 @@ void	Server::read_request(int i, char *buffer, int read) {
 	}
 	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
 	// static int j = 0; // A EFFACER
-	std::cout << "CREATION REQUEST" << std::endl;
+	// std::cout << "CREATION REQUEST" << std::endl;
 	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 	// j++;
 	// std::cout << "request id rentre dans body request 1 : " << request.id << std::endl;
 	body_request_present(request, read, i);
-	std::cout << "request body = |" << request.getBody() << "|\n" ;
+	// std::cout << "request body = |" << request.getBody() << "|\n" ;
 	requests.push_back(request);
 	
 	// std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;
@@ -615,7 +582,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 void	Server::send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
 	
 	it->fill_error(code, error);
-	std::cout << "END_ERROR ERASE " << std::endl;
+	// std::cout << "END_ERROR ERASE " << std::endl;
 	requests.erase(it);
 	throw (ServerException(mess));
 }
@@ -652,7 +619,7 @@ void	Server::error_bfr_launch() {
 void	Server::close_and_erase(std::vector<Request>::iterator it) {
 	for (int i = 0; i < MAX_CONNECTION; i++) {
 		if (fds[i].fd == it->getSocket_fd()) {
-			std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
+			// std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
 			return (requests.erase(it), close_connection(i), (void) 0);
 		}
 	}

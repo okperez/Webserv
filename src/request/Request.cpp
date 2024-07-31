@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/30 12:23:25 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/31 12:10:45 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@ Request::Request() {}
 Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
 
 	std::cout << "REQUEST CONSTRUCTOR" << std::endl;
+	time_t	now;
+	time(&now);
+	t_creation =  localtime(&now);
+	printf ("Creation Request: %s", asctime(t_creation)); // A EFFACER
 	socket_fd = socket;
 	server = src_server;
 	error = src_error;
@@ -74,6 +78,7 @@ Request &Request::operator=(Request const & rhs) {
 	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
+	t_creation = rhs.t_creation;
 	// id = rhs.id;
 	return (*this); 
 }
@@ -92,6 +97,14 @@ int 		Request::getIconf() const {
 
 int Request::getStatus() const {
 	return (status);
+}
+
+tm 		*Request::getT_creation() const {
+	return (t_creation);
+}
+
+void 		Request::setT_creation(time_t &now) {
+	t_creation = localtime(&now);
 }
 
 int Request::getSocket_fd() const {
@@ -162,9 +175,9 @@ void	Request::send_response(int socket_fd) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
 	}
-	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
-	std::cout << response_content << std::endl;
-	std::cout << "******************************" << std::endl;
+	// std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
+	// std::cout << response_content << std::endl;
+	// std::cout << "******************************" << std::endl;
 	// status = SENT;
 }
 
@@ -560,14 +573,17 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		{
 			try
 			{
-				std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
-				std::cout << "body : " << std::endl << body << std::endl << std::endl;
+				// std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
+				// std::cout << "body : " << std::endl << body << std::endl << std::endl;
 				std::cout << "ENTER IN CGI" << std::endl;
 				std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
 				handle_cgi(conf, location);
 			}
 			catch(const std::exception& e)
 			{
+				std::string err = e.what();
+				if (err == "exit") // Si ctrl + c
+					throw ;
 				error.fill_error(response, e.what(), conf);
 			}
 		}
@@ -724,7 +740,7 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		std::cout << "CHECK REQUEST SIGNIFIACANT ERROR" << std::endl;
 		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
 		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		response.print();
+		// response.print();
 		return (false);
 		// error.fill_error(response, "400", conf);
 		// return (send_response(socket_fd), false);
@@ -817,35 +833,22 @@ void	Request::setIp_socket(in_addr_t s_addr) {
 }
 
 
-bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
+/* Parse first line, host and port */
+void	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	
 	std::string title = "\e[34m";
 	std::string reset = "\e[0m";
-	/* Parse first line */
 	method = extract_line(save_buffer, ' ');
-	// std::cout << "***************************************" << std::endl;
-	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
-	// std::cout << "method = |" << method << "|" << std::endl;
 	uri = extract_line(save_buffer, ' ');
-	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
-	// std::cout << "uri = |" << uri << "|" << std::endl;
 	version = extract_line(save_buffer, '\r');
-	// std::cout << "save buffer = |" << save_buffer << "|" << std::endl;
-	// std::cout << "version = |" << version << "|" << std::endl;
 	host = extract_elem("Host:", "\r", save_buffer, "");
-	// std::cout << "host = |" << host << "|" << std::endl;
 	parse_host();
-	// std::cout << "host = |" << host << "|" << std::endl;
 	std::cout << "***************************************" << std::endl;
 	std::cout << title << "*********** REQUEST **********" << std::endl;
 	std::cout << title << method << " " << uri << " " << version << std::endl;
 	std::cout << "******************************" << reset << std::endl;
-	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		// std::cout << "PARSE_FIRST_LINE ERROR 400" << std::endl;
-		// error->fill_significant_error(response, "400");
-		return (/* send_response(socket_fd), */ false);
-	}
-	return (true);
+	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty())
+		throw (RequestException("400"));
 }
 
 bool		Request::body_present() {
@@ -866,70 +869,11 @@ int	Request::ft_shextodec(std::string & s) {
 	return (n);
 }
 
-// int Request::extract_chunked_body(std::string &s) {
-// 	int i = 0;
-// 	std::string tmp;
-// 	std::string new_body;
-// 	int length = -1;
-	
-// 	std::cout << "extract_chunked_body\n";
-// 	if (s.empty()) {
-// 			return (-2);
-// 	}
-// 	while (1) {
-// 	// for (int i = 0; i < 3; i++) {
-// 		std::cout << "i = " << i << std::endl;
-// 		tmp = getline(s, "\r\n");
-// 		std::cout << "tmp = |" << tmp << "|\n"; 
-// 		std::cout << "s = |" << s << "|\n"; 
-// 		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
-// 			// if (i == 0)
-// 			// 	return (-2);
-// 			// if (i == 1)
-
-// 			// if (i == 2)
-			
-// 			if (i % 2 == 0) {
-// 				std::cout << "2 A IMPLEMENTER COMMENT ON GERE? i = " << i << std::endl;
-// 				std::cout << "SORTIE i%0" << std::endl;
-// 				return (-2);
-// 				// return (length);
-// 			}
-// 			else {
-// 				std::cout << "SORTIE i%1" << std::endl;
-// 				return (length);
-// 			}
-// 		}
-			
-// 		// std::cout << "tmp = |" << tmp << "|" << std::endl;
-// 		if (i % 2 == 0) {
-// 			// length = ft_stoi(tmp);
-// 			length = ft_shextodec(tmp);
-// 			if (length == -1) {
-// 				error->fill_significant_error(response, "400");
-// 				return (length);
-// 			}
-// 		}
-// 		else {
-// 			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
-// 			if (tmp.length() != static_cast<size_t>(length)) {
-// 				error->fill_significant_error(response, "400");
-// 				return (-1);
-// 			}
-// 			body += tmp;
-// 			std::cout << "chunked body = |" << body << "|\n";
-// 		}
-// 		i++;
-// 	}
-// 	// return (-2); //  A CHECKER
-// }
-
 int Request::extract_chunked_body(std::string &s) {
 	std::string tmp;
 	std::string new_body;
 	int length = -1;
 	
-	std::cout << "extract_chunked_body\n";
 	if (s.empty()) {
 			return (-2);
 	}
@@ -939,30 +883,22 @@ int Request::extract_chunked_body(std::string &s) {
 			if (i == 0) {
 				if (s.empty())
 					return (-2);
-				else
-					return (/* error->fill_significant_error(response, "400"), */ -1);
+				throw (RequestException("400"));
 			}
 			else if (length == 0) 
 				return (0);
-			else
-				return (/* error->fill_significant_error(response, "400"), */ -1);
+			throw (RequestException("400"));
 		}
 		if (i == 0) {
 			length = ft_shextodec(tmp);
-			if (length == -1) {
-				// error->fill_significant_error(response, "400");
-				return (-1);
-			}
+			if (length == -1)
+				throw (RequestException("400"));
 		}
 		else {
-			std::cout << tmp.length() << " et " << length << " et " << static_cast<size_t>(length) << std::endl;
-			if (tmp.length() != static_cast<size_t>(length))
-				return (/* error->fill_significant_error(response, "400"), */ -1);
+			if (tmp.length() != static_cast<size_t>(length) || s != "\r\n")
+				throw (RequestException("400"));
 			body += tmp;
-			if (s != "\r\n")
-				return (/* error->fill_significant_error(response, "400"), */ -1);
-			else
-				return (length);
+			return (length);
 		}
 	}
 	return (-2);
@@ -970,7 +906,6 @@ int Request::extract_chunked_body(std::string &s) {
 
 void	Request::parse_body() {
 	
-	// std::cout << "parse_body save buffer = |" << save_buffer << "|\n" ;
 	body = extract_body(save_buffer);
 	if (body.empty()) {
 		body = "";
@@ -1000,14 +935,13 @@ void	Request::handle_multi_length() {
 	}
 }
 
-// UNNIQUEMENT erreur "400" ==> mettre exception
-bool	Request::parse_header() {
+void	Request::parse_header() {
 	std::string tmp;
 	
+	std::cout << "REQUEST PARSE HEADER" << std::endl;
 	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos)
-		return (/* error->fill_significant_error(response, "400"), */ false);
-	if (!parse_first_line())
-		return (false);
+		throw (RequestException("400"));
+	parse_first_line();
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
@@ -1027,19 +961,14 @@ bool	Request::parse_header() {
 	handle_multi_length();
 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-	
 	if (transfer_encoding == "chunked") {
 		std::string s = extract_body(save_buffer);
-		// std::cout << "s = |" << s << "|\n" << std::endl;
 		int chunk = extract_chunked_body(s);
-		if (chunk == -1)
-			return (/* error->fill_significant_error(response, "400"), */ false);
 		if (chunk == 0)
 			status = RD_TO_RESPOND;
 		else
 			status = READING;
 	}
-	return (true);
 }
 
 /* ************************************************************************* */
@@ -1068,31 +997,30 @@ std::string Request::extract_header(std::string & buff) const
 
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
-	std::cout << "\nEXTRACT ELEM\n";
-	std::cout << "buff[0] = " << (int)buff[0] << std::endl;
-	std::cout << "buff[1] = " << (int)buff[1] << std::endl;
+	// std::cout << "\nEXTRACT ELEM\n";
+	// std::cout << "buff[0] = " << (int)buff[0] << std::endl;
+	// std::cout << "buff[1] = " << (int)buff[1] << std::endl;
 	int begin, end = 0, sep_body;
 	sep_body = buff.find("\r\n\r\n");
 	begin = buff.find(elem);
 	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
 	end = buff.find(delim, begin);
-	std::cout << "buff[" << begin << "] = " << (int)buff[begin] << std::endl;
-	std::cout << "buff[" << end << "] = " << (int)buff[end] << std::endl;
+	// std::cout << "buff[" << begin << "] = " << (int)buff[begin] << std::endl;
+	// std::cout << "buff[" << end << "] = " << (int)buff[end] << std::endl;
 	
 	std::string tmp (buff.substr(begin, end - begin));
-	std::cout << tmp.length() << " = " << end - begin << "?" << std::endl; 
+	// std::cout << tmp.length() << " = " << end - begin << "?" << std::endl; 
 	buff.erase(begin, end - begin);
-	std::cout << "After erase :\n";
-	std::cout << "buff[begin] = " << (int)buff[begin] << std::endl;
-	std::cout << "buff[begin + 1] = " << (int)buff[begin + 1] << std::endl;
-	std::cout << "buff = |" << buff << "|" << std::endl;
-	if (buff.compare(begin, 4, "\r\n\r\n") != 0 || buff.compare(begin, 6, "\r\n\r\n\r\n") == 0) {
-		std::cout << "erase /r/n\n";
+	// std::cout << "After erase :\n";
+	// std::cout << "buff[begin] = " << (int)buff[begin] << std::endl;
+	// std::cout << "buff[begin + 1] = " << (int)buff[begin + 1] << std::endl;
+	// std::cout << "buff = |" << buff << "|" << std::endl;
+	if (buff.compare(begin, 4, "\r\n\r\n") != 0 || buff.compare(begin, 6, "\r\n\r\n\r\n") == 0)
+		// std::cout << "erase /r/n\n";
 		buff.erase(begin, 2);
-	}
-	std::cout << "tmp = |" << tmp << "|\n";
-	std::cout << "EXTRACT ELEM END\n\n";
+	// std::cout << "tmp = |" << tmp << "|\n";
+	// std::cout << "EXTRACT ELEM END\n\n";
 	return (extract_header(tmp));
 }
 
@@ -1113,7 +1041,7 @@ std::string Request::extract_body(std::string & buff) {
 	int begin = buff.find("\r\n\r\n");
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
-	std::cout << "buff = " << buff << std::endl;
+	// std::cout << "buff = " << buff << std::endl;
 	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
 	if (transfer_encoding != "chunked") {
 	int found;
@@ -1124,7 +1052,7 @@ std::string Request::extract_body(std::string & buff) {
 		tmp.erase(found, 2);
 	}
 	}
-	std::cout << "body = " << tmp << std::endl;
+	// std::cout << "body = " << tmp << std::endl;
 	return (tmp);
 }
 
@@ -1186,5 +1114,5 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 /* ************************************************************************* */	
 
 void	Request::print_response() {
-	response.print();
+	// response.print();
 }

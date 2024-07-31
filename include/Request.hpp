@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/30 12:16:26 by garance          ###   ########.fr       */
+/*   Updated: 2024/07/31 12:10:37 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,13 @@ class Request
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
 		// std::string		response_content;
 		
-		 // REQUEST line
+		// REQUEST line
 		std::string   	method;   // HTTP method (ex: GET)
 		std::string   	uri;   // Request uri (ex: index.html)
 		std::string   	version;  // HTTP version (ex: HTTP/1.1)
+
+		// FOR TIME_OUT
+		struct tm		*t_creation;
 
 		// POUR CGI : PARSING TARGET
 		std::string   	_query_string;
@@ -93,6 +96,8 @@ class Request
 		// Response 	&getsetResponse();
 		int 		getIconf() const;
 		int 		getStatus() const;
+		tm 			*getT_creation() const;
+		void 		setT_creation(time_t &now);
 		int 		getSocket_fd() const;
 		size_t 		getSave_buffer_length() const;
 		in_addr_t 	getSocket_s_addr() const;
@@ -115,12 +120,12 @@ class Request
 		bool		media_request_allowed();
 		bool		check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
-		bool		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
+		void		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
 		int 		extract_chunked_body(std::string &s);
 		void		handle_multi_length();
 		void		parse_body();
-		bool		parse_header();
+		void		parse_header();
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
