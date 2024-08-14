@@ -9,8 +9,8 @@ if ($file != false && strlen($file) > 0)
     {
         if ((str_contains (getenv("QUERY_STRING"), "rememberMe=on")) && getenv("REQUEST_METHOD") == "POST")
         {
-            echo "Set-Cookie: $fname; path=/sign_in.html; HttpOnly;\n";
-            echo "Set-Cookie: $lname; path=/sign_in.html; HttpOnly;\n";
+            echo "Set-Cookie: $fname; path=/sign_in.html;\n";
+            echo "Set-Cookie: $lname; path=/sign_in.html;\n";
         }
         echo "Location: http://localhost:8080/welcome.html\n";
     }

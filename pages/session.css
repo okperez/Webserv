@@ -45,12 +45,23 @@ h1 {
 	transform: translate(90%, 0%);
 }
 
-#text , #champs , #remember {
+#text , #fname , #remember {
 	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 	color: rgb(255, 255, 255);
 }
 
-#champs {
+#fname {
+	border-width: 0.05cm;
+	border-color: rgb(255, 255, 255);
+	background-color: rgb(5, 104, 14);
+}
+
+#text , #lname , #remember {
+	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
+	color: rgb(255, 255, 255);
+}
+
+#lname {
 	border-width: 0.05cm;
 	border-color: rgb(255, 255, 255);
 	background-color: rgb(5, 104, 14);

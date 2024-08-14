@@ -1,21 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Sign_in</title>
-    <link rel="stylesheet" type="text/css" href="/session.css">
-    <!-- <link rel="stylesheet" type="text/css" href="/styles.css"> -->
-</head>
-<body>
-    <h1>Sign In</h1>
-    <!-- <img src="/image.png" alt="Example Image"> -->
-    <!-- <script src="/script.js"></script> -->
-	<div id="center">
+	<head>
+		<title>Sign_in</title>
+		<link rel="stylesheet" type="text/css" href="/session.css">
+		<!-- <link rel="stylesheet" type="text/css" href="/styles.css"> -->
+	</head>
+	<body>
+		<h1>Sign In</h1>
+		<!-- <img src="/image.png" alt="Example Image"> -->
+		<!-- <script src="/script.js"></script> -->
+		<div id="center">
 		<form action="cgi-bin/sign_in.php" method="POST">
 		<!-- response.php selon le fichier qui contient le scrip pour generer la reponse  -->
 			<label id="text" for="fname">First name :</label><br>
-			<input id="champs" type = "text" id="fname" name="fname"><br><br>
+			<input type = "text" id="fname" name="fname"><br><br>
 			<label id="text" for="lname">Last Name :</label><br>
-			<input id="champs" type = "text" id="lname" name="lname"><br><br>
+			<input type = "password" id="lname" name="lname"><br><br>
+			<script>
+				function getCookie(cname) {
+				  var cookies = ` ${document.cookie}`.split(";");
+				  for (var i = 0; i < cookies.length; i++)
+				  {
+				    var val = cookies[i].split("=");
+				    if (val[0] == ` ${cname}`) {
+				      return val[1];
+				    }
+				  }
+				  return "";
+				}
+				var fname = getCookie('fname');
+				var lname = getCookie('lname');
+				document.getElementById('fname').value = fname;
+				document.getElementById('lname').value = lname;
+			</script>
 			<label id="remember">
 				<input type="checkbox" name="rememberMe"> Remember Me </label><br><br><br>
 			<input id="button2" type="submit" value="submit">
