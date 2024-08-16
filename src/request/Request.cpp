@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/31 12:10:45 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/02 10:44:41 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,54 +182,35 @@ void	Request::send_response(int socket_fd) {
 }
 
 //  parse request from client and send back response 
-int  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
+void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
 	// std::cout << "handle request misslength = " << miss_length << std::endl;
 	if (!check_request(/* socket_fd,  */conf, error))
-		return (send_response(socket_fd), 1);
+		return (send_response(socket_fd), (void)0);
 	int i = check_exist_method();
 	// std::cout << "i = " << i << std::endl;
-	switch (i) {
-		case UNKNOWN : {
-			fill_significant_error("405", error, conf);
-			// fill_error("405", error, conf);
-			return (1);
-			// error.fill_error(response, "405", conf);
-			// return (send_response(socket_fd), 1);
-		}
-		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
-			// std::cout << "uri " << uri << std::endl;
-			std::string index = look_for_location(uri, conf); // si pas trouve index = ""
-			if (index.empty())
-			{
-				if (conf.root_dir.empty()) {
-					fill_error("404", error, conf);
-					return (1);
-					// error.fill_error(response, "404", conf);
-					// return (send_response(socket_fd), 1);
-				}
-				else {
-					if (strback(conf.root_dir) == '/')
-						uri.replace(0, 1, conf.root_dir);
-					else	
-						uri.insert(0, conf.root_dir);
-				}
+	try {
+		switch (i) {
+			case UNKNOWN : {
+				fill_significant_error("405", error, conf);
+				return (send_response(socket_fd), (void)0);
 			}
-			/* AVANT D AJOUTER LE PATH => check method ok */
-			else {
-				if (!check_allow_method(conf, index)) {
-					fill_significant_error("405", error, conf);
-					// fill_error("405", error, conf);
-					return (1);
-					// error.fill_error(response, "405", conf);
-					// return (send_response(socket_fd), 1);
-				}
-				add_path(conf, index); // GET POST DELETE
+			case DELETE : {
+				find_location(conf, error);
+				delete_action(/* socket_fd, conf, */ error);
+				return (send_response(socket_fd), (void)0);
 			}
-			cgi_parse_uri();
-			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
+			default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
+				std::string index = find_location(conf, error);
+				return (build_response(socket_fd, conf, index, error), (void)0); // GET ONLY ICI
+			}
 		}
 	}
+	catch (std::exception const &e) {
+		std::string err = e.what();
+		if (err == "exit")
+			throw ;
+	} 
 }
 
 /* ************************************************************************* */
@@ -301,6 +282,35 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 		index.erase(0, 1);
 	uri.replace(uri.find(index), index.length(), root);
 	// std::cout << "uri : " << uri << std::endl;
+}
+
+std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
+	std::string index = look_for_location(uri, conf); // si pas trouve index = ""
+	if (index.empty())
+	{
+		if (conf.root_dir.empty()) {
+			fill_error("404", error, conf);
+			/* return ( */send_response(socket_fd);
+			throw (RequestException(""));
+		}
+		else {
+			if (strback(conf.root_dir) == '/')
+				uri.replace(0, 1, conf.root_dir);
+			else	
+				uri.insert(0, conf.root_dir);
+		}
+	}
+	/* AVANT D AJOUTER LE PATH => check method ok */
+	else {
+		if (!check_allow_method(conf, index)) {
+			fill_significant_error("405", error, conf);
+			/* return ( */send_response(socket_fd);
+			throw (RequestException(""));
+		}
+		add_path(conf, index); // GET POST DELETE
+	}
+	cgi_parse_uri();
+	return (index);
 }
 
 /* ************************************************************************* */
@@ -485,6 +495,7 @@ bool	Request::is_accessible(char const *pathname)
 {
 	struct stat path_stat;
 	stat(pathname, &path_stat);
+	// SECU stat if == -1 ?
 	if (access(pathname, X_OK) == -1)
 		return false;
 	return S_ISREG(path_stat.st_mode);
@@ -505,7 +516,7 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 
 	std::string join = ("./" + _target);
 	char const *pathname = join.c_str();
-	std::ifstream	file(pathname, std::ifstream::in);
+	std::ifstream	file(pathname, std::ifstream::in); // QU EST CE QUI se passe si pathname n existe pas ===> a tester
 	if (!is_accessible(pathname) || is_empty(file))
 		throw RequestException ("500");
 	check_extension(conf, pathname, index_loc);
@@ -530,6 +541,56 @@ void	Request::setTimestamp(std::ofstream	& data)
 	std::time_t result = std::time(NULL);
 	data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
 }
+
+/* ************************************************************************* */
+/* ******************************** DELETE ********************************* */
+/* ************************************************************************* */
+		
+void	Request::delete_action(/*int socket_fd,  */t_conf &conf, ErrorPages &error) {
+	std::cout << "IMPLEMENTER RULE DELETE" << std::endl;
+	std::cout << "TEST0" << std::endl;
+	
+	struct stat buf;
+	
+	if (stat(_target.data(), &buf) == -1) {
+		std::cout << "ATTENTION ERREUR ENVOYEE DEUX FOIS POTENTIELLEMENT" << std::endl;
+		return (fill_error("404", error, conf));
+	}
+	if (S_ISREG(buf.st_mode)) {
+		std::cout << "DELETE" << std::endl;
+		if (remove(_target.data()) == -1) {
+			std::cout << "ATTENTION ERREUR ENVOYEE DEUX FOIS POTENTIELLEMENT" << std::endl;
+			return (fill_error("500", error, conf));
+		}
+		response.setStatus("204", error);
+	}
+	/* Voir avec Orlando si directory on efface ou pas ==> la rfc n est pas clair a ce propos */
+	/* SI oui finir d implementer le if si dessous et faire une recursive et voir les prob de symlink...*/
+	// if (S_ISDIR(buf.st_mode)) { // Faire une recursive
+	// 	DIR *tmp = opendir(_target.data());
+	// 	if (!tmp) {
+	// 		std::cout << "ERREUR PAS ENVOYEE" << std::endl;
+	// 		return (fill_error_errno(conf, error), (void) 0);
+	// 	}
+	// 	dirent	*directory;
+		
+	// }
+	else
+		return (fill_error("500", error, conf));
+		// std::cout << "IMPLEMENTER ERREUR DELETE" << std::endl;
+	std::cout << "TEST4" << std::endl;
+		// response.setBody(file);
+		// response.setStatus("200", " OK");
+		// std::string	type = extract_extension(target);
+		// if (type.empty())
+		// 	type = "octet-stream";
+		// if (!response.setContent_type(type)) {
+		// 	response.reinitBody();
+		// 	error.fill_error(response, "406", conf);
+		// }
+		// return (true);
+	
+}	
 
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */
@@ -564,8 +625,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		std::map<std::string, std::string>::iterator it = conf.location[location].find("return");
 		if (it != conf.location[location].end())
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
-		// 	=====> Request is a directory (end with a "/")
-		
+		// 	=====> Request is a directory (end with a "/")		
 		else if (is_dir(_target))
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
@@ -619,6 +679,7 @@ bool	Request::is_dir(std::string const &path) {
 	struct stat buf;
 	if (stat(path.data(), &buf) == -1) // NO LEAK MEMMORY + FD ===> erreur not found renvoyee
 		return (false);
+	std::cout << "A TESTER:  CHECKER SI PAS LES PERMISSIONS SUR DIR" << std::endl;
 	if (S_ISDIR(buf.st_mode))
 		return (true);
 	return (false);

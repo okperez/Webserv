@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/31 12:22:24 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/02 09:39:17 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 ErrorPages::ErrorPages() {
     map_error["200"] = " OK";
+    map_error["204"] = " No Content";
     map_error["300"] = " Multiple Choices";
     map_error["301"] = " Moved Permanently";
     map_error["302"] = " Found";

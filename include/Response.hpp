@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/22 10:02:35 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/02 09:31:01 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class Response
 
 		void						setAuthmedia(Media *auth_media);
 		void						setStatus(std::string const & code, std::string const & tittle);
+		void						setStatus(std::string const & code, ErrorPages &error);
 		bool						setContent_type(std::string const & s);
 		void						setContent_length();
 		void						setLocation(std::string const & s);

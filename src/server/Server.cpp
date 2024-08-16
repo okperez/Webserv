@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/31 12:24:05 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/01 11:43:03 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -288,7 +288,6 @@ void	Server::event_request() {
 						// std::cout << "EVENT_REQUEST ERASE" << std::endl;
 						return (close_and_erase(it), (void) 0);
 					}
-					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
 					// std::cout << "it->id" << it->id << std::endl;
 					struct sockaddr_storage name;
 					socklen_t namelen = sizeof(name);
@@ -472,7 +471,7 @@ void	Server::body_request_present(Request &request, int read, int i) {
 				if (err == "exit")
 					throw;
 				request.fill_significant_error(err, error);
-				std::cout << "BODY PRESENT POLLOUT" << std::endl;
+				std::cout << "BODY PRESENT POLLOUT 1" << std::endl;
 				fds[i].events = POLLOUT;
 				request.setStatus(ERROR);
 				return ;
@@ -487,12 +486,12 @@ void	Server::body_request_present(Request &request, int read, int i) {
 		// 	request.setStatus(ERROR);
 		// }
 		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked") {
-			std::cout << "BODY_PRESENT POLLOUT" << std::endl;
+			std::cout << "BODY_PRESENT POLLOUT 2" << std::endl;
 			fds[i].events = POLLOUT;
 			// request.setStatus(RD_TO_RESPOND);
 		}
 		else if (request.getTransfer_encoding() == "chunked" && request.getStatus() == RD_TO_RESPOND) {
-			std::cout << "BODY PRESENT POLLOUT" << std::endl;
+			std::cout << "BODY PRESENT POLLOUT 3" << std::endl;
 			fds[i].events = POLLOUT;
 		}
 			// request.setStatus(RD_TO_RESPOND);

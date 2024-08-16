@@ -31,3 +31,9 @@ TEST CONNECTION TELNET
 Connection: close         							    ====> OK
 Connection: other         							    ====> OK
 Connection: ABSENT       							    ====> OK
+
+TEST RULE DELETE
+
+delete file             							    ====> OK
+delete file chmod 000      							    ====> OK
+delete on location method not allowed				    ====> OK

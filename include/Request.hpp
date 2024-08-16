@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/31 12:10:37 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/02 10:35:10 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ class Request
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
 		
-        int  		handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
+        void  		handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		send_response(int socket_fd);
 		
 		/* ***************************************************************** */
@@ -142,6 +142,7 @@ class Request
 		std::string look_for_location(std::string &url, t_conf & conf);
 		std::string look_if_location(std::string &uri, t_conf & conf);
 		void		add_path(t_conf & conf, std::string &index);
+		std::string	find_location(t_conf &conf, ErrorPages &error);
 		
 		/* ***************************************************************** */
 		/* ***************************** Method **************************** */
@@ -149,6 +150,12 @@ class Request
 		
 		int			check_exist_method();
 		bool		check_allow_method(t_conf &conf, std::string &index);
+		
+		/* ***************************************************************** */
+		/* **************************** DELETE ***************************** */
+		/* ***************************************************************** */
+		
+		void	delete_action(/*int socket_fd, */t_conf &conf, ErrorPages &error);	
 		
 		/* ***************************************************************** */
 		/* ****************************** GET ****************************** */
