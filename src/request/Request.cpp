@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/21 12:37:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:35:07 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ Request &Request::operator=(Request const & rhs) {
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
 	t_creation = rhs.t_creation;
+	boundary = rhs.boundary;
 	return (*this); 
 }
 
@@ -168,10 +169,6 @@ void	Request::send_response(int socket_fd) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
 	}
-	// std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
-	// std::cout << response_content << std::endl;
-	// std::cout << "******************************" << std::endl;
-	// status = SENT;
 }
 
 //  parse request from client and send back response 
@@ -276,7 +273,6 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 	if (index[0] == '=')
 		index.erase(0, 1);
 	uri.replace(uri.find(index), index.length(), root);
-	// std::cout << "uri : " << uri << std::endl;
 }
 
 std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
@@ -285,7 +281,7 @@ std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
 	{
 		if (conf.root_dir.empty()) {
 			fill_error("404", error, conf);
-			/* return ( */send_response(socket_fd);
+			send_response(socket_fd);
 			throw (RequestException(""));
 		}
 		else {
@@ -591,10 +587,6 @@ void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	// std::cout << "\nLOCATION = " << location << std::endl;
-	// std::cout << "URI = " << uri << std::endl;
-	// std::cout << "Target = " << _target << std::endl;
-	// std::cout << "DIR = " << dir << std::endl;
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
@@ -740,8 +732,6 @@ void	Request::build_index(t_conf &conf, ErrorPages &error) {
 bool	Request::is_loop(std::string &redir, std::string const &location, t_conf &conf) {
 	
 	std::string tmp = look_for_location(redir, conf);
-	// std::cout << "redir = " << redir << std::endl; 
-	// std::cout << "next location = " << tmp << std::endl; 
 	if (tmp == location)
 		return (true);
 	return (false);
@@ -778,44 +768,32 @@ bool	Request::media_request_allowed() {
 
 bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
 	
-	// std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		fill_significant_error("411", error, conf);
 		return (false);
-		// error.fill_error(response, "411", conf);
-		// return (send_response(socket_fd), false);
 	}
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
-		std::cout << "CHECK REQUEST SIGNIFIACANT ERROR" << std::endl;
 		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
 		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		// response.print();
 		return (false);
-		// error.fill_error(response, "400", conf);
-		// return (send_response(socket_fd), false);
 	}
 	if (version != "HTTP/1.1") {
 		fill_significant_error("405", error, conf);
 		return (false);
-		// error.fill_error(response, "405", conf);
-		// return (send_response(socket_fd), false);
 	}
 	if (content_length > conf.limit_body_size) { // Significant error or not ?
 		fill_significant_error("413", error, conf);
 		return (false);
-		// error.fill_error(response, "413", conf);
-		// return (send_response(socket_fd), false);
 	}
 	if (media.size() > 0 && !media_request_allowed()) { // Significant error or not ?
 		fill_significant_error("415", error, conf);
 		return (false);
-		// error.fill_error(response, "415", conf);
-		// return (send_response(socket_fd), false);
 	}
 	return (true);
 }
 
 void	Request::recover_ip_socket() {
+	
 	u_int32_t n = ntohl(socket_s_addr);
 	std::stringstream iss;
 	for (int i = 24; i >= 0; i -= 8) {
@@ -825,7 +803,6 @@ void	Request::recover_ip_socket() {
 			iss << '.';
 	}
 	socket_ip = iss.str();
-	// std::cout << socket_ip << std::endl;
 }
 
 void	Request::cgi_parse_uri() {
@@ -846,6 +823,7 @@ void	Request::cgi_parse_uri() {
 }
 
 void	Request::parse_host() {
+	
 	std::istringstream	iss(host);
 	
 	std::getline(iss, host, ':');
@@ -855,24 +833,18 @@ void	Request::parse_host() {
 
 void	Request::parse_media(std::string &s) {
 
-std::string tmp;
-size_t begin, end;
+	std::string tmp;
+	size_t begin, end;
 
-while (1) {
-	tmp = s;
-	begin = tmp.find(";q=");
-	if (begin == std::string::npos)
-		break;
-	end = tmp.find(",", begin);
-	s = tmp.erase(begin, end - begin);
-}
-strtomap(s, media, ",", "/");
-// for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
-// 	std::cout << "MEDIA[" << it->first << "] = ";
-// 	for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
-// 		std::cout << *jt << " ";
-// 	std::cout << std::endl;
-// 	}
+	while (1) {
+		tmp = s;
+		begin = tmp.find(";q=");
+		if (begin == std::string::npos)
+			break;
+		end = tmp.find(",", begin);
+		s = tmp.erase(begin, end - begin);
+	}
+	strtomap(s, media, ",", "/");
 }
 
 void	Request::setIp_socket(in_addr_t s_addr) {
@@ -909,6 +881,7 @@ bool		Request::body_present() {
 
 // TESTER AVEC MAX INT + 1 OU MIN INT -1
 int	Request::ft_shextodec(std::string & s) {
+	
 	std::istringstream iss(s);
 	int n;
 
@@ -919,6 +892,7 @@ int	Request::ft_shextodec(std::string & s) {
 }
 
 int Request::extract_chunked_body(std::string &s) {
+	
 	std::string tmp;
 	std::string new_body;
 	int length = -1;
@@ -978,18 +952,38 @@ void	Request::handle_multi_length() {
 			}
 		}
 		catch (std::exception & e) {
-			content_length = -1;
-			return ;
+			std::string err = e.what();
+			if (err == "exit")
+				throw ;
+			else {
+				content_length = -1;
+				return ;
+			}
 			}	
 	}
+}
+
+void	Request::extract_boundary() {
+		content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+		try {
+			boundary = content_type.substr(content_type.find("; boundary=") + 11);
+			content_type.erase(content_type.find("; boundary="));
+		}
+		catch(std::exception & e) {
+			std::string err = e.what();
+			if (err == "exit")
+				throw ;
+		}
 }
 
 void	Request::parse_header() {
 	std::string tmp;
 	
-	std::cout << "REQUEST PARSE HEADER" << std::endl;
-	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos)
-		throw (RequestException("400"));
+	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos) {
+		extract_boundary();
+		if (content_type != "multipart/form-data" || content_type.find(";") != std::string::npos || boundary.empty())
+			throw (RequestException("400"));
+	}
 	parse_first_line();
 	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
@@ -1008,7 +1002,11 @@ void	Request::parse_header() {
 		catch (std::exception & e) { content_length = -1; }
 	}
 	handle_multi_length();
-	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+	if (content_type.empty()) {
+		extract_boundary();
+		if (content_type == "multipart/form-data" && boundary.empty())
+			throw (RequestException("400"));
+	}
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
 	if (transfer_encoding == "chunked") {
 		std::string s = extract_body(save_buffer);
@@ -1046,30 +1044,16 @@ std::string Request::extract_header(std::string & buff) const
 
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
-	// std::cout << "\nEXTRACT ELEM\n";
-	// std::cout << "buff[0] = " << (int)buff[0] << std::endl;
-	// std::cout << "buff[1] = " << (int)buff[1] << std::endl;
 	int begin, end = 0, sep_body;
 	sep_body = buff.find("\r\n\r\n");
 	begin = buff.find(elem);
 	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
 	end = buff.find(delim, begin);
-	// std::cout << "buff[" << begin << "] = " << (int)buff[begin] << std::endl;
-	// std::cout << "buff[" << end << "] = " << (int)buff[end] << std::endl;
-	
 	std::string tmp (buff.substr(begin, end - begin));
-	// std::cout << tmp.length() << " = " << end - begin << "?" << std::endl; 
 	buff.erase(begin, end - begin);
-	// std::cout << "After erase :\n";
-	// std::cout << "buff[begin] = " << (int)buff[begin] << std::endl;
-	// std::cout << "buff[begin + 1] = " << (int)buff[begin + 1] << std::endl;
-	// std::cout << "buff = |" << buff << "|" << std::endl;
 	if (buff.compare(begin, 4, "\r\n\r\n") != 0 || buff.compare(begin, 6, "\r\n\r\n\r\n") == 0)
-		// std::cout << "erase /r/n\n";
 		buff.erase(begin, 2);
-	// std::cout << "tmp = |" << tmp << "|\n";
-	// std::cout << "EXTRACT ELEM END\n\n";
 	return (extract_header(tmp));
 }
 
@@ -1090,18 +1074,16 @@ std::string Request::extract_body(std::string & buff) {
 	int begin = buff.find("\r\n\r\n");
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
-	// std::cout << "buff = " << buff << std::endl;
 	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
 	if (transfer_encoding != "chunked") {
-	int found;
-	while (1) {
-		found = tmp.find("\r\n");
-		if (found == -1)
-			break;
-		tmp.erase(found, 2);
+		int found;
+		while (1) {
+			found = tmp.find("\r\n");
+			if (found == -1)
+				break;
+			tmp.erase(found, 2);
+			}
 	}
-	}
-	// std::cout << "body = " << tmp << std::endl;
 	return (tmp);
 }
 

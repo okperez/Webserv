@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 12:36:49 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 12:40:35 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ class Request
 		int													content_length; 	// Header that specifies the length of the body
 		bool												miss_length;
 		std::string											body;
+		std::string											boundary;
 
 		// RESPONSE
 		Response	response;
@@ -123,6 +124,7 @@ class Request
 		bool		body_present();
 		int 		extract_chunked_body(std::string &s);
 		void		handle_multi_length();
+		void		extract_boundary();
 		void		parse_body();
 		void		parse_header();
 		
