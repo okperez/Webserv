@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/02 10:44:41 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/21 10:41:54 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,8 +197,10 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 			}
 			case DELETE : {
 				find_location(conf, error);
-				delete_action(/* socket_fd, conf, */ error);
-				return (send_response(socket_fd), (void)0);
+				delete_action(socket_fd, conf,  error);
+				return ;
+				// delete_action(/* socket_fd, conf, */ error);
+				// return (send_response(socket_fd), (void)0);
 			}
 			default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
 				std::string index = find_location(conf, error);
@@ -546,23 +548,16 @@ void	Request::setTimestamp(std::ofstream	& data)
 /* ******************************** DELETE ********************************* */
 /* ************************************************************************* */
 		
-void	Request::delete_action(/*int socket_fd,  */t_conf &conf, ErrorPages &error) {
-	std::cout << "IMPLEMENTER RULE DELETE" << std::endl;
-	std::cout << "TEST0" << std::endl;
-	
+void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
 	struct stat buf;
 	
-	if (stat(_target.data(), &buf) == -1) {
-		std::cout << "ATTENTION ERREUR ENVOYEE DEUX FOIS POTENTIELLEMENT" << std::endl;
+	if (stat(_target.data(), &buf) == -1)
 		return (fill_error("404", error, conf));
-	}
 	if (S_ISREG(buf.st_mode)) {
-		std::cout << "DELETE" << std::endl;
-		if (remove(_target.data()) == -1) {
-			std::cout << "ATTENTION ERREUR ENVOYEE DEUX FOIS POTENTIELLEMENT" << std::endl;
+		if (remove(_target.data()) == -1)
 			return (fill_error("500", error, conf));
-		}
 		response.setStatus("204", error);
+		send_response(socket_fd);
 	}
 	/* Voir avec Orlando si directory on efface ou pas ==> la rfc n est pas clair a ce propos */
 	/* SI oui finir d implementer le if si dessous et faire une recursive et voir les prob de symlink...*/
@@ -578,7 +573,6 @@ void	Request::delete_action(/*int socket_fd,  */t_conf &conf, ErrorPages &error)
 	else
 		return (fill_error("500", error, conf));
 		// std::cout << "IMPLEMENTER ERREUR DELETE" << std::endl;
-	std::cout << "TEST4" << std::endl;
 		// response.setBody(file);
 		// response.setStatus("200", " OK");
 		// std::string	type = extract_extension(target);
@@ -590,7 +584,7 @@ void	Request::delete_action(/*int socket_fd,  */t_conf &conf, ErrorPages &error)
 		// }
 		// return (true);
 	
-}	
+}
 
 /* ************************************************************************* */
 /* ********************************** GET ********************************** */

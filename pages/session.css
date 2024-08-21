@@ -40,7 +40,7 @@ body {
 /* ********************************* POLICE ******************************** */
 /* ************************************************************************* */
 
-h1, #text , #champs , #remember, #file-name, #size2, #button1, #button2, #custom-file-upload {
+h1, h2, #text , #champs , #remember, #file-name, #size2, #button1, #button2, #custom-file-upload {
 	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 	color: rgb(255, 255, 255);
 }
