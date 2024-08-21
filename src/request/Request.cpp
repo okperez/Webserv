@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/21 10:41:54 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 12:37:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ Request::Request() {}
 
 Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
 
-	std::cout << "REQUEST CONSTRUCTOR" << std::endl;
 	time_t	now;
 	time(&now);
 	t_creation =  localtime(&now);
@@ -33,12 +32,7 @@ Request::Request(char const *buffer, /* int read, */ int socket, Server *src_ser
 	if (buffer)
 		save_buffer = buffer;
 	i_conf = -1;
-	// if (read < BUFFER_SIZE)
-	// 	status = RD_TO_RESPOND;
-	// else
 	status = NEW;
-	// this->id = id;
-	std::cout << "END REQUEST CONSTRUCTOR" << std::endl;
 }
 
 Request::Request(const Request & orig) : socket_fd(orig.socket_fd), status(orig.status), save_buffer(orig.save_buffer) {
@@ -79,7 +73,6 @@ Request &Request::operator=(Request const & rhs) {
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
 	t_creation = rhs.t_creation;
-	// id = rhs.id;
 	return (*this); 
 }
 
@@ -454,6 +447,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	{
 		while (1) // ATTENTION A LA BOUCLE WHILE ==> si on passe deux fois on efface le buff
 		{
+			std::cout << "ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL" << std::endl;
 			rd = read(fd[0], buff, sizeof(buff) - 1); // ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL
 			if (rd < 1)
 			{

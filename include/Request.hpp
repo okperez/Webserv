@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 10:30:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 12:36:49 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,6 @@ class Request
 	};
 
 	public :
-		// int id;// => POUR DEBUG A EFFACER
 
 		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);

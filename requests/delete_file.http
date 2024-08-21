@@ -1,4 +1,4 @@
-DELETE /downloads/abc HTTP/1.1
+DELETE /downloads/abcc HTTP/1.1
 Host: 127.0.0.1:8080
 Content-Length: 0
 
