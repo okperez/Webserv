@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:45:39 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/16 14:12:24 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 15:22:18 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include <cerrno>
 # include <algorithm>
 # include <vector>
+# include <deque>
 # include <map>
 # include <list>
 # include <ctime>

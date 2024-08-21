@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 12:40:35 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:24:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ class Request
 		int													content_length; 	// Header that specifies the length of the body
 		bool												miss_length;
 		std::string											body;
+		std::deque<unsigned char>							body_deque;
 		std::string											boundary;
 
 		// RESPONSE
@@ -81,7 +82,7 @@ class Request
 
 	public :
 
-		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
+		Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -106,7 +107,9 @@ class Request
 		std::string getPort() const;
 		std::string getConnection() const;
 		std::string getTransfer_encoding() const;
-		void		addSave_buffer(const char *buffer);
+		std::string getContentType() const;
+		void		addSave_buffer(/* const */ char *buffer, int end);
+		// void		addSave_buffer(const char *buffer);
 		void		setStatus(int status);
 		void		setIp_socket(in_addr_t s_addr);		
 		
@@ -123,10 +126,13 @@ class Request
 		void		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
 		int 		extract_chunked_body(std::string &s);
+		void		parse_chunk_body();
+		void		parse_upload_body(std::string & body);
+		void		parse_body();
 		void		handle_multi_length();
 		void		extract_boundary();
-		void		parse_body();
-		void		parse_header();
+		void		parse_headers();
+		void		parse_request();
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */

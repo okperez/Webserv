@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 11:59:06 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:54:28 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ class Server
 		/* **************************** EVENTS ***************************** */
 		/* ***************************************************************** */
 
+		void	read_request(int i, char *buffer, int read);
 		bool	request_response(int i);
 		void	event_request();
 		
@@ -89,7 +90,6 @@ class Server
 		int		unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
 		int		pick_server(Request &request);
 		void	body_request_present(Request &request, int read, int i);
-		void	read_request(int i, char *buffer, int read);
 
 		/* ***************************************************************** */
 		/* ***************************** ERROR ***************************** */

@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 12:11:48 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 17:36:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,8 +183,10 @@ void	Server::launch_server(int max_socket) {
 	int ret;
 	
 	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR =>> POUR EVITER BOUCLE INFINI REMPLACER VECT PAR DEQUE" << std::endl;
+	std::cout << "VOIR AC ORLANDO SI IMPLEMENTERSINON A IMPLEMENTER DANS CGI WAIT: SI SCRIPT QUI TOURNE EN BOUCLE METTRE EN PLACE TIMEOUT POUR CONTINUER" << std::endl;
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
 	std::cout << "		- SECU " << std::endl;
+	std::cout << "VOIR AC ORLANDO : DELETE SUR DIRECTORY ON FAIT OU PAS? " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
@@ -225,6 +227,73 @@ void	Server::launch_server(int max_socket) {
 /* ********************************* EVENTS ******************************** */
 /* ************************************************************************* */
 
+/*
+The normal procedure for parsing an HTTP message is to read the start-line
+into a structure, read each header field line into a hash table by field name
+until the empty line, and then use the parsed data to determine if a message
+body is expected. If a message body has been indicated, then it is read as a
+stream until an amount of octets equal to the message body length is read or the
+connection is closed.
+*/
+void	Server::read_request(int i, char *buffer, int read) {
+	
+	// std::cout << "************************ READ REQUEST fds[i].fd = " << fds[i].fd << std::endl;
+	// for (int j = 0; j < BUFFER_SIZE; j++)
+	// 	std::cout << buffer[j];
+	// std::cout << std::endl;
+
+	// Si une requete a deja ete cree : 
+	std::cout << "READ_REQUEST" << std::endl;
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
+		if (it->getSocket_fd() == fds[i].fd) {
+			time_t now;
+			time(&now);
+			it->setT_creation(now);
+			if (it->getStatus() == READING) { // UTILE ICI ?
+				if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data") {
+					it->addSave_buffer(buffer, read);
+					if (read < BUFFER_SIZE) {
+						fds[i].events = POLLOUT;
+					}
+				}
+				else if (it->getContentType() == "multipart/form-data") {
+					std::string tmp /* = buffer */;
+					std::cout << "read = " << read << std::endl;
+					tmp.append(buffer, read);
+					it->parse_upload_body(tmp);
+					// std::cout << "A IMPLEMENTER : Server::read_request Status = READING\n";
+				}
+				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
+					std::string tmp = buffer;
+					try {
+						int chunk = it->extract_chunked_body(tmp);
+						if (chunk == 0)
+							fds[i].events = POLLOUT;
+					}
+					catch (std::exception const &e) {
+						std::string err = e.what();
+						if (err == "exit")
+							throw ;
+						it->fill_significant_error("400", error);
+						fds[i].events = POLLOUT;
+						it->setStatus(ERROR);
+					}
+				}
+			}
+			else if (it->getStatus() == NEW) {
+				
+				it->addSave_buffer(buffer, read);
+				body_request_present(*it, read, i);
+			}
+			return ;
+		}
+	}
+	Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	body_request_present(request, read, i);
+	requests.push_back(request);
+}
+
 bool	Server::request_response(int i) {
 	
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
@@ -242,7 +311,7 @@ bool	Server::request_response(int i) {
 			// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
 			
 			it->setIp_socket(socket->sin_addr.s_addr);
-			if (it->getTransfer_encoding() != "chunked")
+			if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
 				it->parse_body();
 			int i_conf = pick_server(*it);
 			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
@@ -273,7 +342,7 @@ void	Server::event_request() {
 			}
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
-			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE);
+			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				handle_error_function(fds[i].fd, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
@@ -442,7 +511,7 @@ void	Server::body_request_present(Request &request, int read, int i) {
 	if (request.body_present()) {
 		if (request.getStatus() == NEW) {
 			try { 
-				request.parse_header();
+				request.parse_request();
 			}
 			catch (std::exception const &e) {
 				std::string err = e.what();
@@ -454,74 +523,15 @@ void	Server::body_request_present(Request &request, int read, int i) {
 				return ;
 			}
 		}
-		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
+		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked" && request.getContentType() != "multipart/form-data")
 			fds[i].events = POLLOUT;
-		else if (request.getTransfer_encoding() == "chunked" && request.getStatus() == RD_TO_RESPOND)
+		else if ((request.getTransfer_encoding() == "chunked" || request.getContentType() != "multipart/form-data") && request.getStatus() == RD_TO_RESPOND)
 			fds[i].events = POLLOUT;
 		else
 			request.setStatus(READING);
 	}
 	else
 		std::cout << "A IMPLEMENTER OU VOIR SI BESOIN : body absent" << std::endl;
-}
-
-/*
-The normal procedure for parsing an HTTP message is to read the start-line
-into a structure, read each header field line into a hash table by field name
-until the empty line, and then use the parsed data to determine if a message
-body is expected. If a message body has been indicated, then it is read as a
-stream until an amount of octets equal to the message body length is read or the
-connection is closed.
-*/
-void	Server::read_request(int i, char *buffer, int read) {
-	
-	// std::cout << "************************ READ REQUEST fds[i].fd = " << fds[i].fd << std::endl;
-	// for (int j = 0; j < BUFFER_SIZE; j++)
-	// 	std::cout << buffer[j];
-	// std::cout << std::endl;
-
-	// Si une requete a deja ete cree : 
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
-		if (it->getSocket_fd() == fds[i].fd) {
-			time_t now;
-			time(&now);
-			it->setT_creation(now);
-			if (it->getStatus() == READING) { // UTILE ICI ?
-				if (it->getTransfer_encoding() != "chunked") {
-					it->addSave_buffer(buffer);
-					if (read < BUFFER_SIZE) {
-						fds[i].events = POLLOUT;
-					}
-				}
-				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
-					std::string tmp = buffer;
-					try {
-						int chunk = it->extract_chunked_body(tmp);
-						if (chunk == 0)
-							fds[i].events = POLLOUT;
-					}
-					catch (std::exception const &e) {
-						std::string err = e.what();
-						if (err == "exit")
-							throw ;
-						it->fill_significant_error("400", error);
-						fds[i].events = POLLOUT;
-						it->setStatus(ERROR);
-					}
-				}
-			}
-			else if (it->getStatus() == NEW) {
-				
-				it->addSave_buffer(buffer);
-				body_request_present(*it, read, i);
-			}
-			return ;
-		}
-	}
-	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
-	body_request_present(request, read, i);
-	requests.push_back(request);
 }
 
 /* ************************************************************************* */
@@ -540,7 +550,7 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", socket, this, &error, &auth_media/* , 0 */);
+	Request tmp("", 0, socket, this, &error, &auth_media/* , 0 */);
 	tmp.fill_error(code, error);
 	throw (ServerException(mess));
 }

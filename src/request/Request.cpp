@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/21 14:35:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 17:32:55 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
+Request::Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
 
 	time_t	now;
 	time(&now);
@@ -30,7 +30,8 @@ Request::Request(char const *buffer, /* int read, */ int socket, Server *src_ser
 	auth_media = src_auth_media;
 	response.setAuthmedia(src_auth_media);
 	if (buffer)
-		save_buffer = buffer;
+		save_buffer.append(buffer, read);
+		// save_buffer = buffer;
 	i_conf = -1;
 	status = NEW;
 }
@@ -74,6 +75,7 @@ Request &Request::operator=(Request const & rhs) {
 	i_conf = rhs.i_conf;
 	t_creation = rhs.t_creation;
 	boundary = rhs.boundary;
+	body_deque = rhs.body_deque;
 	return (*this); 
 }
 
@@ -129,6 +131,10 @@ std::string Request::getTransfer_encoding() const {
 	return (transfer_encoding);
 }
 
+std::string Request::getContentType() const {
+	return (content_type);
+}
+
 std::string Request::getConnection() const {
 	return (connection);
 }
@@ -146,9 +152,18 @@ void	Request::setStatus(int status) {
 	this->status = status;
 }
 
-void	Request::addSave_buffer(const char *buffer) {
-	save_buffer += buffer;
+void	Request::addSave_buffer(/* const */ char *buffer, int end) {
+	
+	
+	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
+	save_buffer.append(buffer, end);
+	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
+	// save_buffer += buffer;
 }
+
+// void	Request::addSave_buffer(const char *buffer) {
+// 	save_buffer += buffer;
+// }
 
 /* ************************************************************************* */
 /* ******************************* Exception ******************************* */
@@ -772,8 +787,13 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		fill_significant_error("411", error, conf);
 		return (false);
 	}
-	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
+	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data")) {
 		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
+		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+		return (false);
+	}
+	std::cout << static_cast<size_t>(content_length) << " et " << body_deque.size() << std::endl;
+	if (content_type == "multipart/form-data" && static_cast<size_t>(content_length) != body_deque.size()) {
 		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
 		return (false);
 	}
@@ -927,6 +947,29 @@ int Request::extract_chunked_body(std::string &s) {
 	return (-2);
 }
 
+void	Request::parse_chunk_body() {
+	
+	std::string tmp = extract_body(save_buffer);
+	int chunk = extract_chunked_body(tmp);
+	if (chunk == 0)
+		status = RD_TO_RESPOND;
+	else
+		status = READING;
+}
+
+void	Request::parse_upload_body(std::string &body) {
+	
+	for (std::string::iterator it = body.begin(); it != body.end(); it++) {
+		body_deque.push_back(*it);
+	}
+	std::cout << "body_deque.size()" << body_deque.size() << std::endl;
+	std::cout << "content_length" << content_length << std::endl;
+	if (body_deque.size() == static_cast<size_t>(content_length))
+		status = RD_TO_RESPOND;
+	else
+		status = READING;
+}
+
 void	Request::parse_body() {
 	
 	body = extract_body(save_buffer);
@@ -959,7 +1002,7 @@ void	Request::handle_multi_length() {
 				content_length = -1;
 				return ;
 			}
-			}	
+		}	
 	}
 }
 
@@ -976,16 +1019,10 @@ void	Request::extract_boundary() {
 		}
 }
 
-void	Request::parse_header() {
+void	Request::parse_headers() {
+	
 	std::string tmp;
 	
-	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos) {
-		extract_boundary();
-		if (content_type != "multipart/form-data" || content_type.find(";") != std::string::npos || boundary.empty())
-			throw (RequestException("400"));
-	}
-	parse_first_line();
-	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
 	if (!tmp.empty())
@@ -1008,13 +1045,22 @@ void	Request::parse_header() {
 			throw (RequestException("400"));
 	}
 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-	if (transfer_encoding == "chunked") {
-		std::string s = extract_body(save_buffer);
-		int chunk = extract_chunked_body(s);
-		if (chunk == 0)
-			status = RD_TO_RESPOND;
-		else
-			status = READING;
+}
+
+void	Request::parse_request() {
+	
+	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos) {
+		extract_boundary();
+		if (content_type != "multipart/form-data" || content_type.find(";") != std::string::npos || boundary.empty())
+			throw (RequestException("400"));
+	}
+	parse_first_line();
+	parse_headers();
+	if (transfer_encoding == "chunked")
+		parse_chunk_body();
+	if (content_type == "multipart/form-data") {
+		std::string tmp = extract_body(save_buffer);
+		parse_upload_body(tmp);
 	}
 }
 
@@ -1075,7 +1121,7 @@ std::string Request::extract_body(std::string & buff) {
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
 	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
-	if (transfer_encoding != "chunked") {
+	if (transfer_encoding != "chunked" && content_type != "multipart/form-data") {
 		int found;
 		while (1) {
 			found = tmp.find("\r\n");
