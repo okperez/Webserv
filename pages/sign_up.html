@@ -5,18 +5,24 @@
     <link rel="stylesheet" type="text/css" href="/session.css">
 </head>
 <body>
-    <h1>Sign Up</h1>
+    <!-- <h1>Sign Up</h1> -->
     <!-- <img src="/image.png" alt="Example Image"> -->
     <!-- <script src="/script.js"></script> -->
 	<div id="center">
-		<form action="cgi-bin/sign_up.pl" method="POST">
-		<!-- response.php selon le fichier qui contient le scrip pour generer la reponse  -->
+	<form id="div2" action="cgi-bin/sign_up.pl" method="POST">
+		<div>
+			<h1 id="size3">Sign Up</h1>
+		</div>
+		<div id="div3">
 			<label id="text" for="user">User name :</label><br>
 			<input id="champs" type = "text" id="user" name="user"><br><br>
 			<label id="text" for="password">Password :</label><br>
 			<input id="champs" type = "text" id="password" name="password"><br><br>
-			<input id="button2" type="submit" value="submit">
-		</form>
+		</div>
+		<div>
+			<input id="button2" type="submit" value="Submit">
+		</div>
+	</form>
 	</div>
 </body>
 </html>

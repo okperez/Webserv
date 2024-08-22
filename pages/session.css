@@ -1,61 +1,144 @@
+html, body, #center {
+	height:100%;
+}
+
 body {
 	background-color: rgb(2, 39, 17);
 }
 
-h1 {
-	position:absolute;
-	top:30%;
-	left:50%;
+/* ************************************************************************* */
+/* ******************************** POSITION ******************************* */
+/* ************************************************************************* */
+
+#center, #div1, #div2, #div3 {
+	display:flex;
+	flex-direction: column;
+}
+
+#center {
+	justify-content:center;
+	align-items: center;
+	width:100%;
+}
+
+#div1 {
+	padding: 5px 15px;
+	row-gap: 20px;
+	width:fit-content;
+}
+
+#div2 {
+	margin-top: -5%;
+	row-gap: 40px;
+}
+
+#div3 {
+	row-gap: 5px;
+}
+
+/* ************************************************************************* */
+/* ********************************* POLICE ******************************** */
+/* ************************************************************************* */
+
+h1, h2, #text , #champs , #remember, #file-name, #size2, #button1, #button2, #custom-file-upload {
 	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 	color: rgb(255, 255, 255);
-	transform: translate(-50%, -50%);
-	font-size: 50px;
 }
 
-#center{
-	margin: 0;
-	position:absolute;
-	top:50%;
-	left:50%;
-	transform: translate(-50%, -50%);
+#size1, #size4 {
+	font-size: 200%;
 }
 
-#button1, #button2 {
+#size2 {
+	font-size: 300%;
+}
+
+#size3 {
+	font-size: 270%;
+}
+
+/* #size4 {
+	font-size: 200%;
+} */
+
+/* ************************************************************************* */
+/* ********************************** COLOR ******************************** */
+/* ************************************************************************* */
+
+a:link, a:visited {
+	color: rgb(5, 104, 14);
+}
+
+a:hover {
+	color: rgb(8, 133, 18);
+}
+
+
+#custom-file-upload:hover, #button1:hover, #button2:hover, #button3:hover:hover {
+    background-color: rgb(8, 133, 18);
+}
+
+#button1, #button2, #custom-file-upload, #champs {
 	background-color: rgb(5, 104, 14);
-	color: rgb(255, 255, 255);
 	border-color: rgb(255, 255, 255);
 	border-radius: 5%;
-	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 }
 
-#button1 {
+/* ************************************************************************* */
+/* ********************************* BUTTON ******************************** */
+/* ************************************************************************* */
+
+#button1, #button2, #custom-file-upload {
+	border-radius: 5%;
+}
+
+#button1
+{
+	align-items: center;
+	padding: 5px 15px;
+	width :100%;
+}
+
+#button2
+{
+	padding: 5px 15px;
+	width :100%;
+}
+
+#button2, #custom-file-upload {
+	border-width: 0.05cm;
+	font-size: 20px;
+}
+
+#button1
+{
 	display: block;
   	margin-left: auto;
   	margin-right: 40%;
-	width :5cm;
-	border-width: 0.15cm;
+	font-size: 50px;
 	border-top-left-radius: 20%;
 	border-bottom-right-radius: 20%;
-	font-size: 50px;
 }
 
-#button2 {
-	border-width: 0.05cm;
-	font-size: 20px;
-	transform: translate(90%, 0%);
-}
+/* ************************************************************************* */
+/* ********************************** OTHER ******************************** */
+/* ************************************************************************* */
 
-#text , #champs , #remember {
-	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
-	color: rgb(255, 255, 255);
+#custom-file-upload {
+    padding: 3px 10px;
 }
 
 #champs {
 	border-width: 0.05cm;
-	border-color: rgb(255, 255, 255);
-	background-color: rgb(5, 104, 14);
 }
 
-a:link, a:visited {
-color: rgb(5, 104, 14);
+#hide {
+    display: none; /* Hide the default file input */
+}
+
+#custom-file-upload {
+    border: 1px solid #FFFFFF;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 4px;
 }

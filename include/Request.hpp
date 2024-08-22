@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/18 16:04:41 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 16:24:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,13 @@ class Request
 		std::string		save_buffer; //Pour sauvegarder le buffer si pas entierement lu
 		// std::string		response_content;
 		
-		 // REQUEST line
+		// REQUEST line
 		std::string   	method;   // HTTP method (ex: GET)
 		std::string   	uri;   // Request uri (ex: index.html)
 		std::string   	version;  // HTTP version (ex: HTTP/1.1)
+
+		// FOR TIME_OUT
+		struct tm		*t_creation;
 
 		// POUR CGI : PARSING TARGET
 		std::string   	_query_string;
@@ -51,6 +54,8 @@ class Request
 		int													content_length; 	// Header that specifies the length of the body
 		bool												miss_length;
 		std::string											body;
+		std::deque<unsigned char>							body_deque;
+		std::string											boundary;
 
 		// RESPONSE
 		Response	response;
@@ -76,7 +81,8 @@ class Request
 	};
 
 	public :
-		Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media);
+
+		Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);
 		~Request();
 		Request &operator=(Request const & rhs);
@@ -91,6 +97,8 @@ class Request
 		// Response 	&getsetResponse();
 		int 		getIconf() const;
 		int 		getStatus() const;
+		tm 			*getT_creation() const;
+		void 		setT_creation(time_t &now);
 		int 		getSocket_fd() const;
 		size_t 		getSave_buffer_length() const;
 		in_addr_t 	getSocket_s_addr() const;
@@ -99,7 +107,9 @@ class Request
 		std::string getPort() const;
 		std::string getConnection() const;
 		std::string getTransfer_encoding() const;
-		void		addSave_buffer(const char *buffer);
+		std::string getContentType() const;
+		void		addSave_buffer(/* const */ char *buffer, int end);
+		// void		addSave_buffer(const char *buffer);
 		void		setStatus(int status);
 		void		setIp_socket(in_addr_t s_addr);		
 		
@@ -111,19 +121,24 @@ class Request
 		void		parse_media(std::string &s);
 		void		cgi_parse_uri();
 		bool		media_request_allowed();
-		bool		check_request(int socket_fd, t_conf &conf, ErrorPages &error);
+		bool		check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
-		bool		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
+		void		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
 		int 		extract_chunked_body(std::string &s);
+		void		parse_chunk_body();
+		void		parse_upload_body(std::string & body);
 		void		parse_body();
-		bool		parse_header();
+		void		handle_multi_length();
+		void		extract_boundary();
+		void		parse_headers();
+		void		parse_request();
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
 		
-        int  		handle_request(int socket_fd, t_conf &conf, ErrorPages &error);
+        void  		handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
 		void		send_response(int socket_fd);
 		
 		/* ***************************************************************** */
@@ -134,6 +149,7 @@ class Request
 		std::string look_for_location(std::string &url, t_conf & conf);
 		std::string look_if_location(std::string &uri, t_conf & conf);
 		void		add_path(t_conf & conf, std::string &index);
+		std::string	find_location(t_conf &conf, ErrorPages &error);
 		
 		/* ***************************************************************** */
 		/* ***************************** Method **************************** */
@@ -141,6 +157,13 @@ class Request
 		
 		int			check_exist_method();
 		bool		check_allow_method(t_conf &conf, std::string &index);
+		
+		/* ***************************************************************** */
+		/* **************************** DELETE ***************************** */
+		/* ***************************************************************** */
+		
+		void	delete_action(int socket_fd, t_conf &conf, ErrorPages &error);	
+		// void	delete_action(/*int socket_fd, */t_conf &conf, ErrorPages &error);	
 		
 		/* ***************************************************************** */
 		/* ****************************** GET ****************************** */
@@ -197,13 +220,24 @@ class Request
 		/* ***************************************************************** */	
 
 		void	fill_error_errno(t_conf &conf, ErrorPages &error);
+
 		void	fill_error(std::string const &code, ErrorPages &error);
+		void	fill_significant_error(std::string const &code, ErrorPages &error);
+		void	fill_error(std::string const &code, ErrorPages &error, t_conf &conf);
+		void	fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
 		void	handle_pending_requests(ErrorPages & error, int &socket);
+
+		/* ************************************************************************* */	
+		/* ******************************** A EFFACER ****************************** */
+		/* ************************************************************************* */	
+
+		void	print_response();
+
 };
 
 void	setExtensions(std::map<std::string, char const *> &extensions);

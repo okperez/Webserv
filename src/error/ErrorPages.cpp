@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/15 14:26:02 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/02 09:39:17 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 ErrorPages::ErrorPages() {
     map_error["200"] = " OK";
+    map_error["204"] = " No Content";
     map_error["300"] = " Multiple Choices";
     map_error["301"] = " Moved Permanently";
     map_error["302"] = " Found";
@@ -32,6 +33,7 @@ ErrorPages::ErrorPages() {
     map_error["404"] = " Not Found";
 	map_error["405"] = " Method Not Allowed";
 	map_error["406"] = " Not Acceptable";
+	map_error["408"] = " Request Timeout";
 	map_error["411"] = " Length Required";
     map_error["413"] = " Request Entity Too Large";
     map_error["415"] = " Unsupported Media Type";
@@ -99,12 +101,27 @@ void	ErrorPages::fill_error(Response &response, std::string code, t_conf &conf) 
 			err_not_found(response, code);
     }
 	response.setStatus(code, map_error[code]);
+	response.setError(true);
+}
+
+void	ErrorPages::fill_significant_error(Response &response, std::string code, t_conf &conf) {
+	fill_error(response, code, conf);
+	response.setConnectiontoclose();
+	// response.print();
 }
 
 void	ErrorPages::fill_error(Response &response, std::string code) {
     
     err_not_found(response, code);
 	response.setStatus(code, map_error[code]);
+	response.setError(true);
+}
+
+void	ErrorPages::fill_significant_error(Response &response, std::string code) {
+    
+    fill_error(response, code);
+	response.setConnectiontoclose();
+	// response.print();
 }
 
 void	ErrorPages::fill_redir(Response &response, std::string const &code, std::string const &redir) {

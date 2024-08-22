@@ -4,6 +4,7 @@ $file = file_get_contents('Data_user');
 if ($file != 0)
 {
     $fname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "fname"), strpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "fname"));
+    $firstname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "fname") + 6, strpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "fname") - 6);
     $lname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "lname"), strrpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "lname"));
     if (strpos($file, $fname) > -1 && strpos($file, $lname) > -1)
     {
@@ -12,7 +13,21 @@ if ($file != 0)
             echo "Set-Cookie: $fname; path=/sign_in.html; HttpOnly;\n";
             echo "Set-Cookie: $lname; path=/sign_in.html; HttpOnly;\n";
         }
-        echo "Location: http://localhost:8080/welcome.html\n";
+        // echo "Location: http://localhost:8080/welcome.html\n";
+        echo("<!DOCTYPE html>");
+        echo("<html>");
+        echo("<head>");
+        echo("<title>Welcome</title>");
+        echo ("<link rel=\"stylesheet\" type=\"text/css\" href=\"/session.css\">");
+        echo("</head>");
+        echo("<body>");
+        echo("<div id=\"center\">");
+        echo("<h1>Welcome ");
+        echo($firstname);
+        echo("</div>");
+        echo("</h1>");
+        echo("</body>");
+        echo("</html>");
     }
     else
     {

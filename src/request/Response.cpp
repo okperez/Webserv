@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/15 12:40:13 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/02 09:32:46 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,9 @@
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
 
-Response::Response() {}
+Response::Response() {
+	_error = false;
+}
 
 Response::Response(const Response & orig) { (void) orig; }
 
@@ -35,7 +37,9 @@ Response &Response::operator=(Response const & rhs) {
 	_content_length = rhs._content_length;
 	_body = rhs._body;
 	_location = rhs._location;
+	_connection = rhs._connection;
 	_cookie = rhs._cookie;
+	_error = rhs._error;
 	auth_media = rhs.auth_media;
 	return (*this); 
 }
@@ -50,6 +54,10 @@ void	Response::setAuthmedia(Media *auth_media) {
 
 void	Response::setStatus(std::string const & code, std::string const & tittle) {
 	_status = code + tittle;
+}
+
+void	Response::setStatus(std::string const & code, ErrorPages &error) {
+	_status = code + error.get_message(code);
 }
 
 bool	Response::setContent_type(std::string const &type) {
@@ -72,6 +80,11 @@ void	Response::setLocation(std::string const & s) {
 	_location = s;
 }
 
+void	Response::setConnectiontoclose() {
+	// std::cout << "Im in" << std::endl;
+	_connection = "close";
+}
+
 void	Response::setBody(std::string const & s) {
 	_body += s;	
 }
@@ -84,9 +97,16 @@ void	Response::setBody(std::ifstream &file) {
 	std::getline(file, _body, '\0');
 }
 
-void	Response::setCookie(std::string str)
-{
+void	Response::setCookie(std::string str) {
 	_cookie.push_back(str);
+}
+
+void	Response::setError(bool err) {
+	_error = err;
+}
+
+bool	Response::getError() {
+	return (_error);
 }
 
 /* ************************************************************************* */
@@ -110,9 +130,13 @@ std::string Response::build_response()
 		response += "Location: " + _location + delim;
 	if (!_content_type.empty())
 		response += "Content-Type: " + _content_type + delim;
+	// std::cout << "connection = " << _connection << std::endl;
+	if (!_connection.empty())
+		response += "Connection: " + _connection + delim;
 	response += "Content-Length: " + _content_length + delim + delim;
 	if (!_body.empty())
 		response += _body;
+	response += "\r\n";
 	return (response);
 }
 
@@ -120,8 +144,9 @@ void	Response::print() {
 	std::cout << "_start_line : " << _status << std::endl;
 	std::cout << "_content_type : " << _content_type << std::endl;
 	std::cout << "_content_length : " << _content_length << std::endl;
+	std::cout << "_connection : " << _connection << std::endl;
 	std::cout << "_body : " << _body << std::endl;
-	for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
-		std::cout << "_cookie: " << (*it) << std::endl;
+	// for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
+	// 	std::cout << "_cookie: " << (*it) << std::endl;
 	// std::cout << "_cookie :" << _cookie << std::endl;
 }

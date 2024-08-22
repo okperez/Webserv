@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/07/17 09:40:20 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/22 10:00:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 # include "Media.hpp"
 
 # define MAX_CONNECTION	1000
-# define BUFFER_SIZE	4000
+# define BUFFER_SIZE	1000
 
 typedef struct s_flag
 {
@@ -40,6 +40,7 @@ typedef struct s_conf
   std::string												host;
   std::string                                               server_name;
   std::string                                               root_dir;
+  std::string												upload_dir;
   std::string                                               files;  // A EFFACER UNE FOIS PASSER EN VECTEUR // A Transformer en vecteur de string : il peut y en avoir plusieurs, une fois ok effacer
   std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::string                                               autoindex;
@@ -120,8 +121,9 @@ enum	e_status_request {
 	NEW,
 	READING,
 	RD_TO_RESPOND,
-	RD_TO_SEND,
+	ERROR,
 	SENT,
+    CLOSE,
     ERASE,
 };
 

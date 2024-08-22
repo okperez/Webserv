@@ -1,0 +1,90 @@
+/* ************************************************************************* */
+/* ********************************* ERROR ********************************* */
+/* ************************************************************************* */
+
+RFC 7230 3.3.3 :
+    If a message is received with both a Transfer-Encoding and a
+    Content-Length header field, the Transfer-Encoding overrides the
+    Content-Length.  Such a message might indicate an attempt to
+    perform request smuggling (Section 9.5) or response splitting
+    (Section 9.4) and ought to be handled as an error.  A sender MUST
+    remove the received Content-Length field prior to forwarding such
+    a message downstream.
+===> Si Content-Length + Transfer-Encoding ==> Ignorer Content-Length
+
+RFC 7230 3.3.3 :
+    If a message is received without Transfer-Encoding and with
+    either multiple Content-Length header fields having differing
+    field-values or a single Content-Length header field having an
+    invalid value, then the message framing is invalid and the
+    recipient MUST treat it as an unrecoverable error.  If this is a
+    request message, the server MUST respond with a 400 (Bad Request)
+    status code and then close the connection.
+===> Si multi Content-Length different OU bad ContentLength ==> ERREUR + CLOSE CONNECTION  // OK
+
+
+
+/* ************************************************************************* */
+/* *************************** CLOSE CONNECTION **************************** */
+/* ************************************************************************* */
+
+RFC 7230 6.6 :
+Tear-down
+
+   The Connection header field (Section 6.1) provides a "close"
+   connection option that a sender SHOULD send when it wishes to close
+   the connection after the current request/response pair.
+
+   A client that sends a "close" connection option MUST NOT send further
+   requests on that connection (after the one containing "close") and
+   MUST close the connection after reading the final response message
+   corresponding to this request.
+
+   A server that receives a "close" connection option MUST initiate a
+   close of the connection (see below) after it sends the final response
+   to the request that contained "close".  The server SHOULD send a
+   "close" connection option in its final response on that connection.
+   The server MUST NOT process any further requests received on that
+   connection.
+
+   A server that sends a "close" connection option MUST initiate a close
+   of the connection (see below) after it sends the response containing
+   "close".  The server MUST NOT process any further requests received
+   on that connection.
+
+   A client that receives a "close" connection option MUST cease sending
+   requests on that connection and close the connection after reading
+   the response message containing the "close"; if additional pipelined
+   requests had been sent on the connection, the client SHOULD NOT
+   assume that they will be processed by the server.
+
+    If a server performs an immediate close of a TCP connection, there is
+   a significant risk that the client will not be able to read the last
+   HTTP response.  If the server receives additional data from the
+   client on a fully closed connection, such as another request that was
+   sent by the client before receiving the server's response, the
+   server's TCP stack will send a reset packet to the client;
+   unfortunately, the reset packet might erase the client's
+   unacknowledged input buffers before they can be read and interpreted
+   by the client's HTTP parser.
+
+   To avoid the TCP reset problem, servers typically close a connection
+   in stages.  First, the server performs a half-close by closing only
+   the write side of the read/write connection.  The server then
+   continues to read from the connection until it receives a
+   corresponding close by the client, or until the server is reasonably
+   certain that its own TCP stack has received the client's
+   acknowledgement of the packet(s) containing the server's last
+   response.  Finally, the server fully closes the connection.
+
+   It is unknown whether the reset problem is exclusive to TCP or might
+   also be found in other transport connection protocols.
+
+RFC 7230 : 3.4
+   
+   Handling Incomplete Messages
+
+   A server that receives an incomplete request message, usually due to
+   a canceled request or a triggered timeout exception, MAY send an
+   error response prior to closing the connection.
+

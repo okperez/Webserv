@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/19 13:51:29 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/22 10:48:23 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,21 @@
 
 Request::Request() {}
 
-Request::Request(char const *buffer, /* int read, */ int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media) {
-	// A UPDATE
+Request::Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */) {
+
+	time_t	now;
+	time(&now);
+	t_creation =  localtime(&now);
+	printf ("Creation Request: %s", asctime(t_creation)); // A EFFACER
 	socket_fd = socket;
 	server = src_server;
 	error = src_error;
 	auth_media = src_auth_media;
 	response.setAuthmedia(src_auth_media);
 	if (buffer)
-		save_buffer = buffer;
+		save_buffer.append(buffer, read);
+		// save_buffer = buffer;
 	i_conf = -1;
-	// if (read < BUFFER_SIZE)
-	// 	status = RD_TO_RESPOND;
-	// else
 	status = NEW;
 }
 
@@ -71,6 +73,9 @@ Request &Request::operator=(Request const & rhs) {
 	error = rhs.error;
 	auth_media = rhs.auth_media;
 	i_conf = rhs.i_conf;
+	t_creation = rhs.t_creation;
+	boundary = rhs.boundary;
+	body_deque = rhs.body_deque;
 	return (*this); 
 }
 
@@ -88,6 +93,14 @@ int 		Request::getIconf() const {
 
 int Request::getStatus() const {
 	return (status);
+}
+
+tm 		*Request::getT_creation() const {
+	return (t_creation);
+}
+
+void 		Request::setT_creation(time_t &now) {
+	t_creation = localtime(&now);
 }
 
 int Request::getSocket_fd() const {
@@ -118,6 +131,10 @@ std::string Request::getTransfer_encoding() const {
 	return (transfer_encoding);
 }
 
+std::string Request::getContentType() const {
+	return (content_type);
+}
+
 std::string Request::getConnection() const {
 	return (connection);
 }
@@ -135,9 +152,18 @@ void	Request::setStatus(int status) {
 	this->status = status;
 }
 
-void	Request::addSave_buffer(const char *buffer) {
-	save_buffer += buffer;
+void	Request::addSave_buffer(/* const */ char *buffer, int end) {
+	
+	
+	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
+	save_buffer.append(buffer, end);
+	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
+	// save_buffer += buffer;
 }
+
+// void	Request::addSave_buffer(const char *buffer) {
+// 	save_buffer += buffer;
+// }
 
 /* ************************************************************************* */
 /* ******************************* Exception ******************************* */
@@ -158,53 +184,40 @@ void	Request::send_response(int socket_fd) {
 		status = ERASE;
 		throw(ServerException("Fail to write"));
 	}
-	std::cout << fd << "********** RESPONSE CONTENT **********" << std::endl;
-	std::cout << response_content << std::endl;
-	std::cout << "******************************" << std::endl;
-	status = SENT;
 }
 
 //  parse request from client and send back response 
-int  Request::handle_request(int socket_fd, t_conf &conf, ErrorPages &error) // return necessaire?
+void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
-	std::cout << "handle request misslength = " << miss_length << std::endl;
-	if (!check_request(socket_fd, conf, error))
-		return (1);
+	// std::cout << "handle request misslength = " << miss_length << std::endl;
+	if (!check_request(/* socket_fd,  */conf, error))
+		return (send_response(socket_fd), (void)0);
 	int i = check_exist_method();
 	// std::cout << "i = " << i << std::endl;
-	switch (i) {
-		case UNKNOWN : {
-			error.fill_error(response, "405", conf);
-			return (send_response(socket_fd), 1);
-		}
-		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
-			// std::cout << "uri " << uri << std::endl;
-			std::string index = look_for_location(uri, conf); // si pas trouve index = ""
-			if (index.empty())
-			{
-				if (conf.root_dir.empty()) {
-					error.fill_error(response, "404", conf);
-					return (send_response(socket_fd), 1);
-				}
-				else {
-					if (strback(conf.root_dir) == '/')
-						uri.replace(0, 1, conf.root_dir);
-					else	
-						uri.insert(0, conf.root_dir);
-				}
+	try {
+		switch (i) {
+			case UNKNOWN : {
+				fill_significant_error("405", error, conf);
+				return (send_response(socket_fd), (void)0);
 			}
-			/* AVANT D AJOUTER LE PATH => check method ok */
-			else {
-				if (!check_allow_method(conf, index)) {
-					error.fill_error(response, "405", conf);
-					return (send_response(socket_fd), 1);
-				}
-				add_path(conf, index); // GET POST DELETE
+			case DELETE : {
+				find_location(conf, error);
+				delete_action(socket_fd, conf,  error);
+				return ;
+				// delete_action(/* socket_fd, conf, */ error);
+				// return (send_response(socket_fd), (void)0);
 			}
-			cgi_parse_uri();
-			return (build_response(socket_fd, conf, index, error), 1); // GET ONLY ICI
+			default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
+				std::string index = find_location(conf, error);
+				return (build_response(socket_fd, conf, index, error), (void)0); // GET ONLY ICI
+			}
 		}
 	}
+	catch (std::exception const &e) {
+		std::string err = e.what();
+		if (err == "exit")
+			throw ;
+	} 
 }
 
 /* ************************************************************************* */
@@ -275,7 +288,35 @@ void	Request::add_path(t_conf & conf, std::string &index) {
 	if (index[0] == '=')
 		index.erase(0, 1);
 	uri.replace(uri.find(index), index.length(), root);
-	// std::cout << "uri : " << uri << std::endl;
+}
+
+std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
+	std::string index = look_for_location(uri, conf); // si pas trouve index = ""
+	if (index.empty())
+	{
+		if (conf.root_dir.empty()) {
+			fill_error("404", error, conf);
+			send_response(socket_fd);
+			throw (RequestException(""));
+		}
+		else {
+			if (strback(conf.root_dir) == '/')
+				uri.replace(0, 1, conf.root_dir);
+			else	
+				uri.insert(0, conf.root_dir);
+		}
+	}
+	/* AVANT D AJOUTER LE PATH => check method ok */
+	else {
+		if (!check_allow_method(conf, index)) {
+			fill_significant_error("405", error, conf);
+			/* return ( */send_response(socket_fd);
+			throw (RequestException(""));
+		}
+		add_path(conf, index); // GET POST DELETE
+	}
+	cgi_parse_uri();
+	return (index);
 }
 
 /* ************************************************************************* */
@@ -392,6 +433,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		close(fd[0]);
 		close(fd[1]);
 		server->close_child_sockets();
+		std::cerr << "pathname" << std::endl << pathname << std::endl;
 		if (execve(pathname, argv, envp) != 0)
 		{
 			for (int i = 0; i < 7; i++)
@@ -414,9 +456,10 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	}
 	if (exit_status == 0)
 	{
-		while (1) // Attention si on passe plusieurs fois dedand on efface le buff
+		while (1) // ATTENTION A LA BOUCLE WHILE ==> si on passe deux fois on efface le buff
 		{
-			rd = read(fd[0], buff, sizeof(buff) - 1); // read ici interdit car on ne passe pas par poll (cf sujet) => utiliser filestream plutot
+			std::cout << "ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL" << std::endl;
+			rd = read(fd[0], buff, sizeof(buff) - 1); // ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL
 			if (rd < 1)
 			{
 				// buff[rd] = '\0';
@@ -459,6 +502,7 @@ bool	Request::is_accessible(char const *pathname)
 {
 	struct stat path_stat;
 	stat(pathname, &path_stat);
+	// SECU stat if == -1 ?
 	if (access(pathname, X_OK) == -1)
 		return false;
 	return S_ISREG(path_stat.st_mode);
@@ -479,7 +523,7 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 
 	std::string join = ("./" + _target);
 	char const *pathname = join.c_str();
-	std::ifstream	file(pathname, std::ifstream::in);
+	std::ifstream	file(pathname, std::ifstream::in); // QU EST CE QUI se passe si pathname n existe pas ===> a tester
 	if (!is_accessible(pathname) || is_empty(file))
 		throw RequestException ("500");
 	check_extension(conf, pathname, index_loc);
@@ -506,6 +550,48 @@ void	Request::setTimestamp(std::ofstream	& data)
 }
 
 /* ************************************************************************* */
+/* ******************************** DELETE ********************************* */
+/* ************************************************************************* */
+		
+void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
+	struct stat buf;
+	
+	if (stat(_target.data(), &buf) == -1)
+		return (fill_error("404", error, conf));
+	if (S_ISREG(buf.st_mode)) {
+		if (remove(_target.data()) == -1)
+			return (fill_error("500", error, conf));
+		response.setStatus("204", error);
+		send_response(socket_fd);
+	}
+	/* Voir avec Orlando si directory on efface ou pas ==> la rfc n est pas clair a ce propos */
+	/* SI oui finir d implementer le if si dessous et faire une recursive et voir les prob de symlink...*/
+	// if (S_ISDIR(buf.st_mode)) { // Faire une recursive
+	// 	DIR *tmp = opendir(_target.data());
+	// 	if (!tmp) {
+	// 		std::cout << "ERREUR PAS ENVOYEE" << std::endl;
+	// 		return (fill_error_errno(conf, error), (void) 0);
+	// 	}
+	// 	dirent	*directory;
+		
+	// }
+	else
+		return (fill_error("500", error, conf));
+		// std::cout << "IMPLEMENTER ERREUR DELETE" << std::endl;
+		// response.setBody(file);
+		// response.setStatus("200", " OK");
+		// std::string	type = extract_extension(target);
+		// if (type.empty())
+		// 	type = "octet-stream";
+		// if (!response.setContent_type(type)) {
+		// 	response.reinitBody();
+		// 	error.fill_error(response, "406", conf);
+		// }
+		// return (true);
+	
+}
+
+/* ************************************************************************* */
 /* ********************************** GET ********************************** */
 /* ************************************************************************* */
 
@@ -516,10 +602,6 @@ void	Request::setTimestamp(std::ofstream	& data)
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	std::cout << "\nLOCATION = " << location << std::endl;
-	std::cout << "URI = " << uri << std::endl;
-	std::cout << "Target = " << _target << std::endl;
-	// std::cout << "DIR = " << dir << std::endl;
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
@@ -538,8 +620,7 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		std::map<std::string, std::string>::iterator it = conf.location[location].find("return");
 		if (it != conf.location[location].end())
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
-		// 	=====> Request is a directory (end with a "/")
-		
+		// 	=====> Request is a directory (end with a "/")		
 		else if (is_dir(_target))
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
@@ -547,10 +628,17 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		{
 			try
 			{
+				// std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
+				// std::cout << "body : " << std::endl << body << std::endl << std::endl;
+				std::cout << "ENTER IN CGI" << std::endl;
+				std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
 				handle_cgi(conf, location);
 			}
 			catch(const std::exception& e)
 			{
+				std::string err = e.what();
+				if (err == "exit") // Si ctrl + c
+					throw ;
 				error.fill_error(response, e.what(), conf);
 			}
 		}
@@ -586,6 +674,7 @@ bool	Request::is_dir(std::string const &path) {
 	struct stat buf;
 	if (stat(path.data(), &buf) == -1) // NO LEAK MEMMORY + FD ===> erreur not found renvoyee
 		return (false);
+	std::cout << "A TESTER:  CHECKER SI PAS LES PERMISSIONS SUR DIR" << std::endl;
 	if (S_ISDIR(buf.st_mode))
 		return (true);
 	return (false);
@@ -597,7 +686,7 @@ void	Request::uri_directory(t_conf &conf, ErrorPages &error) {
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = _target + *it;
 		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
-			return (std::cout << "return" << std::endl, (void)0);
+			return (/* std::cout << "return" << std::endl, */ (void)0);
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(conf, error), (void)0);
@@ -658,8 +747,6 @@ void	Request::build_index(t_conf &conf, ErrorPages &error) {
 bool	Request::is_loop(std::string &redir, std::string const &location, t_conf &conf) {
 	
 	std::string tmp = look_for_location(redir, conf);
-	// std::cout << "redir = " << redir << std::endl; 
-	// std::cout << "next location = " << tmp << std::endl; 
 	if (tmp == location)
 		return (true);
 	return (false);
@@ -694,33 +781,45 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-bool	Request::check_request(int socket_fd, t_conf &conf, ErrorPages &error) {
+bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
 	
-	std::cout << "transfer_encoding = |" << transfer_encoding << "|" << std::endl;
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
-		error.fill_error(response, "411", conf);
-		return (send_response(socket_fd), false);
+		fill_significant_error("411", error, conf);
+		return (false);
 	}
-	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked")) {
-		error.fill_error(response, "400", conf);
-		return (send_response(socket_fd), false);
+	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data")) {
+		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
+		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+		return (false);
+	}
+	std::cout << static_cast<size_t>(content_length) << " et " << body_deque.size() << std::endl;
+	if (content_type == "multipart/form-data") {
+		if (static_cast<size_t>(content_length) != body_deque.size()) {
+			fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+			return (false);
+		}
+		if (method != "POST") {
+			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+			return (false);
+		}
 	}
 	if (version != "HTTP/1.1") {
-		error.fill_error(response, "405", conf);
-		return (send_response(socket_fd), false);
+		fill_significant_error("405", error, conf);
+		return (false);
 	}
-	if (content_length > conf.limit_body_size) {
-		error.fill_error(response, "413", conf);
-		return (send_response(socket_fd), false);
+	if (content_length > conf.limit_body_size) { // Significant error or not ?
+		fill_significant_error("413", error, conf);
+		return (false);
 	}
-	if (media.size() > 0 && !media_request_allowed()) {
-		error.fill_error(response, "415", conf);
-		return (send_response(socket_fd), false);
+	if (media.size() > 0 && !media_request_allowed()) { // Significant error or not ?
+		fill_significant_error("415", error, conf);
+		return (false);
 	}
 	return (true);
 }
 
 void	Request::recover_ip_socket() {
+	
 	u_int32_t n = ntohl(socket_s_addr);
 	std::stringstream iss;
 	for (int i = 24; i >= 0; i -= 8) {
@@ -730,7 +829,6 @@ void	Request::recover_ip_socket() {
 			iss << '.';
 	}
 	socket_ip = iss.str();
-	std::cout << socket_ip << std::endl;
 }
 
 void	Request::cgi_parse_uri() {
@@ -751,6 +849,7 @@ void	Request::cgi_parse_uri() {
 }
 
 void	Request::parse_host() {
+	
 	std::istringstream	iss(host);
 	
 	std::getline(iss, host, ':');
@@ -760,24 +859,18 @@ void	Request::parse_host() {
 
 void	Request::parse_media(std::string &s) {
 
-std::string tmp;
-size_t begin, end;
+	std::string tmp;
+	size_t begin, end;
 
-while (1) {
-	tmp = s;
-	begin = tmp.find(";q=");
-	if (begin == std::string::npos)
-		break;
-	end = tmp.find(",", begin);
-	s = tmp.erase(begin, end - begin);
-}
-strtomap(s, media, ",", "/");
-// for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
-// 	std::cout << "MEDIA[" << it->first << "] = ";
-// 	for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
-// 		std::cout << *jt << " ";
-// 	std::cout << std::endl;
-// 	}
+	while (1) {
+		tmp = s;
+		begin = tmp.find(";q=");
+		if (begin == std::string::npos)
+			break;
+		end = tmp.find(",", begin);
+		s = tmp.erase(begin, end - begin);
+	}
+	strtomap(s, media, ",", "/");
 }
 
 void	Request::setIp_socket(in_addr_t s_addr) {
@@ -787,31 +880,34 @@ void	Request::setIp_socket(in_addr_t s_addr) {
 }
 
 
-bool	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
+/* Parse first line, host and port */
+void	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	
-	// socket_s_addr = s_addr;
-	// recover_ip_socket();
-	/* Parse first line */
+	std::string title = "\e[34m";
+	std::string reset = "\e[0m";
 	method = extract_line(save_buffer, ' ');
 	uri = extract_line(save_buffer, ' ');
 	version = extract_line(save_buffer, '\r');
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
-	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty()) {
-		error->fill_error(response, "400");
-		return (send_response(socket_fd), false);
-	}
-	return (true);
+	std::cout << "***************************************" << std::endl;
+	std::cout << title << "*********** REQUEST **********" << std::endl;
+	std::cout << title << method << " " << uri << " " << version << std::endl;
+	std::cout << "******************************" << reset << std::endl;
+	if (method.empty() || version.empty() || uri.empty() || host.empty() || port.empty())
+		throw (RequestException("400"));
 }
 
 bool		Request::body_present() {
-	if (save_buffer.find("\n\r\n") != std::string::npos)
+	
+	if (save_buffer.find("\r\n\r\n") != std::string::npos)
 		return (true);
 	return (false);
 }
 
 // TESTER AVEC MAX INT + 1 OU MIN INT -1
 int	Request::ft_shextodec(std::string & s) {
+	
 	std::istringstream iss(s);
 	int n;
 
@@ -822,63 +918,122 @@ int	Request::ft_shextodec(std::string & s) {
 }
 
 int Request::extract_chunked_body(std::string &s) {
-	int i = 0;
+	
 	std::string tmp;
 	std::string new_body;
 	int length = -1;
 	
-	while (1) {
-		if (s.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3 ============> du coup utile ???
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-			return (length);
-		}
+	if (s.empty()) {
+			return (-2);
+	}
+	for (int i = 0; i < 2; i++) {
 		tmp = getline(s, "\r\n");
-		if (tmp.empty()) { // if i == 0 ou i > 0 && i < 2 ou i > 3
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-			return (length);
+		if (tmp.empty()) {
+			if (i == 0) {
+				if (s.empty())
+					return (-2);
+				throw (RequestException("400"));
+			}
+			else if (length == 0) 
+				return (0);
+			throw (RequestException("400"));
 		}
-			
-		std::cout << "tmp = |" << tmp << "|" << std::endl;
-		if (i % 2 == 0) {
-			// length = ft_stoi(tmp);
+		if (i == 0) {
 			length = ft_shextodec(tmp);
 			if (length == -1)
-				std::cout << "A IMPLEMENTER EXCEPTION stoi" << std::endl;
+				throw (RequestException("400"));
 		}
 		else {
-			if (tmp.length() != static_cast<size_t>(length)) // check if ici on peut avoir un length == a -1 ou non
-				std::cout << "A IMPLEMENTER ERROR bad request ou bad length" << std::endl;
+			if (tmp.length() != static_cast<size_t>(length) || s != "\r\n")
+				throw (RequestException("400"));
 			body += tmp;
+			return (length);
 		}
-		i++;
 	}
+	return (-2);
+}
+
+void	Request::parse_chunk_body() {
+	
+	std::string tmp = extract_body(save_buffer);
+	int chunk = extract_chunked_body(tmp);
+	if (chunk == 0)
+		status = RD_TO_RESPOND;
+	else
+		status = READING;
+}
+
+void	Request::parse_upload_body(std::string &body) {
+	
+	for (std::string::iterator it = body.begin(); it != body.end(); it++) {
+		body_deque.push_back(*it);
+	}
+	std::cout << "body_deque.size()" << body_deque.size() << std::endl;
+	std::cout << "content_length" << content_length << std::endl;
+	if (body_deque.size() == static_cast<size_t>(content_length))
+		status = RD_TO_RESPOND;
+	else
+		status = READING;
 }
 
 void	Request::parse_body() {
 	
 	body = extract_body(save_buffer);
-	std::cout << "body : " << body << std ::endl;
 	if (body.empty()) {
 		body = "";
-		std::cout << "A IMPLEMENTER si chunked" << std::endl;
 	}
-	// if (transfer_encoding == "chunked")
-	// 	extract_chunked_body();
 }
 
-bool	Request::parse_header() {
+void	Request::handle_multi_length() {
+	
+	std::string tmp;
+	int n;
+	
+	while (1) {
+		tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
+		if (tmp.empty())
+			return ;
+		try {
+			n = ft_stoi(tmp); 
+			if (n != content_length) {
+				content_length = -1;
+				return ;
+			}
+		}
+		catch (std::exception & e) {
+			std::string err = e.what();
+			if (err == "exit")
+				throw ;
+			else {
+				content_length = -1;
+				return ;
+			}
+		}	
+	}
+}
+
+void	Request::extract_boundary() {
+		content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
+		try {
+			boundary = content_type.substr(content_type.find("; boundary=") + 11);
+			content_type.erase(content_type.find("; boundary="));
+		}
+		catch(std::exception & e) {
+			std::string err = e.what();
+			if (err == "exit")
+				throw ;
+		}
+}
+
+void	Request::parse_headers() {
+	
 	std::string tmp;
 	
-	if (!parse_first_line())
-		return (false);
-
-	
-	/* Extract Headers */
 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
 	if (!tmp.empty())
 		parse_media(tmp);
-	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
+	connection = extract_elem("Connection:", "\r\n", save_buffer, "keep-alive");
 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "");
 	if (tmp.empty()) {
 		miss_length = true;
@@ -889,83 +1044,31 @@ bool	Request::parse_header() {
 		try { content_length = ft_stoi(tmp); }
 		catch (std::exception & e) { content_length = -1; }
 	}
-	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
-	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-	
-	if (transfer_encoding == "chunked") {
-		std::string s = extract_body(save_buffer);
-		int chunk = extract_chunked_body(s);
-		if (chunk == -1) // ==> body empty
-			std::cout << "A IMPLEMENTER COMMENT ON GERE?" << std::endl;
-		if (chunk == 0)
-			status = RD_TO_RESPOND;
-		else
-			status = READING;
+	handle_multi_length();
+	if (content_type.empty()) {
+		extract_boundary();
+		if (content_type == "multipart/form-data" && boundary.empty())
+			throw (RequestException("400"));
 	}
-	// std::cout << "body : " << body << std ::endl;
-	// if (body.empty())
-	// 	std::cout << "A IMPLEMENTER si chunked" << std::endl;
-	// if (transfer_encoding == "chunked")
-	// 	extract_chunked_body();
-		
-	// std::cout << std::endl;
-	std::cout << "host : " << host << std ::endl;
-	std::cout << "port : " << port << std ::endl;
-	std::cout << "method : " << method << std ::endl;
-	std::cout << "uri : " << uri << std ::endl;
-	std::cout << "version : " << version << std ::endl;
-	std::cout << "content_length : " << content_length << std ::endl;
-	std::cout << "miss_length : " << miss_length << std ::endl;
-	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-	std::cout << "connection : " << connection << std ::endl;
-	// std::cout << "body : " << body << std ::endl;
-	// std::cout << "*******************************" << std ::endl;
-	// std::cout << "save_buffer : " << save_buffer << std ::endl;
-	// std::cout << "*******************************" << std ::endl;
-	// std::cout << std::endl;
-	return (true);
+	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
 }
 
-// void	Request::parse_request() {
-// 	std::string tmp;
+void	Request::parse_request() {
 	
-// 	/* Extract Headers */
-// 	agent = extract_elem("User-Agent:", "\r", save_buffer, "");
-// 	tmp = extract_elem("Accept:", "\r", save_buffer, "");
-// 	if (!tmp.empty())
-// 		parse_media(tmp);
-// 	connection = extract_elem("Connection:", "\r", save_buffer, "keep-alive");
-// 	tmp = extract_elem("Content-Length:", "\r", save_buffer, "0");
-// 	if (tmp.empty())
-// 		miss_length = true;
-// 	else {
-// 		miss_length = false;
-// 		try { content_length = ft_stoi(tmp); }
-// 		catch (std::exception & e) { content_length = -1; }
-// 	}
-// 	content_type = extract_elem("Content-Type:", "\r", save_buffer, "");
-// 	transfer_encoding = extract_elem("Transfer-Encoding:", "\r", save_buffer, "");
-// 	body = extract_body(save_buffer);
-// 	std::cout << "body : " << body << std ::endl;
-// 	if (body.empty())
-// 		std::cout << "A IMPLEMENTER si chunked" << std::endl;
-// 	if (transfer_encoding == "chunked")
-// 		extract_chunked_body();
-// 	// std::cout << std::endl;
-// 	// std::cout << "host : " << host << std ::endl;
-// 	// std::cout << "port : " << port << std ::endl;
-// 	// std::cout << "method : " << method << std ::endl;
-// 	// std::cout << "uri : " << uri << std ::endl;
-// 	// std::cout << "version : " << version << std ::endl;
-// 	// std::cout << "content_length : " << content_length << std ::endl;
-// 	std::cout << "transfer_encoding : " << transfer_encoding << std ::endl;
-// 	// std::cout << "connection : " << connection << std ::endl;
-// 	// std::cout << "body : " << body << std ::endl;
-// 	// std::cout << "*******************************" << std ::endl;
-// 	// std::cout << "save_buffer : " << save_buffer << std ::endl;
-// 	// std::cout << "*******************************" << std ::endl;
-// 	// std::cout << std::endl;
-// }
+	if (save_buffer.find("\r\n\r\n\r\n") != std::string::npos) {
+		extract_boundary();
+		if (content_type != "multipart/form-data" || content_type.find(";") != std::string::npos || boundary.empty())
+			throw (RequestException("400"));
+	}
+	parse_first_line();
+	parse_headers();
+	if (transfer_encoding == "chunked")
+		parse_chunk_body();
+	if (content_type == "multipart/form-data") {
+		std::string tmp = extract_body(save_buffer);
+		parse_upload_body(tmp);
+	}
+}
 
 /* ************************************************************************* */
 /* ********************************* Utils ********************************* */
@@ -994,12 +1097,15 @@ std::string Request::extract_header(std::string & buff) const
 std::string Request::extract_elem(std::string const & elem, std::string const & delim, std::string & buff, std::string const & nofound) const {
 	
 	int begin, end = 0, sep_body;
-	sep_body = buff.find("\n\r\n");
+	sep_body = buff.find("\r\n\r\n");
 	begin = buff.find(elem);
 	if (begin == -1 || (sep_body > -1 && begin > sep_body))
 		return (nofound);
 	end = buff.find(delim, begin);
-	std::string tmp (buff.substr(begin, end + 1));
+	std::string tmp (buff.substr(begin, end - begin));
+	buff.erase(begin, end - begin);
+	if (buff.compare(begin, 4, "\r\n\r\n") != 0 || buff.compare(begin, 6, "\r\n\r\n\r\n") == 0)
+		buff.erase(begin, 2);
 	return (extract_header(tmp));
 }
 
@@ -1017,10 +1123,19 @@ std::string Request::getline(std::string &src, std::string const & delim) const 
 
 std::string Request::extract_body(std::string & buff) {
 	
-	int begin = buff.find("\n\r\n");
+	int begin = buff.find("\r\n\r\n");
 	if (begin == -1 || static_cast<size_t>(begin + 3) >= buff.length())
 		return ("");
-	std::string tmp (buff.substr(begin + 3, buff.length() - begin + 3));
+	std::string tmp (buff.substr(begin + 4, buff.length() - begin - 4));
+	if (transfer_encoding != "chunked" && content_type != "multipart/form-data") {
+		int found;
+		while (1) {
+			found = tmp.find("\r\n");
+			if (found == -1)
+				break;
+			tmp.erase(found, 2);
+			}
+	}
 	return (tmp);
 }
 
@@ -1048,6 +1163,21 @@ void	Request::fill_error(std::string const &code, ErrorPages &error) {
 	send_response(socket_fd);
 }
 
+void	Request::fill_significant_error(std::string const &code, ErrorPages &error) {
+	error.fill_significant_error(response, code);
+	setStatus(CLOSE);
+}
+
+void	Request::fill_error(std::string const &code, ErrorPages &error, t_conf &conf) {
+	error.fill_error(response, code, conf);
+	send_response(socket_fd);
+}
+
+void	Request::fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf) {
+	error.fill_significant_error(response, code, conf);
+	setStatus(CLOSE);
+}
+
 /* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
@@ -1060,4 +1190,12 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	else
 		error.fill_error(response, "503");
 	send_response(socket);
+}
+
+/* ************************************************************************* */	
+/* ******************************** A EFFACER ****************************** */
+/* ************************************************************************* */	
+
+void	Request::print_response() {
+	// response.print();
 }

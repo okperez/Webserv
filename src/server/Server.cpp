@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/18 16:04:45 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 17:36:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,7 @@ void	Server::create_fds() {
 	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->getFd();
 		it->setIndex(i);
+		std::cout << "CREATE_FDS POLLIN" << std::endl;
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
 		i++;
 	}
@@ -181,11 +182,16 @@ void	Server::launch_server(int max_socket) {
 	int i = 0;
 	int ret;
 	
-	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR" << std::endl;
+	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR =>> POUR EVITER BOUCLE INFINI REMPLACER VECT PAR DEQUE" << std::endl;
+	std::cout << "VOIR AC ORLANDO SI IMPLEMENTERSINON A IMPLEMENTER DANS CGI WAIT: SI SCRIPT QUI TOURNE EN BOUCLE METTRE EN PLACE TIMEOUT POUR CONTINUER" << std::endl;
+	std::cout << "		- SECU OVERFLOW INT" << std::endl;
+	std::cout << "		- SECU " << std::endl;
+	std::cout << "VOIR AC ORLANDO : DELETE SUR DIRECTORY ON FAIT OU PAS? " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
 		ret = poll(fds, max_socket, 50);
+		// std::cout << "\e[31mPASSE PAR POLL\e[0m" << std::endl;
 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
 			garbagge_server(NULL, PARENT);
 			throw(ServerException("Failed to poll."));
@@ -221,6 +227,103 @@ void	Server::launch_server(int max_socket) {
 /* ********************************* EVENTS ******************************** */
 /* ************************************************************************* */
 
+/*
+The normal procedure for parsing an HTTP message is to read the start-line
+into a structure, read each header field line into a hash table by field name
+until the empty line, and then use the parsed data to determine if a message
+body is expected. If a message body has been indicated, then it is read as a
+stream until an amount of octets equal to the message body length is read or the
+connection is closed.
+*/
+void	Server::read_request(int i, char *buffer, int read) {
+	
+	// std::cout << "************************ READ REQUEST fds[i].fd = " << fds[i].fd << std::endl;
+	// for (int j = 0; j < BUFFER_SIZE; j++)
+	// 	std::cout << buffer[j];
+	// std::cout << std::endl;
+
+	// Si une requete a deja ete cree : 
+	std::cout << "READ_REQUEST" << std::endl;
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
+		if (it->getSocket_fd() == fds[i].fd) {
+			time_t now;
+			time(&now);
+			it->setT_creation(now);
+			if (it->getStatus() == READING) { // UTILE ICI ?
+				if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data") {
+					it->addSave_buffer(buffer, read);
+					if (read < BUFFER_SIZE) {
+						fds[i].events = POLLOUT;
+					}
+				}
+				else if (it->getContentType() == "multipart/form-data") {
+					std::string tmp /* = buffer */;
+					std::cout << "read = " << read << std::endl;
+					tmp.append(buffer, read);
+					it->parse_upload_body(tmp);
+					// std::cout << "A IMPLEMENTER : Server::read_request Status = READING\n";
+				}
+				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
+					std::string tmp = buffer;
+					try {
+						int chunk = it->extract_chunked_body(tmp);
+						if (chunk == 0)
+							fds[i].events = POLLOUT;
+					}
+					catch (std::exception const &e) {
+						std::string err = e.what();
+						if (err == "exit")
+							throw ;
+						it->fill_significant_error("400", error);
+						fds[i].events = POLLOUT;
+						it->setStatus(ERROR);
+					}
+				}
+			}
+			else if (it->getStatus() == NEW) {
+				
+				it->addSave_buffer(buffer, read);
+				body_request_present(*it, read, i);
+			}
+			return ;
+		}
+	}
+	Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+	body_request_present(request, read, i);
+	requests.push_back(request);
+}
+
+bool	Server::request_response(int i) {
+	
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (it->getSocket_fd() == fds[i].fd) {
+			if (it->getStatus() == ERROR) {
+				it->send_response(it->getSocket_fd());
+				fds[i].events = POLLIN;	
+				return (close_and_erase(it), true);
+			}
+			struct sockaddr_storage name;
+			socklen_t namelen = sizeof(name);
+			if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+				send_error(it, "500", "Fail getsockname", error);
+			struct sockaddr_in *socket = (struct sockaddr_in *)&name;
+			// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
+			
+			it->setIp_socket(socket->sin_addr.s_addr);
+			if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
+				it->parse_body();
+			int i_conf = pick_server(*it);
+			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
+			if (it->getConnection() == "close" || it->getStatus() == CLOSE) // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
+				return (close_and_erase(it), true);			
+			fds[i].events = POLLIN;	
+			return (requests.erase(it), true);
+		}
+	}
+	return (false);
+}
+
 
 /* Called if there something to be read and handled in one of the fds */
 void	Server::event_request() {
@@ -234,26 +337,15 @@ void	Server::event_request() {
 				if (it->getFd() == fds[i].fd) {
 					new_connection(it->getFd()); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 					return ;
+					// A TESTER AVEC SIEGE : break au lieu de return et si nouvelle connection revenir au 1er for avec un continue  
 				}
 			}
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
-			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE);
+			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				handle_error_function(fds[i].fd, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
-			/*A significant difference between HTTP/1.1 and earlier versions of
-			HTTP is that persistent connections are the default behavior of any
-			HTTP connection. That is, unless otherwise indicated, the client
-			SHOULD assume that the server will maintain a persistent connection,
-			even after error responses from the server.
-
-			Persistent connections provide a mechanism by which a client and a
-			server can signal the close of a TCP connection. This signaling takes
-			place using the Connection header field (section 14.10). Once a close
-			has been signaled, the client MUST NOT send any more requests on that
-			connection.
-			*/
 				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
 						requests.erase(it);
@@ -263,55 +355,29 @@ void	Server::event_request() {
 				close_connection(i);
 			}
 			else
-			/*
-			In order to remain persistent, all messages on the connection MUST
-			have a self-defined message length (i.e., one not defined by closure
-			of the connection), as described in section 4.4.
-			*/
 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 			return ;
 		}
-	}
-	// =====> Il n 'y a pas eu d'event on check si une requete a quelque chose a repondre
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked") || it->getStatus() == RD_TO_RESPOND) {
-			for (int j = 0; j < MAX_CONNECTION; j++) {
-				if (fds[j].fd == it->getSocket_fd()) {
-					std::cout << "A IMPLEMENTER : AJOUTER TIME_OUT NOTAMMENT POUR CHUNK REQUEST TROP LONG" << std::endl;
-					struct sockaddr_storage name;
-					socklen_t namelen = sizeof(name);
-					if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-						send_error(it, "500", "Fail getsockname", error);
-					struct sockaddr_in *socket = (struct sockaddr_in *)&name;
-					// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
-					
-					it->setIp_socket(socket->sin_addr.s_addr);
-					// if (!it->parse_first_line(socket->sin_addr.s_addr, error))
-					// 	return (requests.erase(it), (void) 0);
-					
-					if (it->getTransfer_encoding() != "chunked")
-						it->parse_body();
-					std::cout << "body = " << it->getBody() << std::endl;
-					
-					int i_conf = pick_server(*it);
-					std::cout << "i_conf = " << i_conf << std::endl;
-					
-					// it->parse_request();
-					
-					it->handle_request(it->getSocket_fd(), conf[i_conf], error);
-					if (it->getConnection() == "close") { // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-						for (int i = 0; i < MAX_CONNECTION; i++) {
-							if (fds[i].fd == it->getSocket_fd()) 
-								return (requests.erase(it), close_connection(i), (void) 0);
-						}				
-					}
-					return (requests.erase(it), (void) 0);
-				}
-			}
-			return (requests.erase(it), (void) 0);
+		else if (fds[i].revents & POLLOUT)
+		{
+			if (request_response(i))
+				return;
 		}
-		else if (it->getStatus() == ERASE)
-			return (requests.erase(it), (void) 0);
+	}
+	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
+			for (int j = 0; j < MAX_CONNECTION; j++)
+				if (fds[j].fd == it->getSocket_fd())
+					fds[j].events = POLLOUT;
+			continue;
+		}
+		time_t now;
+		time(&now);
+		if (difftime(now, mktime(it->getT_creation())) > 10) {
+			it->fill_significant_error("408", error);
+			it->send_response(it->getSocket_fd());
+			return (close_and_erase(it), (void) 0);
+		}
 	}
 }
 
@@ -381,7 +447,6 @@ int	Server::is_host(std::string host, std::string port, std::string socket_ip) {
 	std::vector<int> match, exact_host, server_name, default_host;
 
 	i = unique_match(port, socket_ip, match);
-	std::cout << "i = " << i << std::endl;
 	if (i > -1)
 		return (i);
 	for (std::vector<int>::iterator it = match.begin(); it != match.end(); it++) {
@@ -441,71 +506,32 @@ int	Server::pick_server(Request &request) {
 	return (is_host(request.getHost(), request.getPort(), request.getSocket_ip()));
 }
 
-void	Server::body_request_present(Request &request, int read) {
+void	Server::body_request_present(Request &request, int read, int i) {
 	
 	if (request.body_present()) {
-		if (request.getStatus() == NEW && !request.parse_header())
-			std::cout << "A IMPLEMENTER => error a deja fill response => envoyer la rep + effacer requete ";
-		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
-			request.setStatus(RD_TO_RESPOND);
-		// else if (request.getTransfer_encoding() == "chunked" /* && dans body 0 */)
-		// 	request.setStatus(RD_TO_RESPOND);
+		if (request.getStatus() == NEW) {
+			try { 
+				request.parse_request();
+			}
+			catch (std::exception const &e) {
+				std::string err = e.what();
+				if (err == "exit")
+					throw;
+				request.fill_significant_error(err, error);
+				fds[i].events = POLLOUT;
+				request.setStatus(ERROR);
+				return ;
+			}
+		}
+		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked" && request.getContentType() != "multipart/form-data")
+			fds[i].events = POLLOUT;
+		else if ((request.getTransfer_encoding() == "chunked" || request.getContentType() != "multipart/form-data") && request.getStatus() == RD_TO_RESPOND)
+			fds[i].events = POLLOUT;
 		else
 			request.setStatus(READING);
 	}
-}
-
-/*
-The normal procedure for parsing an HTTP message is to read the start-line
-into a structure, read each header field line into a hash table by field name
-until the empty line, and then use the parsed data to determine if a message
-body is expected. If a message body has been indicated, then it is read as a
-stream until an amount of octets equal to the message body length is read or the
-connection is closed.
-*/
-void	Server::read_request(int i, char *buffer, int read) {
-	
-	for (int j = 0; j < BUFFER_SIZE; j++)
-		std::cout << buffer[j];
-	std::cout << std::endl;
-
-	// Si une requete a deja ete cree : 
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if (it->getSocket_fd() == fds[i].fd) {
-			if (it->getStatus() == READING) { // UTILE ICI ?
-				if (it->getTransfer_encoding() != "chunked") {
-					it->addSave_buffer(buffer);
-					if (read < BUFFER_SIZE)
-						it->setStatus(RD_TO_RESPOND);
-				}
-				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
-					std::string tmp = buffer;
-					int chunk = it->extract_chunked_body(tmp);
-					if (chunk == 0) {
-						it->setStatus(RD_TO_RESPOND);
-					}
-				}
-				return ;
-			}
-			else if (it->getStatus() == NEW) {
-				body_request_present(*it, read);
-			}
-		}
-	}
-	// Si pas de requete correspondant a l event, creation d'i=une nouvelle requete :
-	Request 	request(buffer, /* read, */ fds[i].fd, this, &this->error, &this->auth_media); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
-	body_request_present(request, read);
-	// if (request.body_present()) {
-	// 	request.parse_request();
-	// 	if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked")
-	// 		request.setStatus(RD_TO_RESPOND);
-	// 	else if (request.getTransfer_encoding() != "chunked" /* && dans body 0 */)
-	// 		request.setStatus(RD_TO_RESPOND);
-	// 	else
-	// 		request.setStatus(READING);
-	// }
-	requests.push_back(request);
-	std::cout << "requests[0].getTransfer_encoding() = |" << requests[0].getTransfer_encoding() << "|" << std::endl;
+	else
+		std::cout << "A IMPLEMENTER OU VOIR SI BESOIN : body absent" << std::endl;
 }
 
 /* ************************************************************************* */
@@ -524,7 +550,7 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", /* -1, */ socket, this, &error, &auth_media);
+	Request tmp("", 0, socket, this, &error, &auth_media/* , 0 */);
 	tmp.fill_error(code, error);
 	throw (ServerException(mess));
 }
@@ -548,6 +574,15 @@ void	Server::error_bfr_launch() {
 		it->close_fd();
 }
 
+void	Server::close_and_erase(std::vector<Request>::iterator it) {
+	for (int i = 0; i < MAX_CONNECTION; i++) {
+		if (fds[i].fd == it->getSocket_fd()) {
+			// std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
+			return (requests.erase(it), close_connection(i), (void) 0);
+		}
+	}
+}
+
 /* Si control C stop listen + close socket listen */
 void	Server::stop_listen() {
 	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end() ; it++) {
@@ -564,8 +599,6 @@ void	Server::close_requests(int &socket) {
 			return ;
 		}
 	}
-	// Request tmp(NULL, 0, socket, this, &this->auth_media);
-	// tmp.handle_pending_requests(error, socket);
 } 
 
 void	Server::handle_pending_requests() {

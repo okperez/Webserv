@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<head>
+	<title>Image</title>
+    <link rel="stylesheet" type="text/css" href="session.css">
+</head>
+<body>
+	<div id="center">
+	<!-- <form id="div2" action="home.html" method="POST" enctype="multipart/form-data"> -->
+		<form id="div2" method="POST" enctype="multipart/form-data">
+		<!-- <label id="text" for="file"> Choisir un fichier </label> -->
+		<!-- <label for="file" id="custom-file-upload">Parcourir</label> -->
+		<!-- <input id="hide"type="file" id="file" name="myFile"/> -->
+		<!-- <input id="button2" type="submit" value="Submit"/> -->
+
+		<!-- <label id="text" for="file">Choisir un fichier</label><br><br> -->
+		<div>
+			<h1 id="size4">Choisir un fichier</h1>
+		</div>
+		<div id="div3">
+			<label for="hide" id="custom-file-upload">Parcourir</label>
+			<input type="file" id="hide" name="myFile"/>
+			<text id="file-name">Aucun fichier choisi</text>
+		</div>
+		<div>
+			<input id="button2" type="submit" value="Submit"/>
+		</div>
+	</form>
+	</div>
+	<script>
+        document.getElementById('custom-file-upload').addEventListener('click', function() {
+            document.getElementById('hide').click();
+        });
+
+		document.getElementById('hide').addEventListener('change', function() {
+            var fileName = document.getElementById('hide').files[0].name;
+            document.getElementById('file-name').textContent = fileName;
+        });
+		
+    </script>
+</body>

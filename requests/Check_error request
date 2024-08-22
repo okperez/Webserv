@@ -1,0 +1,39 @@
+TEST CONTENT LENGTH TELNET
+
+Content length absent + body present                    ====> OK
+Content length absent + body absent                     ====> OK
+Content length > 0 + body absent                        ====> OK
+Content length = 0 + body absent                        ====> OK
+Content length ok + body present                        ====> OK
+Content length false + body present                     ====> OK
+multi Content length all exact + body present           ====> OK
+multi Content length 1 false + body present             ====> OK
+
+TEST CONNECTION CHUNK REQUEST
+
+chunk request avec good length			                ====> OK
+chunk request avec 1er chunk bad length			        ====> OK
+chunk request avec 2eme chunk bad length			    ====> OK
+chunk request avec 1ere chunk length is not hexa	    ====> OK
+chunk request avec 2eme chunk length is not hexa	    ====> OK
+chunk request avec 1rst body vide                       ====> OK
+chunk request avec 2eme body vide                       ====> OK
+chunk request avec 1er et 2eme body vide                ====> OK
+chunk request avec 2 chunk en 1 dans le 1er             ====> OK
+chunk request avec 2 chunk en 1 dans le 1eme            ====> OK
+chunk request avec chunk separes de plus de deux CRLF   ====> OK
+chunk request avec dernier chunk != 0                   ====> OK
+chunk request avec Content-Length av Transfer-Encoding  ====> OK
+chunk request avec Content-Length ap Transfer-Encoding  ====> OK
+
+TEST CONNECTION TELNET
+
+Connection: close         							    ====> OK
+Connection: other         							    ====> OK
+Connection: ABSENT       							    ====> OK
+
+TEST RULE DELETE
+
+delete file             							    ====> OK
+delete file chmod 000      							    ====> OK
+delete on location method not allowed				    ====> OK

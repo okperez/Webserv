@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/18 16:04:39 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/21 14:54:28 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,16 @@ class Server
 		/* ***************************************************************** */
 
 		void	launch_server(int max_socket);
+
+		
+		/* ***************************************************************** */
+		/* **************************** EVENTS ***************************** */
+		/* ***************************************************************** */
+
+		void	read_request(int i, char *buffer, int read);
+		bool	request_response(int i);
 		void	event_request();
+		
 		/* ***************************************************************** */
 		/* *********************** HANDLE CONNECTION *********************** */
 		/* ***************************************************************** */
@@ -80,8 +89,7 @@ class Server
 		int		is_host(std::string host, std::string port, std::string socket_host);
 		int		unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
 		int		pick_server(Request &request);
-		void	body_request_present(Request &request, int read);
-		void	read_request(int i, char *buffer, int read);
+		void	body_request_present(Request &request, int read, int i);
 
 		/* ***************************************************************** */
 		/* ***************************** ERROR ***************************** */
@@ -96,6 +104,7 @@ class Server
 		
 		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
+		void	close_and_erase(std::vector<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
 		void	handle_pending_requests();
