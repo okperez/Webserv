@@ -46,7 +46,6 @@ void	adapt_host(std::string &s) {
 	}
 }
 
-/* A INTEGRER DANS PARSING pour mettre en minuscule host et server_name qui doivent etre case insensitive*/
 void	str_tolower(std::string & s) {
 	for (int i = 0; s[i]; i++)
 		s[i] = tolower(s[i]); 

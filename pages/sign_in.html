@@ -18,7 +18,24 @@
 				<label id="text" for="fname">First name :</label><br>
 				<input id="champs" type = "text" id="fname" name="fname"><br><br>
 				<label id="text" for="lname">Last Name :</label><br>
-				<input id="champs" type = "text" id="lname" name="lname"><br><br>
+				<input id="champs" type = "password" id="lname" name="lname"><br><br>
+				<script>
+					function getCookie(cname) {
+					  var cookies = ` ${document.cookie}`.split(";");
+					  for (var i = 0; i < cookies.length; i++)
+					  {
+						var val = cookies[i].split("=");
+						if (val[0] == ` ${cname}`) {
+						  return val[1];
+						}
+					  }
+					  return "";
+					}
+					var fname = getCookie('fname');
+					var lname = getCookie('lname');
+					document.getElementById('fname').value = fname;
+					document.getElementById('lname').value = lname;
+				</script>
 				<label id="remember">
 				<input type="checkbox" name="rememberMe"> Remember Me </label><br><br><br>
 			</div>

@@ -93,15 +93,15 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
 {
     std::string arg = str.substr(0, str.find(' '));
     std::string valid_loc = "index allow_methods autoindex upload_dir root cgi_extension cgi_path return location try_files";
-    std::string valid_server = "index root listen host client_max_body_size error_page server{ }";
-    std::string error_page = "404 403 error_page";
+    std::string valid_server = "index root listen host location client_max_body_size error_page server{ }";
+    std::string error_page = "200 300 301 302 303 304 305 306 307 308 400 403 404 405 406 411 413 415 500 501 503 505 508 error_page";                  // quelles sont les autres possiblites ?
     
     if (loc == 1)
     {
         if (valid_loc.find(arg) == valid_loc.npos)
         {
             
-            std::cout << "Invalid arg = " << arg << std::endl;
+            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in location");
         }
     }
@@ -109,7 +109,7 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
     {
         if (error_page.find(arg) == error_page.npos)
         {
-            std::cout << "Invalid arg = " << arg << std::endl;
+            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in error_page");
         }
     }
@@ -117,7 +117,7 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
     {
         if (valid_server.find(arg) == valid_server.npos)
         {
-            std::cout << "Invalid arg = " << arg << std::endl;
+            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in server");
         }
     }

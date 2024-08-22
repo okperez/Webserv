@@ -375,8 +375,6 @@ char**	Request::set_env(t_conf & conf)
 void	Request::get_output(char *buff)
 {
 	int	flag = 0;
-	// if (strlen(buff) == 0)
-		// response.setBody("/r/n");
 	std::string str = buff;
 	if (str == "1")
 		throw RequestException ("500");

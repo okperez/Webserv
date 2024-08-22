@@ -1,7 +1,7 @@
 <?php
 
 $file = file_get_contents('Data_user');
-if ($file != 0)
+if ($file != false && strlen($file) > 0)
 {
     $fname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "fname"), strpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "fname"));
     $firstname = substr(getenv("QUERY_STRING"), strpos(getenv("QUERY_STRING"), "fname") + 6, strpos(getenv("QUERY_STRING"), '&') - strpos(getenv("QUERY_STRING"), "fname") - 6);
@@ -10,10 +10,9 @@ if ($file != 0)
     {
         if ((str_contains (getenv("QUERY_STRING"), "rememberMe=on")) && getenv("REQUEST_METHOD") == "POST")
         {
-            echo "Set-Cookie: $fname; path=/sign_in.html; HttpOnly;\n";
-            echo "Set-Cookie: $lname; path=/sign_in.html; HttpOnly;\n";
+            echo "Set-Cookie: $fname; path=/sign_in.html;\n";
+            echo "Set-Cookie: $lname; path=/sign_in.html;\n";
         }
-        // echo "Location: http://localhost:8080/welcome.html\n";
         echo("<!DOCTYPE html>");
         echo("<html>");
         echo("<head>");
@@ -35,5 +34,5 @@ if ($file != 0)
     }
 }
 else
-    "1"
+    echo "1"
 ?>

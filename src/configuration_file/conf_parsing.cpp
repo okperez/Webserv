@@ -47,15 +47,6 @@ void    clear_file(std::list<std::string> & cnf_file, char *argv)
         }
         it++;
     }
-    // std::cout << "Here parsing fail with server only in conf file\n";
-    // for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
-    // {
-        // if (((*it) == "server" || (*it) == "server ") && *std::next(it) == "{")
-        // {
-            // *it = "server{";
-            // it = cnf_file.erase(std::next(it));
-        // }
-    // }
 }
 
 int     count_server(std::list<std::string> & cnf_file)
@@ -109,7 +100,8 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
     {
         clear_file(cnf_file, argv);
 		check_syntax(cnf_file);
-        server_nbr = count_server(cnf_file);
+        if ((server_nbr = count_server(cnf_file)) == 0)
+            throw ConfFileException ("Error: server missing");
         std::list<std::string>      split_file[server_nbr];
         split_conf_file(cnf_file, split_file, server_nbr);
         conf.resize(server_nbr);

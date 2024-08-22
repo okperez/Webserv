@@ -40,7 +40,7 @@ void	check_bracket(std::list<std::string> & cnf_file)
         	throw ConfFileException ("Error: missing bracket");
 	}
 	if (sign == 1)
-    throw ConfFileException ("Error: too many bracket");	
+    	throw ConfFileException ("Error: unclosed bracket");	
 }
 
 void	erase_content(std::string & str, char c)
@@ -79,19 +79,6 @@ void	check_server_content(std::string str)
 	std::string sub = str.substr(7, r_bracket - 7);
 }
 
-// void	check_http_content(std::string str)
-// {
-	// static const size_t	pos = str.find("http{");
-	// str.erase(0, pos);
-	// static const size_t	r_bracket = str.find('}');
-// 
-	// if (r_bracket > str.find("server{"))
-		// throw ConfFileException("Error: server context not declared in main");
-	// std::string sub = str.substr(5, r_bracket - 5);
-	// if (sub.find("server{") == sub.npos)
-		// throw ConfFileException("Error: server context not declared in main");
-// }
-
 std::string	clear_str(std::list<std::string> cnf_file)
 {
 	std::string	str = "";
@@ -104,17 +91,29 @@ std::string	clear_str(std::list<std::string> cnf_file)
 	return (str);
 }
 
-// void    quick_parsing(std::list<std::string> & cnf_file)
-// {
-    // auto it = cnf_file.begin();
-    // if (*it != "server {" && *it != "server{")	
-        // throw ConfFileException ("Error: missing server directive");
-// }
+void	check_parameters(std::list<std::string> & cnf_file)
+{
+	int	srv_count = 0;
+	int	loc_count = 0;
+	for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
+	{
+		std::cout << *it << std::endl;
+		if ((*it).find("server") != (*it).npos)
+			srv_count += 1;
+		if ((*it).find("location") != (*it).npos)
+			loc_count += 1;
+	}
+	if (srv_count < 1)
+		throw ConfFileException ("Error: missing server");
+	if (loc_count < 1)
+		throw ConfFileException ("Error: missing location");
+}
 
 void	check_syntax(std::list<std::string> & cnf_file)
 {
 	std::string	str;
 
+	check_parameters(cnf_file);
 	check_bracket(cnf_file);
 	str = clear_str(cnf_file);
 	check_outside_bracket(str);
