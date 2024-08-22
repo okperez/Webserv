@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/22 10:48:23 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/22 14:01:58 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -555,7 +555,7 @@ void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
 	struct stat buf;
 	
 	if (stat(_target.data(), &buf) == -1)
-		return (fill_error("404", error, conf));
+		return (fill_error("404", error, conf)); // A IMPLEMENTER ERREUR 404 PAS OK ICI
 	if (S_ISREG(buf.st_mode)) {
 		if (remove(_target.data()) == -1)
 			return (fill_error("500", error, conf));
@@ -600,6 +600,13 @@ void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
+	if (content_type == "multipart/form-data")
+	{
+		std::cout << "BODY_DEQUE\n\n";
+		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+			std::cout << *it; 
+		std::cout << "\n\n END BODY_DEQUE\n\n";
+	}
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
@@ -780,6 +787,14 @@ bool	Request::media_request_allowed() {
 }
 
 bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
+	
+	if (content_type == "multipart/form-data")
+	{
+		std::cout << "BODY_DEQUE\n\n";
+		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+			std::cout << *it; 
+		std::cout << "\n\n END BODY_DEQUE\n\n";
+	}
 	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		fill_significant_error("411", error, conf);
@@ -968,8 +983,16 @@ void	Request::parse_upload_body(std::string &body) {
 	}
 	std::cout << "body_deque.size()" << body_deque.size() << std::endl;
 	std::cout << "content_length" << content_length << std::endl;
-	if (body_deque.size() == static_cast<size_t>(content_length))
+	if (body_deque.size() == static_cast<size_t>(content_length)) {
+		if (content_type == "multipart/form-data")
+		{
+			std::cout << "BODY_DEQUE\n\n";
+			for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+				std::cout << *it; 
+			std::cout << "\n\n END BODY_DEQUE\n\n";
+		}
 		status = RD_TO_RESPOND;
+	}
 	else
 		status = READING;
 }

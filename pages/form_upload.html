@@ -22,6 +22,11 @@
 			<input type="file" id="hide" name="myFile"/>
 			<text id="file-name">Aucun fichier choisi</text>
 		</div>
+		<div id="div3">
+			<label for="hide2" id="custom-file-upload2">Parcourir</label>
+			<input type="file" id="hide2" name="myFile"/>
+			<text id="file-name2">Aucun fichier choisi</text>
+		</div>
 		<div>
 			<input id="button2" type="submit" value="Submit"/>
 		</div>
@@ -31,10 +36,16 @@
         document.getElementById('custom-file-upload').addEventListener('click', function() {
             document.getElementById('hide').click();
         });
-
+		document.getElementById('custom-file-upload2').addEventListener('click', function() {
+            document.getElementById('hide2').click();
+        });
 		document.getElementById('hide').addEventListener('change', function() {
             var fileName = document.getElementById('hide').files[0].name;
             document.getElementById('file-name').textContent = fileName;
+        });
+		document.getElementById('hide2').addEventListener('change', function() {
+            var fileName = document.getElementById('hide2').files[0].name;
+            document.getElementById('file-name2').textContent = fileName;
         });
 		
     </script>

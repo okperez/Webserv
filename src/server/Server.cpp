@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 17:36:11 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/22 11:51:09 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -360,6 +360,7 @@ void	Server::event_request() {
 		}
 		else if (fds[i].revents & POLLOUT)
 		{
+			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
 			if (request_response(i))
 				return;
 		}
@@ -531,7 +532,7 @@ void	Server::body_request_present(Request &request, int read, int i) {
 			request.setStatus(READING);
 	}
 	else
-		std::cout << "A IMPLEMENTER OU VOIR SI BESOIN : body absent" << std::endl;
+		std::cout << "A IMPLEMENTER OU VOIR SI BESOIN : body absent" << std::endl; // A EFFACER LE ELSE EST JUSTE POUR DEBUG
 }
 
 /* ************************************************************************* */
