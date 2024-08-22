@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/22 14:01:58 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/22 16:35:24 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,12 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 			}
 			case DELETE : {
 				find_location(conf, error);
-				delete_action(socket_fd, conf,  error);
+				if (delete_action(_target.data(), socket_fd, conf,  error)) {
+					response.setStatus("204", error);
+					send_response(socket_fd);
+				}
+				else if ()
+					fill_error("500", error, conf);
 				return ;
 				// delete_action(/* socket_fd, conf, */ error);
 				// return (send_response(socket_fd), (void)0);
@@ -550,43 +555,48 @@ void	Request::setTimestamp(std::ofstream	& data)
 /* ************************************************************************* */
 /* ******************************** DELETE ********************************* */
 /* ************************************************************************* */
-		
-void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
+
+/*
+Que la requete delete concerne un fichier / dossier existant ou inexistant le code renvoye sera le meme : 204
+Le serveur l efface dans le premier cas et ne fait rien dans le deuxieme
+*/		
+bool	Request::delete_action(const char *target, int socket_fd, t_conf &conf, ErrorPages &error) {
 	struct stat buf;
 	
-	if (stat(_target.data(), &buf) == -1)
-		return (fill_error("404", error, conf)); // A IMPLEMENTER ERREUR 404 PAS OK ICI
-	if (S_ISREG(buf.st_mode)) {
-		if (remove(_target.data()) == -1)
-			return (fill_error("500", error, conf));
-		response.setStatus("204", error);
-		send_response(socket_fd);
+	// au lieu d un bool pourquoi pas mettre en place exception avec throw le code qu on veut ?
+	if (stat(target, &buf) == -1)
+		return (true);
+	if (S_ISDIR(buf.st_mode)) {
+		DIR *tmp = opendir(target);
+		if (!tmp) {
+			std::cout << "ERREUR PAS ENVOYEE" << std::endl;
+			return (fill_error_errno(conf, error), false); // PK ERREUR 404 s il existaait pas stat n aurait pas renvoye c est good du coup seul cas droits fichier a verifier
+		}
+		dirent	*directory;
+		while (1) {
+			directory = readdir(tmp);
+			if (!directory) { // OK NO LEAKS MEMMORY + FD
+				// On devrait pas checker erno et droits fichier ? a verif et tester
+				if (remove(target) == -1)
+					return (false);
+				break;
+			}
+			if (!strcmp(directory->d_name, ".") || !strcmp(directory->d_name, ".."))
+				continue;
+			std::string tmp = target;
+			tmp += "/";
+			tmp += directory->d_name;
+			if (!delete_action(tmp.data(), socket_fd, conf, error))
+				return (false);
+		}
+		closedir(tmp);
+		return (true);
 	}
-	/* Voir avec Orlando si directory on efface ou pas ==> la rfc n est pas clair a ce propos */
-	/* SI oui finir d implementer le if si dessous et faire une recursive et voir les prob de symlink...*/
-	// if (S_ISDIR(buf.st_mode)) { // Faire une recursive
-	// 	DIR *tmp = opendir(_target.data());
-	// 	if (!tmp) {
-	// 		std::cout << "ERREUR PAS ENVOYEE" << std::endl;
-	// 		return (fill_error_errno(conf, error), (void) 0);
-	// 	}
-	// 	dirent	*directory;
-		
-	// }
-	else
-		return (fill_error("500", error, conf));
-		// std::cout << "IMPLEMENTER ERREUR DELETE" << std::endl;
-		// response.setBody(file);
-		// response.setStatus("200", " OK");
-		// std::string	type = extract_extension(target);
-		// if (type.empty())
-		// 	type = "octet-stream";
-		// if (!response.setContent_type(type)) {
-		// 	response.reinitBody();
-		// 	error.fill_error(response, "406", conf);
-		// }
-		// return (true);
-	
+	else {
+		if (remove(target) == -1)
+			return (false);
+		return (true);
+	}
 }
 
 /* ************************************************************************* */
@@ -600,13 +610,6 @@ void	Request::delete_action(int socket_fd, t_conf &conf, ErrorPages &error) {
 
 void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
 	
-	if (content_type == "multipart/form-data")
-	{
-		std::cout << "BODY_DEQUE\n\n";
-		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-			std::cout << *it; 
-		std::cout << "\n\n END BODY_DEQUE\n\n";
-	}
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
@@ -787,14 +790,6 @@ bool	Request::media_request_allowed() {
 }
 
 bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
-	
-	if (content_type == "multipart/form-data")
-	{
-		std::cout << "BODY_DEQUE\n\n";
-		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-			std::cout << *it; 
-		std::cout << "\n\n END BODY_DEQUE\n\n";
-	}
 	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
 		fill_significant_error("411", error, conf);
