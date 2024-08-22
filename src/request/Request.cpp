@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/21 17:32:55 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/22 10:07:39 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -793,9 +793,15 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		return (false);
 	}
 	std::cout << static_cast<size_t>(content_length) << " et " << body_deque.size() << std::endl;
-	if (content_type == "multipart/form-data" && static_cast<size_t>(content_length) != body_deque.size()) {
-		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		return (false);
+	if (content_type == "multipart/form-data") {
+		if (static_cast<size_t>(content_length) != body_deque.size()) {
+			fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+			return (false);
+		}
+		if (method != "POST") {
+			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+			return (false);
+		}
 	}
 	if (version != "HTTP/1.1") {
 		fill_significant_error("405", error, conf);
