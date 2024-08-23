@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/23 10:20:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 16:35:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,7 @@ void	Request::send_response(int socket_fd) {
 	std::string response_content = response.build_response();
 	int fd = write(socket_fd, response_content.c_str(), response_content.size());
 	if (fd == -1) {
-		status = ERASE;
+		status = CLOSE;
 		throw(ServerException("Fail to write"));
 	}
 }
@@ -189,42 +189,28 @@ void	Request::send_response(int socket_fd) {
 //  parse request from client and send back response 
 void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
-	// std::cout << "handle request misslength = " << miss_length << std::endl;
-	if (!check_request(/* socket_fd,  */conf, error))
-		return (send_response(socket_fd), (void)0);
+	if (!check_request(conf, error))
+		return ;
 	int i = check_exist_method();
-	// std::cout << "i = " << i << std::endl;
-	try {
-		switch (i) {
-			case UNKNOWN : {
+	switch (i) {
+		case UNKNOWN : {
+			fill_significant_error("405", error, conf);
+		}
+		case DELETE : {
+			std::string index = find_location(conf, error);
+			if (conf.location[index].find("return") != conf.location[index].end()) {
 				fill_significant_error("405", error, conf);
-				return (send_response(socket_fd), (void)0);
 			}
-			case DELETE : {
-				find_location(conf, error);
-				try {
-					delete_action(_target.data(), socket_fd, conf,  error);
-					response.setStatus("204", error);
-				}
-				catch (std::exception const &e) {
-					if (!strcmp(e.what(), "exit"))
-						throw;
-					fill_significant_error("403", error);
-				}
-				send_response(socket_fd);
-				return ;
-			}
-			default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
-				std::string index = find_location(conf, error);
-				return (build_response(socket_fd, conf, index, error), (void)0); // GET ONLY ICI
-			}
+			delete_action(_target.data(), socket_fd, conf,  error);
+			response.setStatus("204", error);
+			setStatus(RD_TO_SEND);
+			return ;
+		}
+		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
+			std::string index = find_location(conf, error);
+			return (build_response(conf, index, error), (void)0);
 		}
 	}
-	catch (std::exception const &e) {
-		std::string err = e.what();
-		if (err == "exit")
-			throw ;
-	} 
 }
 
 /* ************************************************************************* */
@@ -303,7 +289,7 @@ std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
 	{
 		if (conf.root_dir.empty()) {
 			fill_error("404", error, conf);
-			send_response(socket_fd);
+			setStatus(RD_TO_SEND);
 			throw (RequestException(""));
 		}
 		else {
@@ -317,8 +303,6 @@ std::string	Request::find_location(t_conf &conf, ErrorPages &error) {
 	else {
 		if (!check_allow_method(conf, index)) {
 			fill_significant_error("405", error, conf);
-			/* return ( */send_response(socket_fd);
-			throw (RequestException(""));
 		}
 		add_path(conf, index); // GET POST DELETE
 	}
@@ -379,12 +363,16 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
-void	Request::get_output(char *buff)
+void	Request::get_output(char *buff, t_conf &conf)
 {
 	int	flag = 0;
 	std::string str = buff;
-	if (str == "1")
-		throw RequestException ("500");
+	std::cout << "str = " << str << std::endl;
+	if (str == "1") {
+		std::cout << "test 0" << std::endl;
+		fill_significant_error("500", *error, conf);
+		// throw RequestException ("500");
+	}
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -418,7 +406,7 @@ void	Request::get_output(char *buff)
 	response.setContent_type("html");
 }
 
-int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[])
+int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
 {
 	int		pid;
 	int		status;
@@ -428,10 +416,10 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int		exit_status = 0;
 
 	if (pipe(fd) == -1)
-		throw RequestException ("500");
+		fill_significant_error("500", *error, conf);
 	pid = fork();
 	if (pid == -1)
-		throw RequestException ("500");
+		fill_significant_error("500", *error, conf);
 	if (pid == 0)
 	{
 		dup2(fd[1], 1);
@@ -450,6 +438,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		}
 	}
 	waitpid(pid, &status, 0);
+	std::cout << "A IMPLEMENTER : METTRE UN TIME OUT AU CAAS OU SCRIPT INFINI\n";
 	close(fd[1]);
 	if (WIFEXITED(status))
 		exit_status = WEXITSTATUS(status);
@@ -457,7 +446,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	{
 		close(fd[0]);
 		deleteArgs(argv, envp);
-		throw RequestException ("500");
+		fill_significant_error("500", *error, conf);
 	}
 	if (exit_status == 0)
 	{
@@ -473,19 +462,20 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
-		get_output(buff);
+		get_output(buff, conf);
 	}
-	else if (exit_status == 255)
-	{
-		close(fd[0]);
-		deleteArgs(argv, envp);
-		throw RequestException ("500");
-	}
+	// else if (exit_status == 255)
+	// {
+	// 	close(fd[0]);
+	// 	deleteArgs(argv, envp);
+	// 	fill_significant_error("500", *error, conf);
+	// 	// throw RequestException ("500");
+	// }
 	else
 	{
 		close(fd[0]);
 		deleteArgs(argv, envp);
-		throw RequestException ("500");
+		fill_significant_error("500", *error, conf);
 	}
 	return (0);
 }
@@ -500,7 +490,7 @@ void	Request::check_extension(t_conf & conf, std::string pathname, std::string &
 	pathname = pathname.erase(0, pathname.rfind('.') + 1);
 	ext = pathname.substr(0, pathname.find('?'));
 	if (std::count(cgi_ext.begin(), cgi_ext.end(), ext) == 0)
-		throw RequestException ("501");
+		fill_significant_error("501", *error, conf);
 }
 
 bool	Request::is_accessible(char const *pathname)
@@ -528,9 +518,12 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 
 	std::string join = ("./" + _target);
 	char const *pathname = join.c_str();
+	struct stat path_stat;
+	if (stat(pathname, &path_stat) == -1)
+		fill_significant_error("400", *error, conf);
 	std::ifstream	file(pathname, std::ifstream::in); // QU EST CE QUI se passe si pathname n existe pas ===> a tester
 	if (!is_accessible(pathname) || is_empty(file))
-		throw RequestException ("500");
+		fill_significant_error("500", *error, conf);
 	check_extension(conf, pathname, index_loc);
 	char const * interpreter = define_ext(pathname);
 	env = set_env(conf);
@@ -538,7 +531,7 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 	argv[0] = (char *) interpreter;
     argv[1] = (char *) pathname;
     argv[2] = NULL;
-	exec_script(argv[0], argv, env);
+	exec_script(argv[0], argv, env, conf);
 	deleteArgs(argv, env);
 }
 
@@ -569,14 +562,16 @@ void	Request::delete_action(const char *target, int socket_fd, t_conf &conf, Err
 		return ;
 	if (S_ISDIR(buf.st_mode)) {
 		DIR *tmp = opendir(target);
-		if (!tmp)
-			throw (RequestException("403"));
+		if (!tmp) {
+			fill_significant_error("403", error, conf);
+		}
 		dirent	*directory;
 		while (1) {
 			directory = readdir(tmp);
 			if (!directory) { // OK NO LEAKS MEMMORY + FD
-				if (remove(target) == -1)
-					throw (RequestException("500"));
+				if (remove(target) == -1) {
+					fill_significant_error("500", error, conf);
+				}
 				break;
 			}
 			if (!strcmp(directory->d_name, ".") || !strcmp(directory->d_name, ".."))
@@ -589,8 +584,9 @@ void	Request::delete_action(const char *target, int socket_fd, t_conf &conf, Err
 		closedir(tmp);
 	}
 	else {
-		if (remove(target) == -1)
-			throw (RequestException("500"));
+		if (remove(target) == -1) {
+			fill_significant_error("500", error, conf);
+		}
 	}
 }
 
@@ -603,7 +599,7 @@ void	Request::delete_action(const char *target, int socket_fd, t_conf &conf, Err
 //		implementer directive return dans location ou server  ===> Gerer dans parsing conf les cas d erreur de return si on a pas format code + " " + strig
 //		voir si on arrive a envoyer une image  
 
-void	Request::build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error) {
+void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &location, ErrorPages &error) {
 	
 	if (location.empty()) {
 		// 	=====> Server has a return
@@ -629,28 +625,16 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 		//  =====> Request isn't a directory
 		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
 		{
-			try
-			{
-				// std::cout << "transfert_encoding : " << transfer_encoding << std::endl;
-				// std::cout << "body : " << std::endl << body << std::endl << std::endl;
-				std::cout << "ENTER IN CGI" << std::endl;
-				std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
-				handle_cgi(conf, location);
-			}
-			catch(const std::exception& e)
-			{
-				std::string err = e.what();
-				if (err == "exit") // Si ctrl + c
-					throw ;
-				error.fill_error(response, e.what(), conf);
-			}
+			std::cout << "ENTER IN CGI" << std::endl;
+			std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
+			handle_cgi(conf, location);
 		}
 		else
 			if (!open_targetfile(_target, error, conf))
 				fill_error_errno(conf, error);
 	}
 	// handle_cookies();
-	send_response(socket_fd);
+	setStatus(RD_TO_SEND);
 }
 
 bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
@@ -786,38 +770,25 @@ bool	Request::media_request_allowed() {
 
 bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
 	
-	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
+	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
-		return (false);
-	}
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data")) {
 		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
 		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		return (false);
 	}
 	std::cout << static_cast<size_t>(content_length) << " et " << body_deque.size() << std::endl;
 	if (content_type == "multipart/form-data") {
-		if (static_cast<size_t>(content_length) != body_deque.size()) {
+		if (static_cast<size_t>(content_length) != body_deque.size())
 			fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-			return (false);
-		}
-		if (method != "POST") {
+		if (method != "POST")
 			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-			return (false);
-		}
 	}
-	if (version != "HTTP/1.1") {
+	if (version != "HTTP/1.1")
 		fill_significant_error("405", error, conf);
-		return (false);
-	}
-	if (content_length > conf.limit_body_size) { // Significant error or not ?
+	if (content_length > conf.limit_body_size)
 		fill_significant_error("413", error, conf);
-		return (false);
-	}
-	if (media.size() > 0 && !media_request_allowed()) { // Significant error or not ?
+	if (media.size() > 0 && !media_request_allowed())
 		fill_significant_error("415", error, conf);
-		return (false);
-	}
 	return (true);
 }
 
@@ -1171,7 +1142,7 @@ void	Request::fill_error_errno(t_conf &conf, ErrorPages &error) {
 
 void	Request::fill_error(std::string const &code, ErrorPages &error) {
 	error.fill_error(response, code);
-	send_response(socket_fd);
+	setStatus(RD_TO_SEND);
 }
 
 void	Request::fill_significant_error(std::string const &code, ErrorPages &error) {
@@ -1181,12 +1152,13 @@ void	Request::fill_significant_error(std::string const &code, ErrorPages &error)
 
 void	Request::fill_error(std::string const &code, ErrorPages &error, t_conf &conf) {
 	error.fill_error(response, code, conf);
-	send_response(socket_fd);
+	setStatus(RD_TO_SEND);
 }
 
 void	Request::fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf) {
 	error.fill_significant_error(response, code, conf);
 	setStatus(CLOSE);
+	throw (ServerException(""));
 }
 
 /* ************************************************************************* */

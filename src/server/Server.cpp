@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/22 11:51:09 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 17:03:15 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,6 @@ void	Server::launch_server(int max_socket) {
 	std::cout << "VOIR AC ORLANDO SI IMPLEMENTERSINON A IMPLEMENTER DANS CGI WAIT: SI SCRIPT QUI TOURNE EN BOUCLE METTRE EN PLACE TIMEOUT POUR CONTINUER" << std::endl;
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
 	std::cout << "		- SECU " << std::endl;
-	std::cout << "VOIR AC ORLANDO : DELETE SUR DIRECTORY ON FAIT OU PAS? " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
@@ -216,7 +215,7 @@ void	Server::launch_server(int max_socket) {
 			std::string err = e.what();
 			if (err == "exit")
 				throw ;
-			else
+			else if (!err.empty())
 				std::cerr << e.what() << std::endl;
 			continue ;
 		}
@@ -250,7 +249,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 			time_t now;
 			time(&now);
 			it->setT_creation(now);
-			if (it->getStatus() == READING) { // UTILE ICI ?
+			if (it->getStatus() == READING) {
 				if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data") {
 					it->addSave_buffer(buffer, read);
 					if (read < BUFFER_SIZE) {
@@ -262,9 +261,8 @@ void	Server::read_request(int i, char *buffer, int read) {
 					std::cout << "read = " << read << std::endl;
 					tmp.append(buffer, read);
 					it->parse_upload_body(tmp);
-					// std::cout << "A IMPLEMENTER : Server::read_request Status = READING\n";
 				}
-				else if (it->getTransfer_encoding() == "chunked" /* && dans body 0 */) {
+				else if (it->getTransfer_encoding() == "chunked") {
 					std::string tmp = buffer;
 					try {
 						int chunk = it->extract_chunked_body(tmp);
@@ -275,9 +273,9 @@ void	Server::read_request(int i, char *buffer, int read) {
 						std::string err = e.what();
 						if (err == "exit")
 							throw ;
-						it->fill_significant_error("400", error);
 						fds[i].events = POLLOUT;
-						it->setStatus(ERROR);
+						it->fill_significant_error("400", error);
+						throw (ServerException(""));
 					}
 				}
 			}
@@ -298,10 +296,15 @@ bool	Server::request_response(int i) {
 	
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getSocket_fd() == fds[i].fd) {
-			if (it->getStatus() == ERROR) {
+			if (it->getStatus() == ERROR || it->getConnection() == "close" || it->getStatus() == CLOSE) {
 				it->send_response(it->getSocket_fd());
 				fds[i].events = POLLIN;	
 				return (close_and_erase(it), true);
+			}
+			if (it->getStatus() == RD_TO_SEND) {
+				it->send_response(it->getSocket_fd());
+				fds[i].events = POLLIN;
+				return (requests.erase(it), true);
 			}
 			struct sockaddr_storage name;
 			socklen_t namelen = sizeof(name);
@@ -315,10 +318,13 @@ bool	Server::request_response(int i) {
 				it->parse_body();
 			int i_conf = pick_server(*it);
 			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
-			if (it->getConnection() == "close" || it->getStatus() == CLOSE) // =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-				return (close_and_erase(it), true);			
-			fds[i].events = POLLIN;	
-			return (requests.erase(it), true);
+			// if (it->getConnection() == "close" || it->getStatus() == CLOSE) {// =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
+			// 	std::cout << "it->getConnection() = " << it->getConnection() << std::endl;
+			// 	std::cout << "CLOSE = " << CLOSE << "et it->getStatus() = " << it->getStatus() << std::endl;
+			// 	return (close_and_erase(it), true);
+			// }
+			// fds[i].events = POLLIN;	
+			// return (requests.erase(it), true);
 		}
 	}
 	return (false);
@@ -375,7 +381,7 @@ void	Server::event_request() {
 		time_t now;
 		time(&now);
 		if (difftime(now, mktime(it->getT_creation())) > 10) {
-			it->fill_significant_error("408", error);
+			it->fill_error("408", error);
 			it->send_response(it->getSocket_fd());
 			return (close_and_erase(it), (void) 0);
 		}
@@ -516,12 +522,13 @@ void	Server::body_request_present(Request &request, int read, int i) {
 			}
 			catch (std::exception const &e) {
 				std::string err = e.what();
+				std::cout << "hhh\n" ;
 				if (err == "exit")
 					throw;
-				request.fill_significant_error(err, error);
 				fds[i].events = POLLOUT;
-				request.setStatus(ERROR);
-				return ;
+				request.fill_significant_error(err, error);
+				requests.push_back(request);
+				throw (ServerException(""));
 			}
 		}
 		if (read < BUFFER_SIZE && request.getTransfer_encoding() != "chunked" && request.getContentType() != "multipart/form-data")

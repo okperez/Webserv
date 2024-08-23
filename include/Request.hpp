@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 10:16:11 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 16:13:22 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,7 +168,7 @@ class Request
 		/* ****************************** GET ****************************** */
 		/* ***************************************************************** */
 		
-		void		build_response(int socket_fd, t_conf &conf, std::string &location, ErrorPages &error);
+		void		build_response(/* int socket_fd, */ t_conf &conf, std::string &location, ErrorPages &error);
 		bool		open_targetfile(std::string & uri, ErrorPages & error, t_conf &conf);
 		bool		is_dir(std::string const &path);
 		void		uri_directory(t_conf &conf, ErrorPages &error);
@@ -184,10 +184,10 @@ class Request
 		/* ***************************************************************** */
 		void			handle_cgi(t_conf & conf, std::string & index_loc);
 		char**			set_env(t_conf & conf);
-		int				exec_script(char const *pathname, char *const argv[], char *const envp[]);
+		int				exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf);
 		bool			is_accessible(char const *uri);
 		void			check_extension(t_conf & conf, std::string uri, std::string & index_loc);
-		void			get_output(char *buff);
+		void			get_output(char *buff, t_conf &conf);
 		char**			setArg(char const *pathname, char const *interpreter);
 
 		/* ***************************************************************** */
