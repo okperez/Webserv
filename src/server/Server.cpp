@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:03:15 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 17:47:41 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,14 +317,8 @@ bool	Server::request_response(int i) {
 			if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
 				it->parse_body();
 			int i_conf = pick_server(*it);
-			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);
-			// if (it->getConnection() == "close" || it->getStatus() == CLOSE) {// =====> Header "Connection : close" dans la requete => Il faut close une fois qu on a repondu
-			// 	std::cout << "it->getConnection() = " << it->getConnection() << std::endl;
-			// 	std::cout << "CLOSE = " << CLOSE << "et it->getStatus() = " << it->getStatus() << std::endl;
-			// 	return (close_and_erase(it), true);
-			// }
-			// fds[i].events = POLLIN;	
-			// return (requests.erase(it), true);
+			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);	
+			return (true);
 		}
 	}
 	return (false);

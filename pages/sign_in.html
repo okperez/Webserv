@@ -3,22 +3,18 @@
 <head>
     <title>Sign_in</title>
     <link rel="stylesheet" type="text/css" href="/session.css">
-    <!-- <link rel="stylesheet" type="text/css" href="/styles.css"> -->
 </head>
 <body>
-    <!-- <img src="/image.png" alt="Example Image"> -->
-    <!-- <script src="/script.js"></script> -->
 	<div id="center">
-    <!-- <h1 id="size2">Sign In</h1> -->
 		<form id="div2" action="cgi-bin/sign_in.php" method="POST">
 			<div>
 				<h1 id="size2">Sign In</h1>
 			</div>
 			<div id="div3">
 				<label id="text" for="fname">First name :</label><br>
-				<input id="champs" type = "text" id="fname" name="fname"><br><br>
+				<input id="fname" type = "text"  name="fname"><br><br>
 				<label id="text" for="lname">Last Name :</label><br>
-				<input id="champs" type = "password" id="lname" name="lname"><br><br>
+				<input id="lname" type = "password" name="lname"><br><br>
 				<script>
 					function getCookie(cname) {
 					  var cookies = ` ${document.cookie}`.split(";");

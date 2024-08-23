@@ -78,7 +78,7 @@ a:hover {
     background-color: rgb(8, 133, 18);
 }
 
-#button1, #button2, #custom-file-upload, #custom-file-upload2, #champs {
+#button1, #button2, #custom-file-upload, #custom-file-upload2, #champs, #fname, #lname {
 	background-color: rgb(5, 104, 14);
 	border-color: rgb(255, 255, 255);
 	border-radius: 5%;
@@ -128,13 +128,7 @@ a:hover {
     padding: 3px 10px;
 }
 
-#fname {
-	border-width: 0.05cm;
-	border-color: rgb(255, 255, 255);
-	background-color: rgb(5, 104, 14);
-}
-
-#text , #lname , #remember {
+#text , #lname , #fname, #remember {
 	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 	color: rgb(255, 255, 255);
 }
