@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:39:07 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/23 17:45:54 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,7 @@ bool	Server::request_response(int i) {
 			// 	return (close_and_erase(it), true);
 			// }
 			// fds[i].events = POLLIN;	
-			// return (requests.erase(it), true);
+			return (true);
 		}
 	}
 	return (false);

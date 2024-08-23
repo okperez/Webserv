@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/23 17:40:07 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/23 18:13:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -808,14 +808,14 @@ int	Request::set_filename(std::vector<std::string> & array, std::string & filena
 void	Request::build_file(std::vector<std::string> & array)
 {
 	std::string	filename;
-
+	std::string end = "--" + boundary + "--\n";
 	if (set_filename(array, filename) != -1)
 	{
 		std::ofstream file(filename.c_str(), std::ofstream::out);
 		for (std::vector<std::string>::iterator it = array.begin() + 5; it != array.end(); it++)
 		{
-			std::cout << *(array.begin()) << std::endl;
-			if ((*it) == boundary || (*it) == "--" + boundary + "--")
+			// std::cout << *(array.begin()) << std::endl;
+			if ((*it) == boundary || (*it) == end)
 				break ;
 			file << (*it);
 			if (it == array.end() - 1)
@@ -827,9 +827,10 @@ void	Request::build_file(std::vector<std::string> & array)
 
 void	build_array(std::vector<std::string> & array, std::string & str_body)
 {
+	// std::cout << "\n\nSTR BODYYYYYYYYYYYY" << str_body << "\n\n";
 	while (1)
 	{
-		std::string	sub = str_body.substr(0, str_body.find('\n'));
+		std::string	sub = str_body.substr(0, str_body.find('\n') + 1);
 		array.push_back(sub);
 		str_body.erase(0, str_body.find('\n') + 1);
 		if (str_body.find('\n') == str_body.npos)
@@ -848,14 +849,18 @@ void	Request::extract_body_upload(std::vector<std::string> & array)
 {
 	std::string	str_body = "";
 	std::deque<unsigned char> copy = body_deque;
-	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
-	{
-		// std::cout << 
-	}
+	// std::cout << "\n\n\n\n" << "-------------------------------------------" << std::endl;
+	// for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
+	// {
+		// std::cout << (*it);
+	// }
+	// std::cout << "\n\n\n\n" << "-------------------------------------------" << std::endl;
 	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
 	{
 		if ((*it) == '\r' && *(it + 1) == '\n')
-			copy.erase(it);
+		{
+			it = copy.erase(it);
+		}
 		str_body += (*it);	
 	}
 	build_array(array, str_body);
