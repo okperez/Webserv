@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 16:24:11 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 14:06:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,22 +117,26 @@ class Request
         /* **************************** Parsing **************************** */
         /* ***************************************************************** */
 
-		void		parse_host();
-		void		parse_media(std::string &s);
-		void		cgi_parse_uri();
-		bool		media_request_allowed();
-		bool		check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
-		void		recover_ip_socket();
-		void		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
-		bool		body_present();
-		int 		extract_chunked_body(std::string &s);
-		void		parse_chunk_body();
-		void		parse_upload_body(std::string & body);
-		void		parse_body();
-		void		handle_multi_length();
-		void		extract_boundary();
-		void		parse_headers();
-		void		parse_request();
+		void	parse_host();
+		void	parse_media(std::string &s);
+		void	cgi_parse_uri();
+		bool	media_request_allowed();
+		bool	check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
+		void	recover_ip_socket();
+		void	parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
+		bool	body_present();
+		int 	extract_chunked_body(std::string &s);
+		void	parse_chunk_body();
+		void	parse_upload_body(std::string & body);
+		void	parse_body();
+		void	handle_multi_length();
+		void	extract_boundary();
+		void	parse_headers();
+		void	parse_request();
+		void	extract_body_upload(std::vector<std::string> & array);
+		void	build_file(std::vector<std::string> & array);
+		int		set_filename(std::vector<std::string> & array, std::string & filename);
+
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/08/22 10:00:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 15:39:26 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ typedef struct s_conf
   std::string												host;
   std::string                                               server_name;
   std::string                                               root_dir;
-  std::string												upload_dir;
   std::string                                               files;  // A EFFACER UNE FOIS PASSER EN VECTEUR // A Transformer en vecteur de string : il peut y en avoir plusieurs, une fois ok effacer
   std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
   std::string                                               autoindex;

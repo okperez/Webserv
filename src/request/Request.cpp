@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/22 14:01:58 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 17:19:02 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -540,12 +540,12 @@ bool is_empty(std::ifstream& pFile)
     return pFile.peek() == std::ifstream::traits_type::eof();
 }
 
-void	Request::setTimestamp(std::ofstream	& data)
-{
+// void	Request::setTimestamp(std::ofstream	& data)
+// {
 	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
-	std::time_t result = std::time(NULL);
-	data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
-}
+	// std::time_t result = std::time(NULL);
+	// data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
+// }
 
 /* ************************************************************************* */
 /* ******************************** DELETE ********************************* */
@@ -602,10 +602,6 @@ void	Request::build_response(int socket_fd, t_conf &conf, std::string &location,
 	
 	if (content_type == "multipart/form-data")
 	{
-		std::cout << "BODY_DEQUE\n\n";
-		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-			std::cout << *it; 
-		std::cout << "\n\n END BODY_DEQUE\n\n";
 	}
 	if (location.empty()) {
 		// 	=====> Server has a return
@@ -786,14 +782,113 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
+int	extract_name(std::vector<std::string> & array, std::string & name)
+{
+	std::string	extract;
 	
+	for (std::vector<std::string>::iterator it = array.begin(); it != array.end(); it++)
+	{
+		if ((*it).find("Content-Disposition: form-data") != (*it).npos && (*it).find("filename=") != (*it).npos)
+		{
+			extract = *it;
+			break ;
+		}
+	}
+	extract.erase(0, extract.rfind('=') + 1);
+	if (extract == "")
+		return (-1);
+	name = extract.substr(1, extract.rfind('"') - 2);
+	std::cout << "FILENAME AFTER EXTRACTION = " << name << std::endl;
+	return (0);
+}
+
+int	Request::set_filename(std::vector<std::string> & array, std::string & filename)
+{
+	std::string	name;
+	if (extract_name(array, name) != -1)
+	{
+		if (access(name.c_str(), F_OK) == -1)
+		{
+			filename = name;
+		}
+		else
+			filename = name + "1";
+	}
+	else
+		return (-1);
+	return (0);
+}
+
+void	Request::build_file(std::vector<std::string> & array)
+{
+	std::string	filename;
+
+	if (set_filename(array, filename) != -1)
+	{
+		std::ofstream file(filename.c_str(), std::ofstream::out);
+		for (std::vector<std::string>::iterator it = array.begin() + 5; it != array.end(); it++)
+		{
+			std::cout << *(array.begin()) << std::endl;
+			if ((*it) == boundary || (*it) == "--" + boundary + "--")
+				break ;
+			file << (*it);
+			if (it == array.end() - 1)
+				std::cout << (*it) << std::endl;
+		}
+		std::cout << boundary << std::endl;
+	}
+}
+
+void	build_array(std::vector<std::string> & array, std::string & str_body)
+{
+	while (1)
+	{
+		std::string	sub = str_body.substr(0, str_body.find('\n'));
+		array.push_back(sub);
+		str_body.erase(0, str_body.find('\n') + 1);
+		if (str_body.find('\n') == str_body.npos)
+		{
+			array.push_back(str_body);
+			break ;
+		}
+	}
+	for (std::vector<std::string>::iterator it = array.begin(); it != array.end(); it++)
+	{
+		std::cout << "Content line = " << (*it) << std::endl;
+	}
+}
+
+void	Request::extract_body_upload(std::vector<std::string> & array)
+{
+	std::string	str_body = "";
+	std::deque<unsigned char> copy = body_deque;
+	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
+	{
+		// std::cout << 
+	}
+	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
+	{
+		if ((*it) == '\r' && *(it + 1) == '\n')
+			copy.erase(it);
+		str_body += (*it);	
+	}
+	build_array(array, str_body);
+}
+
+bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
+
+	// modifier nom si deja present
+	// ne pas changer contenu du ficher
+	std::vector<std::string>	array;
+
 	if (content_type == "multipart/form-data")
 	{
-		std::cout << "BODY_DEQUE\n\n";
-		for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-			std::cout << *it; 
-		std::cout << "\n\n END BODY_DEQUE\n\n";
+		// std::cout << "Boundary = " << boundary << std::endl;
+		// extract_body_upload(array);
+		// std::cout << "BODY_DEQUE\n\n";
+		// for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+			// std::cout << *it; 
+		// std::cout << "\n\n END BODY_DEQUE\n\n";
 	}
 	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked") {
@@ -815,6 +910,9 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
 			return (false);
 		}
+		extract_body_upload(array);
+		build_file(array);
+
 	}
 	if (version != "HTTP/1.1") {
 		fill_significant_error("405", error, conf);
@@ -984,13 +1082,6 @@ void	Request::parse_upload_body(std::string &body) {
 	std::cout << "body_deque.size()" << body_deque.size() << std::endl;
 	std::cout << "content_length" << content_length << std::endl;
 	if (body_deque.size() == static_cast<size_t>(content_length)) {
-		if (content_type == "multipart/form-data")
-		{
-			std::cout << "BODY_DEQUE\n\n";
-			for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-				std::cout << *it; 
-			std::cout << "\n\n END BODY_DEQUE\n\n";
-		}
 		status = RD_TO_RESPOND;
 	}
 	else
