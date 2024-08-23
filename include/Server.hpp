@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 14:54:28 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 18:01:16 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class Server
 		Media		auth_media;
 		std::vector<t_conf>	conf; // public si on n integre pas parsing dans classe
 		std::vector<Listen> server_fd; // a passer en private une fois good
-		std::vector<Request> requests; // a passer en private une fois good
+		std::deque<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
 		
 		Server();
@@ -95,7 +95,7 @@ class Server
 		/* ***************************** ERROR ***************************** */
 		/* ***************************************************************** */
 
-		void	send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
+		void	send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
 		void	handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error);
 
 		/* ***************************************************************** */
@@ -104,7 +104,7 @@ class Server
 		
 		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
-		void	close_and_erase(std::vector<Request>::iterator it);
+		void	close_and_erase(std::deque<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
 		void	handle_pending_requests();

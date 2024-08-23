@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:47:41 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 17:59:56 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,7 +243,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 
 	// Si une requete a deja ete cree : 
 	std::cout << "READ_REQUEST" << std::endl;
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
 		if (it->getSocket_fd() == fds[i].fd) {
 			time_t now;
@@ -294,7 +294,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 
 bool	Server::request_response(int i) {
 	
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (it->getSocket_fd() == fds[i].fd) {
 			if (it->getStatus() == ERROR || it->getConnection() == "close" || it->getStatus() == CLOSE) {
 				it->send_response(it->getSocket_fd());
@@ -346,7 +346,7 @@ void	Server::event_request() {
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				handle_error_function(fds[i].fd, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
-				for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+				for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
 						requests.erase(it);
 						break;			
@@ -365,7 +365,7 @@ void	Server::event_request() {
 				return;
 		}
 	}
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
 			for (int j = 0; j < MAX_CONNECTION; j++)
 				if (fds[j].fd == it->getSocket_fd())
@@ -540,7 +540,7 @@ void	Server::body_request_present(Request &request, int read, int i) {
 /* ********************************* ERROR ********************************* */
 /* ************************************************************************* */
 
-void	Server::send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
+void	Server::send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
 	
 	it->fill_error(code, error);
 	requests.erase(it);
@@ -548,7 +548,7 @@ void	Server::send_error(std::vector<Request>::iterator it, std::string const &co
 }
 
 void	Server::handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error) {
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (socket == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
@@ -576,7 +576,7 @@ void	Server::error_bfr_launch() {
 		it->close_fd();
 }
 
-void	Server::close_and_erase(std::vector<Request>::iterator it) {
+void	Server::close_and_erase(std::deque<Request>::iterator it) {
 	for (int i = 0; i < MAX_CONNECTION; i++) {
 		if (fds[i].fd == it->getSocket_fd()) {
 			// std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
@@ -595,7 +595,7 @@ void	Server::stop_listen() {
 }
 
 void	Server::close_requests(int &socket) {
-	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (socket == it->getSocket_fd()) {
 			it->handle_pending_requests(error, socket);
 			return ;
