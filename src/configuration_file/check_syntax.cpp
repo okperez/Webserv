@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/07/04 10:42:30 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/23 15:31:52 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,6 @@ void	check_parameters(std::list<std::string> & cnf_file)
 	int	loc_count = 0;
 	for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
 	{
-		std::cout << *it << std::endl;
 		if ((*it).find("server") != (*it).npos)
 			srv_count += 1;
 		if ((*it).find("location") != (*it).npos)

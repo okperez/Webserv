@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:03:15 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 17:39:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,6 +261,9 @@ void	Server::read_request(int i, char *buffer, int read) {
 					std::cout << "read = " << read << std::endl;
 					tmp.append(buffer, read);
 					it->parse_upload_body(tmp);
+					if (it->getStatus() == RD_TO_RESPOND)
+						fds[i].events = POLLOUT;						
+				// std::cout << "A IMPLEMENTER : Server::read_request Status = READING\n";
 				}
 				else if (it->getTransfer_encoding() == "chunked") {
 					std::string tmp = buffer;
@@ -283,6 +286,8 @@ void	Server::read_request(int i, char *buffer, int read) {
 				
 				it->addSave_buffer(buffer, read);
 				body_request_present(*it, read, i);
+				if (it->getContentType() == "multipart/form-data" && it->getStatus() == RD_TO_RESPOND)
+					fds[i].events = POLLOUT;
 			}
 			return ;
 		}
@@ -349,6 +354,7 @@ void	Server::event_request() {
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
+			std::cout << "\n\n" << buffer << "\n\n";
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				handle_error_function(fds[i].fd, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
