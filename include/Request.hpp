@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/22 15:50:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 10:16:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,8 +162,7 @@ class Request
 		/* **************************** DELETE ***************************** */
 		/* ***************************************************************** */
 		
-		bool	delete_action(const char *target, int socket_fd, t_conf &conf, ErrorPages &error);	
-		// void	delete_action(/*int socket_fd, */t_conf &conf, ErrorPages &error);	
+		void	delete_action(const char *target, int socket_fd, t_conf &conf, ErrorPages &error);	
 		
 		/* ***************************************************************** */
 		/* ****************************** GET ****************************** */

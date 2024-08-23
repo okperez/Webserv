@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/22 16:35:24 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/23 10:18:46 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,15 +202,17 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 			}
 			case DELETE : {
 				find_location(conf, error);
-				if (delete_action(_target.data(), socket_fd, conf,  error)) {
+				try {
+					delete_action(_target.data(), socket_fd, conf,  error);
 					response.setStatus("204", error);
-					send_response(socket_fd);
 				}
-				else if ()
-					fill_error("500", error, conf);
+				catch (std::exception const &e) {
+					if (!strcmp(e.what(), "exit"))
+						throw;
+					fill_significant_error("403", error);
+				}
+				send_response(socket_fd);
 				return ;
-				// delete_action(/* socket_fd, conf, */ error);
-				// return (send_response(socket_fd), (void)0);
 			}
 			default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
 				std::string index = find_location(conf, error);
@@ -560,25 +562,21 @@ void	Request::setTimestamp(std::ofstream	& data)
 Que la requete delete concerne un fichier / dossier existant ou inexistant le code renvoye sera le meme : 204
 Le serveur l efface dans le premier cas et ne fait rien dans le deuxieme
 */		
-bool	Request::delete_action(const char *target, int socket_fd, t_conf &conf, ErrorPages &error) {
+void	Request::delete_action(const char *target, int socket_fd, t_conf &conf, ErrorPages &error) {
 	struct stat buf;
 	
-	// au lieu d un bool pourquoi pas mettre en place exception avec throw le code qu on veut ?
 	if (stat(target, &buf) == -1)
-		return (true);
+		return ;
 	if (S_ISDIR(buf.st_mode)) {
 		DIR *tmp = opendir(target);
-		if (!tmp) {
-			std::cout << "ERREUR PAS ENVOYEE" << std::endl;
-			return (fill_error_errno(conf, error), false); // PK ERREUR 404 s il existaait pas stat n aurait pas renvoye c est good du coup seul cas droits fichier a verifier
-		}
+		if (!tmp)
+			throw (RequestException("403"));
 		dirent	*directory;
 		while (1) {
 			directory = readdir(tmp);
 			if (!directory) { // OK NO LEAKS MEMMORY + FD
-				// On devrait pas checker erno et droits fichier ? a verif et tester
 				if (remove(target) == -1)
-					return (false);
+					throw (RequestException("500"));
 				break;
 			}
 			if (!strcmp(directory->d_name, ".") || !strcmp(directory->d_name, ".."))
@@ -586,16 +584,13 @@ bool	Request::delete_action(const char *target, int socket_fd, t_conf &conf, Err
 			std::string tmp = target;
 			tmp += "/";
 			tmp += directory->d_name;
-			if (!delete_action(tmp.data(), socket_fd, conf, error))
-				return (false);
+			delete_action(tmp.data(), socket_fd, conf, error);
 		}
 		closedir(tmp);
-		return (true);
 	}
 	else {
 		if (remove(target) == -1)
-			return (false);
-		return (true);
+			throw (RequestException("500"));
 	}
 }
 
