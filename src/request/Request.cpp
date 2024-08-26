@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/23 16:35:11 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/26 16:31:39 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,9 +177,14 @@ void	Request::addSave_buffer(/* const */ char *buffer, int end) {
 
 void	Request::send_response(int socket_fd) {
 	
+	std::cout << "SEND_RESPONSE\n" ;
 	response.setContent_length();
 	std::string response_content = response.build_response();
+	std::cout << "socket_fd =" << socket_fd << std::endl;
+	std::cout << "response_content.c_str() =" << response_content.c_str() << std::endl;
+	std::cout << "response_content.size() =" << response_content.size() << std::endl;
 	int fd = write(socket_fd, response_content.c_str(), response_content.size());
+	std::cout << "response_content.c_str() = |" << response_content.c_str() << "|" << std::endl;
 	if (fd == -1) {
 		status = CLOSE;
 		throw(ServerException("Fail to write"));
@@ -195,6 +200,7 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 	switch (i) {
 		case UNKNOWN : {
 			fill_significant_error("405", error, conf);
+			return ;
 		}
 		case DELETE : {
 			std::string index = find_location(conf, error);

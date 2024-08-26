@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/08/23 10:51:48 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/26 17:04:59 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 # include "ServerException.hpp"
 # include "Media.hpp"
 
-# define MAX_CONNECTION	1000
+# define MAX_CONNECTION	10
 # define BUFFER_SIZE	1000
 
 typedef struct s_flag
@@ -124,6 +124,7 @@ enum	e_status_request {
 	RD_TO_SEND,
 	ERROR,
     CLOSE,
+    BAD_ALLOC,
 };
 
 enum	e_method {

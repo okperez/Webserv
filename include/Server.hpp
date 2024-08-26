@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 18:01:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/26 16:45:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Server
 		std::vector<Listen> server_fd; // a passer en private une fois good
 		std::deque<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
+		const char *err_all;
 		
 		Server();
 		~Server(); // fds a free dans destructeur
@@ -96,7 +97,7 @@ class Server
 		/* ***************************************************************** */
 
 		void	send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
-		void	handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error);
+		void	handle_error_function(int i, std::string const &code, const char *mess, ErrorPages &error);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */

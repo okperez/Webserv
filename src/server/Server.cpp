@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:59:56 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/26 17:06:21 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 
 Server::Server() {
 	fds = NULL;
+	std::string tmp = "HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 146\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n\t<title> Internal Server Error</title>\n</head>\n<body>\n\t<h1>500</h1>\n\t<h1> Internal Server Error</h1>\n</body>\n</html>\r\n";
+	err_all = tmp.data();
 }
 
 Server::Server(const Server & orig) { (void) orig; }
@@ -244,52 +246,65 @@ void	Server::read_request(int i, char *buffer, int read) {
 	// Si une requete a deja ete cree : 
 	std::cout << "READ_REQUEST" << std::endl;
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
-		if (it->getSocket_fd() == fds[i].fd) {
-			time_t now;
-			time(&now);
-			it->setT_creation(now);
-			if (it->getStatus() == READING) {
-				if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data") {
-					it->addSave_buffer(buffer, read);
-					if (read < BUFFER_SIZE) {
-						fds[i].events = POLLOUT;
-					}
-				}
-				else if (it->getContentType() == "multipart/form-data") {
-					std::string tmp /* = buffer */;
-					std::cout << "read = " << read << std::endl;
-					tmp.append(buffer, read);
-					it->parse_upload_body(tmp);
-				}
-				else if (it->getTransfer_encoding() == "chunked") {
-					std::string tmp = buffer;
-					try {
-						int chunk = it->extract_chunked_body(tmp);
-						if (chunk == 0)
+		try {
+			std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
+			if (it->getSocket_fd() == fds[i].fd) {
+				time_t now;
+				time(&now);
+				it->setT_creation(now);
+				if (it->getStatus() == READING) {
+					if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data") {
+						it->addSave_buffer(buffer, read);
+						if (read < BUFFER_SIZE) {
 							fds[i].events = POLLOUT;
+						}
 					}
-					catch (std::exception const &e) {
-						std::string err = e.what();
-						if (err == "exit")
-							throw ;
-						fds[i].events = POLLOUT;
-						it->fill_significant_error("400", error);
-						throw (ServerException(""));
+					else if (it->getContentType() == "multipart/form-data") {
+						std::string tmp /* = buffer */;
+						std::cout << "read = " << read << std::endl;
+						tmp.append(buffer, read);
+						it->parse_upload_body(tmp);
+					}
+					else if (it->getTransfer_encoding() == "chunked") {
+						std::string tmp = buffer;
+						try {
+							int chunk = it->extract_chunked_body(tmp);
+							if (chunk == 0)
+								fds[i].events = POLLOUT;
+						}
+						catch (std::exception const &e) {
+							std::string err = e.what();
+							if (err == "exit")
+								throw ;
+							fds[i].events = POLLOUT;
+							it->fill_significant_error("400", error);
+							throw (ServerException(""));
+						}
 					}
 				}
+				else if (it->getStatus() == NEW) {
+					
+					it->addSave_buffer(buffer, read);
+					body_request_present(*it, read, i);
+				}
+				return ;
 			}
-			else if (it->getStatus() == NEW) {
-				
-				it->addSave_buffer(buffer, read);
-				body_request_present(*it, read, i);
-			}
-			return ;
+		}
+		catch (std::bad_alloc) {
+			
+			fds[i].events = POLLOUT;
+			it->setStatus(BAD_ALLOC);
+			throw ;
 		}
 	}
-	Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
-	body_request_present(request, read, i);
-	requests.push_back(request);
+	try {
+		Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+		body_request_present(request, read, i);
+		requests.push_back(request);
+	}
+	catch (std::bad_alloc) {
+		
+	}
 }
 
 bool	Server::request_response(int i) {
@@ -343,8 +358,9 @@ void	Server::event_request() {
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
+			// int n_bytes = -1;
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-				handle_error_function(fds[i].fd, "500", "Fail to read", error);
+				handle_error_function(i, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
 				for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
@@ -543,17 +559,21 @@ void	Server::body_request_present(Request &request, int read, int i) {
 void	Server::send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error) {
 	
 	it->fill_error(code, error);
-	requests.erase(it);
+	it->send_response(it->getSocket_fd());
+	close_and_erase(it);
+	// requests.erase(it);
 	throw (ServerException(mess));
 }
 
-void	Server::handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error) {
+void	Server::handle_error_function(int i, std::string const &code, const char *mess, ErrorPages &error) {
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if (socket == it->getSocket_fd())
+		if (fds[i].fd == it->getSocket_fd())
 			send_error(it, code, mess, error);
 	}
-	Request tmp("", 0, socket, this, &error, &auth_media/* , 0 */);
+	Request tmp("", 0, fds[i].fd, this, &error, &auth_media/* , 0 */);
 	tmp.fill_error(code, error);
+	tmp.send_response(fds[i].fd);
+	close_connection(i);
 	throw (ServerException(mess));
 }
 
