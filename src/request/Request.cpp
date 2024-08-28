@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/23 18:13:55 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/28 17:45:54 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,9 +339,6 @@ bool	Request::check_allow_method(t_conf &conf, std::string &index) {
 /* ********************************** CGI ********************************** */
 /* ************************************************************************* */
 
-//creer une session via un file.php
-//l'executer un file.php pour creer une session
-
 char**	Request::set_env(t_conf & conf)
 {
 	char	**env;
@@ -363,7 +360,7 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
-void	Request::get_output(char *buff, t_conf &conf)
+void	Request::get_output(/*const */char *buff, t_conf &conf)
 {
 	int	flag = 0;
 	std::string str = buff;
@@ -371,7 +368,6 @@ void	Request::get_output(char *buff, t_conf &conf)
 	if (str == "1") {
 		std::cout << "test 0" << std::endl;
 		fill_significant_error("500", *error, conf);
-		// throw RequestException ("500");
 	}
 	while (1)
 	{
@@ -408,19 +404,23 @@ void	Request::get_output(char *buff, t_conf &conf)
 
 int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
 {
-	int		pid;
-	int		status;
-	int		fd[2];
-	int		rd;
-	char	buff[1024];
-	int		exit_status = 0;
+	int			script_pid;
+	int			timer_pid;
+	int			pid = 0;
+	int			status;
+	int			fd[2];
+	int			rd;
+	char		buff[1024];
+	// std::string	store = "";
+	int			exit_status = 0;
+	bool		script_got_killed = false;
 
 	if (pipe(fd) == -1)
 		fill_significant_error("500", *error, conf);
-	pid = fork();
-	if (pid == -1)
+	script_pid = fork();
+	if (script_pid == -1)
 		fill_significant_error("500", *error, conf);
-	if (pid == 0)
+	if (script_pid == 0)
 	{
 		dup2(fd[1], 1);
 		close(fd[0]);
@@ -437,40 +437,56 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			exit (1);
 		}
 	}
-	waitpid(pid, &status, 0);
-	std::cout << "A IMPLEMENTER : METTRE UN TIME OUT AU CAAS OU SCRIPT INFINI\n";
+	timer_pid = fork();
+	if (timer_pid == -1)
+		fill_significant_error("500", *error, conf);
+	if (timer_pid == 0)
+	{
+		close(fd[0]);
+		close(fd[1]);
+		server->close_child_sockets();
+		sleep(5);
+		exit(0);
+	}
+	while (1)
+	{
+		pid = waitpid(WAIT_ANY, &status, 0);
+		if (pid == script_pid || pid == timer_pid)
+			break ;
+	}
+	// std::cout << "Timer_pid = " << timer_pid << "\nScript_pid = " << script_pid << "\nPid = " << pid << std::endl;
+	if (pid == timer_pid)
+	{
+		std::cout << "\nSCRIPT TIME_OUT\n\n";
+		kill(script_pid, SIGKILL);
+		script_got_killed = true;
+	}
+	else 
+		kill(timer_pid, SIGKILL);
 	close(fd[1]);
 	if (WIFEXITED(status))
 		exit_status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
+	if (script_got_killed == true)
 	{
 		close(fd[0]);
 		deleteArgs(argv, envp);
 		fill_significant_error("500", *error, conf);
+		return (0);
 	}
 	if (exit_status == 0)
 	{
-		while (1) // ATTENTION A LA BOUCLE WHILE ==> si on passe deux fois on efface le buff
+		while (1)
 		{
-			std::cout << "ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL" << std::endl;
-			rd = read(fd[0], buff, sizeof(buff) - 1); // ATTENTION NE PAS UTILISER READ MAIS PLUTOT LES FSTREAM CAR ON NE PASSE PAS PAR POLL
+			rd = read(fd[0], buff, sizeof(buff) - 1);
 			if (rd < 1)
-			{
-				// buff[rd] = '\0';
 				break ;
-			}
 			buff[rd] = '\0';
+			// store += buff;
 		}
 		close(fd[0]);
 		get_output(buff, conf);
+		// get_output(store.c_str(), conf);
 	}
-	// else if (exit_status == 255)
-	// {
-	// 	close(fd[0]);
-	// 	deleteArgs(argv, envp);
-	// 	fill_significant_error("500", *error, conf);
-	// 	// throw RequestException ("500");
-	// }
 	else
 	{
 		close(fd[0]);
@@ -539,13 +555,6 @@ bool is_empty(std::ifstream& pFile)
 {
     return pFile.peek() == std::ifstream::traits_type::eof();
 }
-
-// void	Request::setTimestamp(std::ofstream	& data)
-// {
-	// ecrire ici: si la difference de temps entre timestamp actuel et celui de data_user trop important, refresh info
-	// std::time_t result = std::time(NULL);
-	// data << "TimeStamp=" << std::asctime(std::localtime(&result)) << std::endl;
-// }
 
 /* ************************************************************************* */
 /* ******************************** DELETE ********************************* */
@@ -626,7 +635,6 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
 		{
 			std::cout << "ENTER IN CGI" << std::endl;
-			std::cout << "Attention : dans sign up si new user remplace dans data l'ancien user au lieu de juste en rajouter un nouveau" << std::endl;
 			handle_cgi(conf, location);
 		}
 		else
@@ -783,51 +791,92 @@ int	extract_name(std::vector<std::string> & array, std::string & name)
 	extract.erase(0, extract.rfind('=') + 1);
 	if (extract == "")
 		return (-1);
-	name = extract.substr(1, extract.rfind('"') - 2);
+	name = extract.substr(1, extract.rfind('"') - 1);
 	std::cout << "FILENAME AFTER EXTRACTION = " << name << std::endl;
 	return (0);
+}
+
+void	recursive_name(std::string & filename, std::string name, int count)
+{
+	if (access(name.c_str(), F_OK) == -1)
+		filename = name;
+	else
+	{
+		char c = ++count + '0';
+		std::string ext = "()";
+		if (count < 2)
+			recursive_name(filename, name.insert(name.rfind('.'), ext.insert(1, 1, c)), count);
+		else
+		{
+			name[name.rfind('.') - 2] = c;
+			recursive_name(filename, name, count);
+		}
+	}
 }
 
 int	Request::set_filename(std::vector<std::string> & array, std::string & filename)
 {
 	std::string	name;
+	int			count = 0;
 	if (extract_name(array, name) != -1)
 	{
-		if (access(name.c_str(), F_OK) == -1)
-		{
-			filename = name;
-		}
-		else
-			filename = name + "1";
+		recursive_name(filename, name, count);
 	}
 	else
 		return (-1);
 	return (0);
 }
 
+void	Request::remove_boundaries(std::deque<unsigned char> & copy)
+{
+	std::vector<std::string> vec;
+	std::string str = "";
+	int			count = 0;
+	std::deque<unsigned char>::iterator start = body_deque.begin();
+	std::deque<unsigned char>::iterator end;
+	for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+	{
+		str += *it;
+		if (*it == '\n')
+		{
+			end = it;
+			vec.push_back(str);
+			if (str == "--" + boundary + "\r\n" || str == "--" + boundary + "--" + "\r\n")
+				start = it + 1;
+			else if (count > 0 && (vec[count - 1] == "--" + boundary + "\r\n" || vec[count - 1] == "--" + boundary + "--" + "\r\n"))
+				start = it + 1;
+			else if (count > 1 && (vec[count - 2] == "--" + boundary + "\r\n" || vec[count - 2] == "--" + boundary + "--" + "\r\n"))
+				start = it + 1;
+			else if (count > 2 && (vec[count - 3] == "--" + boundary + "\r\n" || vec[count - 3] == "--" + boundary + "--" + "\r\n"))
+				start = it + 1;
+			else
+			{
+				for (std::deque<unsigned char>::iterator its = start; its != end; its++)
+					copy.push_back(*its);
+				start = it;
+			}
+			str = "";
+			count++;
+		}
+	}
+}
+
 void	Request::build_file(std::vector<std::string> & array)
 {
 	std::string	filename;
 	std::string end = "--" + boundary + "--\n";
+	std::deque<unsigned char> copy;
 	if (set_filename(array, filename) != -1)
 	{
 		std::ofstream file(filename.c_str(), std::ofstream::out);
-		for (std::vector<std::string>::iterator it = array.begin() + 5; it != array.end(); it++)
-		{
-			// std::cout << *(array.begin()) << std::endl;
-			if ((*it) == boundary || (*it) == end)
-				break ;
+		remove_boundaries(copy);
+		for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
 			file << (*it);
-			if (it == array.end() - 1)
-				std::cout << (*it) << std::endl;
-		}
-		std::cout << boundary << std::endl;
 	}
 }
 
 void	build_array(std::vector<std::string> & array, std::string & str_body)
 {
-	// std::cout << "\n\nSTR BODYYYYYYYYYYYY" << str_body << "\n\n";
 	while (1)
 	{
 		std::string	sub = str_body.substr(0, str_body.find('\n') + 1);
@@ -839,30 +888,15 @@ void	build_array(std::vector<std::string> & array, std::string & str_body)
 			break ;
 		}
 	}
-	for (std::vector<std::string>::iterator it = array.begin(); it != array.end(); it++)
-	{
-		std::cout << "Content line = " << (*it) << std::endl;
-	}
 }
 
 void	Request::extract_body_upload(std::vector<std::string> & array)
 {
 	std::string	str_body = "";
 	std::deque<unsigned char> copy = body_deque;
-	// std::cout << "\n\n\n\n" << "-------------------------------------------" << std::endl;
-	// for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
-	// {
-		// std::cout << (*it);
-	// }
-	// std::cout << "\n\n\n\n" << "-------------------------------------------" << std::endl;
+
 	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
-	{
-		if ((*it) == '\r' && *(it + 1) == '\n')
-		{
-			it = copy.erase(it);
-		}
 		str_body += (*it);	
-	}
 	build_array(array, str_body);
 }
 
@@ -874,14 +908,18 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	if (content_type == "multipart/form-data")
 	{
-		// std::cout << "Boundary = " << boundary << std::endl;
-		// extract_body_upload(array);
-		// std::cout << "BODY_DEQUE\n\n";
-		// for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
-			// std::cout << *it; 
-		// std::cout << "\n\n END BODY_DEQUE\n\n";
-	}
-	
+		extract_body_upload(array);
+		// std::cout << "Array[0]:\n" << array[0] << "\n" << "--" + boundary << "\nboundary" << "\n\n";
+		// std::cout << "Array[max]:\n" << array[array.size() - 2] << "\n" << "--" + boundary + "--" << "\nboundary" << "\n\n";
+		if (array[0] != "--" + boundary + "\r\n" || array[array.size() - 2] != "--" + boundary + "--\r\n")
+		{
+			// std::cout << array[0].size() << array[0] << std::endl;
+			// std::cout << ("--" + boundary).size() << "--" + boundary << std::endl;
+			// std::cout << array[array.size() - 2].size() << array[array.size() - 2] << std::endl;
+			// std::cout << ("--" + boundary + "--").size() << "--" + boundary + "--" << std::endl;
+			fill_significant_error("400", error, conf);
+		}
+	}	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
 	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data")) {
@@ -894,7 +932,6 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 			fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
 		if (method != "POST")
 			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		extract_body_upload(array);
 		build_file(array);
 	}
 	if (version != "HTTP/1.1")

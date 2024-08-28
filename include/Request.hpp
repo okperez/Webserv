@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:34:21 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/28 17:45:35 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,6 +136,8 @@ class Request
 		void	extract_body_upload(std::vector<std::string> & array);
 		void	build_file(std::vector<std::string> & array);
 		int		set_filename(std::vector<std::string> & array, std::string & filename);
+		void	remove_boundaries(std::deque<unsigned char> & copy);
+
 
 		
         /* ***************************************************************** */
@@ -192,7 +194,7 @@ class Request
 		bool			is_accessible(char const *uri);
 		void			check_extension(t_conf & conf, std::string uri, std::string & index_loc);
 		void			get_output(char *buff, t_conf &conf);
-		char**			setArg(char const *pathname, char const *interpreter);
+		// void			get_output(const char *buff, t_conf &conf);
 
 		/* ***************************************************************** */
 		/* **************************** Cookies **************************** */
