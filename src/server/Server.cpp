@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 15:43:49 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 16:34:31 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,6 +266,8 @@ void	Server::read_request(int i, char *buffer, int read) {
 						std::string tmp;
 						tmp.append(buffer, read);
 						it->parse_upload_body(tmp);
+						if (it->getStatus() == RD_TO_RESPOND)
+							fds[i].events = POLLOUT;
 					}
 					else if (it->getTransfer_encoding() == "chunked") {
 						std::string tmp = buffer;
@@ -288,6 +290,8 @@ void	Server::read_request(int i, char *buffer, int read) {
 					
 					it->addSave_buffer(buffer, read);
 					body_request_present(*it, read, i);
+					if (it->getContentType() == "multipart/form-data" && it->getStatus() == RD_TO_RESPOND)
+						fds[i].events = POLLOUT;
 				}
 				return ;
 			}
@@ -447,6 +451,8 @@ void	Server::event_request() {
 	e = MAX_CONNECTION - 1;
 	no_event_request();
 }
+
+
 
 /* ************************************************************************* */
 /* *************************** HANDLE CONNECTION *************************** */
