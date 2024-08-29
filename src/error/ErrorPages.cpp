@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/02 09:39:17 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/29 10:40:53 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,4 +128,9 @@ void	ErrorPages::fill_redir(Response &response, std::string const &code, std::st
     
 	response.setStatus(code, map_error[code]);
 	response.setLocation(redir);
+}
+
+void	ErrorPages::del_all() {
+		map_error.clear();
+	// server_fd.shrink_to_fit();
 }

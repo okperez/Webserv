@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   conf_parsing.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/07/15 12:45:40 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 14:12:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,6 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
         std::list<std::string>      split_file[server_nbr];
         split_conf_file(cnf_file, split_file, server_nbr);
         conf.resize(server_nbr);
-
         for (int i = 0; i < server_nbr; i++)
         {
             set_conf_struct(split_file[i], conf[i]);

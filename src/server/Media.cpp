@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/07/14 11:59:42 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/29 11:49:02 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,12 @@ bool	Media::is_allow(std::string const &index, std::string const &content) {
 	}
 	return (false);
 }
+
+std::map<std::string, std::vector<std::string> >	& Media::getTypes()
+{
+	return (types);
+}
+
 
 std::string	Media::match_type(std::string const &type) {
 	

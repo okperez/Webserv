@@ -1,7 +1,7 @@
-while (1)
-{
-    ;
-}
+# while (1)
+# {
+#     ;
+# }
 @split = split('&', %ENV{'QUERY_STRING'});
 if (-e "Data_user")
 {

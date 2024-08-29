@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/22 10:29:22 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/29 10:38:51 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class ErrorPages
 		void	fill_redir(Response &response, std::string const &code, std::string const &redir);
         // void	err_not_found(std::string &body, std::string &code);
         // void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf);
+		void	del_all();
 } ;
 
 #endif

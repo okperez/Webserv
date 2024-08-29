@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/21 14:54:28 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 10:30:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ class Server
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
+		void	del_all();
 		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
 		void	close_and_erase(std::vector<Request>::iterator it);

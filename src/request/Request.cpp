@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/28 17:45:54 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/29 14:27:17 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,11 +429,9 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		std::cerr << "pathname" << std::endl << pathname << std::endl;
 		if (execve(pathname, argv, envp) != 0)
 		{
-			for (int i = 0; i < 7; i++)
-				delete [] envp[i];
-			delete [] envp;
-			delete [] argv;
+			deleteArgs(argv, envp);
 			delete [] server->fds;
+			server->del_all();
 			exit (1);
 		}
 	}
@@ -446,6 +444,9 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		close(fd[1]);
 		server->close_child_sockets();
 		sleep(5);
+		deleteArgs(argv, envp);
+		delete [] server->fds;
+		server->del_all();
 		exit(0);
 	}
 	while (1)
@@ -454,10 +455,8 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		if (pid == script_pid || pid == timer_pid)
 			break ;
 	}
-	// std::cout << "Timer_pid = " << timer_pid << "\nScript_pid = " << script_pid << "\nPid = " << pid << std::endl;
 	if (pid == timer_pid)
 	{
-		std::cout << "\nSCRIPT TIME_OUT\n\n";
 		kill(script_pid, SIGKILL);
 		script_got_killed = true;
 	}
@@ -532,14 +531,15 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 	char			**env;
 	char			**argv;
 
-	std::string join = ("./" + _target);
-	char const *pathname = join.c_str();
+	str = ("./" + _target);
+	char const *pathname = str.c_str();
 	struct stat path_stat;
 	if (stat(pathname, &path_stat) == -1)
 		fill_significant_error("400", *error, conf);
 	std::ifstream	file(pathname, std::ifstream::in); // QU EST CE QUI se passe si pathname n existe pas ===> a tester
 	if (!is_accessible(pathname) || is_empty(file))
 		fill_significant_error("500", *error, conf);
+	file.close();
 	check_extension(conf, pathname, index_loc);
 	char const * interpreter = define_ext(pathname);
 	env = set_env(conf);

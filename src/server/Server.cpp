@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 17:45:54 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/29 14:21:50 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -572,6 +572,15 @@ void	Server::handle_error_function(int socket, std::string const &code, const ch
 /* ************************************************************************* */
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
+
+void	Server::del_all() {
+	
+	error.del_all();
+	auth_media.getTypes().clear();
+	std::vector<t_conf>().swap(conf); 
+	std::vector<Listen>().swap(server_fd); 
+	std::vector<Request>().swap(requests); 
+}
 
 void	Server::error_bfr_launch(int new_socket, struct addrinfo *res, const char *s) {
 	if (new_socket > -1)
