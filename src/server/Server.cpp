@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/26 17:06:21 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 14:05:19 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,10 @@
 
 Server::Server() {
 	fds = NULL;
-	std::string tmp = "HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 146\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n\t<title> Internal Server Error</title>\n</head>\n<body>\n\t<h1>500</h1>\n\t<h1> Internal Server Error</h1>\n</body>\n</html>\r\n";
-	err_all = tmp.data();
+	std::string tmp = "HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 158\r\n\r\n<!DOCTYPE html>\n<html>\n<head>\n\t<title> Internal Server Error</title>\n</head>\n<body>\n\t<h1>500</h1>\n\t<h1> Internal Server Error</h1>\n</body>\n</html>\r\n";
+	_bad_alloc = false;
+	_err_alloc = tmp.data();
+	_rc_err_alloc = false;
 }
 
 Server::Server(const Server & orig) { (void) orig; }
@@ -86,10 +88,11 @@ void	Server::listen_socket(int new_socket, int port, struct addrinfo *res) {
 		error_bfr_launch(new_socket, res, "");
 	}
 	/* To set up non blocking listen socket */
-	int flags = fcntl(new_socket, F_GETFL, 0); // A VERIFIER POUR FNCTL SUJET + ORLANDO
-	if (flags == -1)
-		error_bfr_launch(new_socket, res, "Failed to fcntl");
-	if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
+	// int flags = fcntl(new_socket, F_GETFL, 0); // A VERIFIER POUR FNCTL SUJET + ORLANDO
+	// if (flags == -1)
+	// 	error_bfr_launch(new_socket, res, "Failed to fcntl");
+	// if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
+	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
 		error_bfr_launch(new_socket, res, "Failed to fcntl");
 }
 
@@ -163,7 +166,6 @@ void	Server::create_fds() {
 	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->getFd();
 		it->setIndex(i);
-		std::cout << "CREATE_FDS POLLIN" << std::endl;
 		fds[i].events = POLLIN; // to set up the listen socket, ready to listen for new request from clients
 		i++;
 	}
@@ -181,36 +183,44 @@ void	Server::create_fds() {
 
 void	Server::launch_server(int max_socket) {
 	
-	int i = 0;
 	int ret;
 	
-	std::cout << "A IMPLEMENTER DANS BOUCLE: CATCH EXCEPTION IF FCT CPP FAIL POUR PAS ARRETER LE SERVEUR =>> POUR EVITER BOUCLE INFINI REMPLACER VECT PAR DEQUE" << std::endl;
 	std::cout << "VOIR AC ORLANDO SI IMPLEMENTERSINON A IMPLEMENTER DANS CGI WAIT: SI SCRIPT QUI TOURNE EN BOUCLE METTRE EN PLACE TIMEOUT POUR CONTINUER" << std::endl;
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
-	std::cout << "		- SECU " << std::endl;
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
 		ret = poll(fds, max_socket, 50);
-		// std::cout << "\e[31mPASSE PAR POLL\e[0m" << std::endl;
 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
 			garbagge_server(NULL, PARENT);
 			throw(ServerException("Failed to poll."));
 		}
 		try {
-			i++;
+			if (_bad_alloc) {
+				write(fds[_ind_err_alloc].fd, _err_alloc, strlen(_err_alloc));
+				if (_rc_err_alloc)
+					close_and_erase(_it_err_alloc);
+				else
+					close_connection(_ind_err_alloc);
+				_rc_err_alloc = false;
+				_bad_alloc = false;
+				continue;
+			}
 			event_request();
 		}
 		catch (std::bad_alloc const & e) {
 			std::cerr << e.what() << std::endl;
+			_bad_alloc = true;
 			continue ;
 		}
 		catch (std::length_error const & e) {
 			std::cerr << e.what() << std::endl;
+			_bad_alloc = true;
 			continue ;
 		}
 		catch (std::out_of_range const & e) {
 			std::cerr << e.what() << std::endl;
+			_bad_alloc = true;
 			continue ;
 		}
 		catch (std::exception const & e) {
@@ -238,16 +248,9 @@ connection is closed.
 */
 void	Server::read_request(int i, char *buffer, int read) {
 	
-	// std::cout << "************************ READ REQUEST fds[i].fd = " << fds[i].fd << std::endl;
-	// for (int j = 0; j < BUFFER_SIZE; j++)
-	// 	std::cout << buffer[j];
-	// std::cout << std::endl;
-
 	// Si une requete a deja ete cree : 
-	std::cout << "READ_REQUEST" << std::endl;
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		try {
-			std::cout << "it->getSocket_fd() = " << it->getSocket_fd() << std::endl;
 			if (it->getSocket_fd() == fds[i].fd) {
 				time_t now;
 				time(&now);
@@ -260,8 +263,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 						}
 					}
 					else if (it->getContentType() == "multipart/form-data") {
-						std::string tmp /* = buffer */;
-						std::cout << "read = " << read << std::endl;
+						std::string tmp;
 						tmp.append(buffer, read);
 						it->parse_upload_body(tmp);
 					}
@@ -290,75 +292,128 @@ void	Server::read_request(int i, char *buffer, int read) {
 				return ;
 			}
 		}
-		catch (std::bad_alloc) {
-			
-			fds[i].events = POLLOUT;
-			it->setStatus(BAD_ALLOC);
-			throw ;
-		}
+		catch (std::bad_alloc) { bad_alloc_error(i, &it); throw ; }
+		catch (std::length_error) { bad_alloc_error(i, &it); throw ; }
+		catch (std::out_of_range) { bad_alloc_error(i, &it); throw ; }
 	}
 	try {
 		Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
 		body_request_present(request, read, i);
 		requests.push_back(request);
 	}
-	catch (std::bad_alloc) {
-		
-	}
+	catch (std::bad_alloc) { _ind_err_alloc = i; throw ; }
+	catch (std::length_error) { _ind_err_alloc = i; throw ; }
+	catch (std::out_of_range) { _ind_err_alloc = i; throw ; }
 }
 
 bool	Server::request_response(int i) {
 	
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if (it->getSocket_fd() == fds[i].fd) {
-			if (it->getStatus() == ERROR || it->getConnection() == "close" || it->getStatus() == CLOSE) {
-				it->send_response(it->getSocket_fd());
-				fds[i].events = POLLIN;	
-				return (close_and_erase(it), true);
+		try {
+			if (it->getSocket_fd() == fds[i].fd) {
+				if (it->getStatus() == ERROR || it->getStatus() == CLOSE) {
+					it->send_response(it->getSocket_fd());
+					fds[i].events = POLLIN;	
+					return (close_and_erase(it), true);
+				}
+				if (it->getStatus() == CLOSE) {
+					fds[i].events = POLLIN;	
+					return (close_and_erase(it), true);
+				}
+				if (it->getStatus() == RD_TO_SEND) {
+					it->send_response(it->getSocket_fd());
+					fds[i].events = POLLIN;
+					if (it->getConnection() == "close")
+						return (close_and_erase(it), true);
+					return (requests.erase(it), true);
+				}
+				struct sockaddr_storage name;
+				socklen_t namelen = sizeof(name);
+				if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+					send_error(it, "500", "Fail getsockname", error);
+				struct sockaddr_in *socket = (struct sockaddr_in *)&name;
+				it->setIp_socket(socket->sin_addr.s_addr);
+				if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
+					it->parse_body();
+				int i_conf = pick_server(*it);
+				it->handle_request(conf[i_conf], error);	
+				return (true);
 			}
-			if (it->getStatus() == RD_TO_SEND) {
-				it->send_response(it->getSocket_fd());
-				fds[i].events = POLLIN;
-				return (requests.erase(it), true);
-			}
-			struct sockaddr_storage name;
-			socklen_t namelen = sizeof(name);
-			if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-				send_error(it, "500", "Fail getsockname", error);
-			struct sockaddr_in *socket = (struct sockaddr_in *)&name;
-			// A PARTIR DE LA : SI std::BAD_ALLOC RETOUR DANS LAUNCH => BOUCLE INFINI : 
-			
-			it->setIp_socket(socket->sin_addr.s_addr);
-			if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
-				it->parse_body();
-			int i_conf = pick_server(*it);
-			it->handle_request(/* it->getSocket_fd(),  */conf[i_conf], error);	
-			return (true);
+		}
+		catch (std::bad_alloc) {
+			_rc_err_alloc = true;
+			_ind_err_alloc = i;
+			_it_err_alloc = it;
+			throw ;
 		}
 	}
 	return (false);
 }
 
+void	Server::no_event_request() {
+	
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
+			for (int i = 0; i < MAX_CONNECTION; i++)
+				if (fds[i].fd == it->getSocket_fd())
+					fds[i].events = POLLOUT;
+			continue;
+		}
+		time_t now;
+		time(&now);
+		if (difftime(now, mktime(it->getT_creation())) > 10) {
+			it->fill_error("408", error);
+			it->send_response(it->getSocket_fd());
+			return (close_and_erase(it), (void) 0);
+		}
+	}
+}
 
 /* Called if there something to be read and handled in one of the fds */
 void	Server::event_request() {
 	
-	for (int i = 0; i < MAX_CONNECTION; i++)
+	static int i = 0;
+	static int e = MAX_CONNECTION - 1;
+	int max_co = MAX_CONNECTION - 1;
+	
+	// for (int i = d; i < MAX_CONNECTION; i++)
+	// int i = d;
+	// while (i++ != e)
+	while (1)
 	{
-		if (fds[i].revents & POLLIN)
+		if (fds[i].revents & POLLOUT)
+		{
+			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
+			if (request_response(i)) {
+				e = i;
+				i = (i != max_co) * (i + 1);
+				// d = (i != MAX_CONNECTION - 1) * (i + 1);
+				// if (i == MAX_CONNECTION - 1)
+				// 	d = 0;
+				// else
+				// 	d = i + 1;
+				return;
+			}
+		}
+		else if (fds[i].revents & POLLIN)
 		{	
 			/* event_request sur socket listening for clients */
 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
 					new_connection(it->getFd()); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+					e = i;
+					i = (i != max_co) * (i + 1);
+					// d = (i != MAX_CONNECTION - 1) * (i + 1);
+					// if (i == MAX_CONNECTION - 1)
+					// 	d = 0;
+					// else
+					// 	d = i + 1;
 					return ;
-					// A TESTER AVEC SIEGE : break au lieu de return et si nouvelle connection revenir au 1er for avec un continue  
 				}
 			}
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
-			// int n_bytes = -1;
 			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				handle_error_function(i, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
@@ -372,30 +427,25 @@ void	Server::event_request() {
 			}
 			else
 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+			e = i;
+			i = (i != max_co) * (i + 1);
+			// d = (i != MAX_CONNECTION - 1) * (i + 1);
+			// if (i == MAX_CONNECTION - 1)
+			// 	d = 0;
+			// else
+			// 	d = i + 1;
 			return ;
 		}
-		else if (fds[i].revents & POLLOUT)
-		{
-			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
-			if (request_response(i))
-				return;
+		if (i == max_co && i != e) {
+			i = -1;
 		}
+		if (i == e)
+			break;
+		i++;
 	}
-	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
-		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
-			for (int j = 0; j < MAX_CONNECTION; j++)
-				if (fds[j].fd == it->getSocket_fd())
-					fds[j].events = POLLOUT;
-			continue;
-		}
-		time_t now;
-		time(&now);
-		if (difftime(now, mktime(it->getT_creation())) > 10) {
-			it->fill_error("408", error);
-			it->send_response(it->getSocket_fd());
-			return (close_and_erase(it), (void) 0);
-		}
-	}
+	i = 0;
+	e = MAX_CONNECTION - 1;
+	no_event_request();
 }
 
 /* ************************************************************************* */
@@ -408,7 +458,7 @@ void	Server::new_connection(int server_fd) {
 	struct sockaddr_in client_addr;
 	int client_addr_len = sizeof(client_addr);
 	
-	std::cout << "Client asked for connection." << std::endl;
+	// std::cout << "Client asked for connection." << std::endl;
 	// A VERIF SI TOUJOURS LE CAS OU NON : 
 		// he accept system call grabs the first connection request on the queue of pending connections (set up in listen) and creates a new socket for that connection.
 		// By default, socket operations are synchronous, or blocking, and accept will block until a connection is present on the queue.
@@ -548,8 +598,6 @@ void	Server::body_request_present(Request &request, int read, int i) {
 		else
 			request.setStatus(READING);
 	}
-	else
-		std::cout << "A IMPLEMENTER OU VOIR SI BESOIN : body absent" << std::endl; // A EFFACER LE ELSE EST JUSTE POUR DEBUG
 }
 
 /* ************************************************************************* */
@@ -572,9 +620,14 @@ void	Server::handle_error_function(int i, std::string const &code, const char *m
 	}
 	Request tmp("", 0, fds[i].fd, this, &error, &auth_media/* , 0 */);
 	tmp.fill_error(code, error);
-	tmp.send_response(fds[i].fd);
 	close_connection(i);
 	throw (ServerException(mess));
+}
+
+void	Server::bad_alloc_error(int i, std::deque<Request>::iterator *it) {
+	_rc_err_alloc = true;
+	_ind_err_alloc = i;
+	_it_err_alloc = *it;
 }
 
 /* ************************************************************************* */

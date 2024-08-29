@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/26 16:45:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/28 14:04:56 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,12 @@ class Server
 
 		Server(const Server & orig);
 		Server &operator=(Server & rhs);
+		bool	_bad_alloc;
+		const char *_err_alloc;
+		int			_ind_err_alloc;
+		bool		_rc_err_alloc;
+		std::deque<Request>::iterator	_it_err_alloc;
+		
 		
 		/* ***************************************************************** */
 		/* ************************* BFR LAUNCHING ************************* */
@@ -45,7 +51,8 @@ class Server
 		std::vector<Listen> server_fd; // a passer en private une fois good
 		std::deque<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
-		const char *err_all;
+
+		
 		
 		Server();
 		~Server(); // fds a free dans destructeur
@@ -74,6 +81,7 @@ class Server
 
 		void	read_request(int i, char *buffer, int read);
 		bool	request_response(int i);
+		void	no_event_request();
 		void	event_request();
 		
 		/* ***************************************************************** */
@@ -96,6 +104,7 @@ class Server
 		/* ***************************** ERROR ***************************** */
 		/* ***************************************************************** */
 
+		void	bad_alloc_error(int i, std::deque<Request>::iterator *it);
 		void	send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
 		void	handle_error_function(int i, std::string const &code, const char *mess, ErrorPages &error);
 

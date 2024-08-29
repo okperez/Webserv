@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/23 16:13:22 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 10:54:42 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ class Request
 		void		parse_media(std::string &s);
 		void		cgi_parse_uri();
 		bool		media_request_allowed();
-		bool		check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
+		void		check_request(t_conf &conf, ErrorPages &error);
 		void		recover_ip_socket();
 		void		parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
 		bool		body_present();
