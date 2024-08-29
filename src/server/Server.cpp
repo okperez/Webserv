@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 16:34:31 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 17:17:13 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,12 +88,9 @@ void	Server::listen_socket(int new_socket, int port, struct addrinfo *res) {
 		error_bfr_launch(new_socket, res, "");
 	}
 	/* To set up non blocking listen socket */
-	// int flags = fcntl(new_socket, F_GETFL, 0); // A VERIFIER POUR FNCTL SUJET + ORLANDO
-	// if (flags == -1)
+	
+	// if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
 	// 	error_bfr_launch(new_socket, res, "Failed to fcntl");
-	// if (fcntl(new_socket, F_SETFL, flags | O_NONBLOCK) == -1)
-	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
-		error_bfr_launch(new_socket, res, "Failed to fcntl");
 }
 
 struct addrinfo	*Server::get_addr_info(char *data, int new_socket) {
@@ -185,7 +182,9 @@ void	Server::launch_server(int max_socket) {
 	
 	int ret;
 	
-	std::cout << "VOIR AC ORLANDO SI IMPLEMENTERSINON A IMPLEMENTER DANS CGI WAIT: SI SCRIPT QUI TOURNE EN BOUCLE METTRE EN PLACE TIMEOUT POUR CONTINUER" << std::endl;
+	std::cout << "REVOIR MAX_CONNECTION : Est ce qu on le coderait pas plutot en dur dans server.hpp en attribut : ex: nb de socket server + un nb de connection possible pour les clients => tester avec siege " << std::endl;
+	std::cout << "Dans create_fds(): fds = new pollfd[MAX_CONNECTION + server_fd.size()];" << std::endl; 
+	std::cout << "Dans event_request: while max connection : -> il y a des sockets qu on ne regare jamais du coup!!!" << std::endl; 
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
 	while (1)
 	{
@@ -380,9 +379,6 @@ void	Server::event_request() {
 	static int e = MAX_CONNECTION - 1;
 	int max_co = MAX_CONNECTION - 1;
 	
-	// for (int i = d; i < MAX_CONNECTION; i++)
-	// int i = d;
-	// while (i++ != e)
 	while (1)
 	{
 		if (fds[i].revents & POLLOUT)
@@ -391,11 +387,6 @@ void	Server::event_request() {
 			if (request_response(i)) {
 				e = i;
 				i = (i != max_co) * (i + 1);
-				// d = (i != MAX_CONNECTION - 1) * (i + 1);
-				// if (i == MAX_CONNECTION - 1)
-				// 	d = 0;
-				// else
-				// 	d = i + 1;
 				return;
 			}
 		}
@@ -407,11 +398,6 @@ void	Server::event_request() {
 					new_connection(it->getFd()); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 					e = i;
 					i = (i != max_co) * (i + 1);
-					// d = (i != MAX_CONNECTION - 1) * (i + 1);
-					// if (i == MAX_CONNECTION - 1)
-					// 	d = 0;
-					// else
-					// 	d = i + 1;
 					return ;
 				}
 			}
@@ -433,11 +419,6 @@ void	Server::event_request() {
 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 			e = i;
 			i = (i != max_co) * (i + 1);
-			// d = (i != MAX_CONNECTION - 1) * (i + 1);
-			// if (i == MAX_CONNECTION - 1)
-			// 	d = 0;
-			// else
-			// 	d = i + 1;
 			return ;
 		}
 		if (i == max_co && i != e) {
