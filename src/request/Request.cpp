@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/29 14:27:17 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/29 14:53:32 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ Request::Request(char const *buffer, int read, int socket, Server *src_server, E
 	time_t	now;
 	time(&now);
 	t_creation =  localtime(&now);
-	printf ("Creation Request: %s", asctime(t_creation)); // A EFFACER
 	socket_fd = socket;
 	server = src_server;
 	error = src_error;
@@ -31,7 +30,6 @@ Request::Request(char const *buffer, int read, int socket, Server *src_server, E
 	response.setAuthmedia(src_auth_media);
 	if (buffer)
 		save_buffer.append(buffer, read);
-		// save_buffer = buffer;
 	i_conf = -1;
 	status = NEW;
 }
@@ -82,10 +80,6 @@ Request &Request::operator=(Request const & rhs) {
 /* ************************************************************************* */
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
-
-// Response &Request::getsetResponse() {
-// 	return (response);
-// }
 
 int 		Request::getIconf() const {
 	return (i_conf);
@@ -154,11 +148,7 @@ void	Request::setStatus(int status) {
 
 void	Request::addSave_buffer(/* const */ char *buffer, int end) {
 	
-	
-	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
 	save_buffer.append(buffer, end);
-	// std::cout << "save_buffer = |" << save_buffer << "|\n"; 
-	// save_buffer += buffer;
 }
 
 // void	Request::addSave_buffer(const char *buffer) {
@@ -189,12 +179,12 @@ void	Request::send_response(int socket_fd) {
 //  parse request from client and send back response 
 void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
-	if (!check_request(conf, error))
-		return ;
+	check_request(conf, error);
 	int i = check_exist_method();
 	switch (i) {
 		case UNKNOWN : {
 			fill_significant_error("405", error, conf);
+			return ;
 		}
 		case DELETE : {
 			std::string index = find_location(conf, error);
@@ -206,7 +196,7 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 			setStatus(RD_TO_SEND);
 			return ;
 		}
-		default : { // A separer GET == 0 POST == 1 DELETE == 2 ==> Pour l instant ne traite que le GET
+		default : {
 			std::string index = find_location(conf, error);
 			return (build_response(conf, index, error), (void)0);
 		}
@@ -365,10 +355,8 @@ void	Request::get_output(/*const */char *buff, t_conf &conf)
 	int	flag = 0;
 	std::string str = buff;
 	std::cout << "str = " << str << std::endl;
-	if (str == "1") {
-		std::cout << "test 0" << std::endl;
+	if (str == "1")
 		fill_significant_error("500", *error, conf);
-	}
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -669,7 +657,6 @@ bool	Request::is_dir(std::string const &path) {
 	struct stat buf;
 	if (stat(path.data(), &buf) == -1) // NO LEAK MEMMORY + FD ===> erreur not found renvoyee
 		return (false);
-	std::cout << "A TESTER:  CHECKER SI PAS LES PERMISSIONS SUR DIR" << std::endl;
 	if (S_ISDIR(buf.st_mode))
 		return (true);
 	return (false);
@@ -681,7 +668,7 @@ void	Request::uri_directory(t_conf &conf, ErrorPages &error) {
 	for (std::vector<std::string>::iterator it = conf.files_vect.begin(); it != conf.files_vect.end(); it++) {
 		std::string tmp = _target + *it;
 		if (open_targetfile(tmp, error, conf)) // =====> open le 1er index valide
-			return (/* std::cout << "return" << std::endl, */ (void)0);
+			return ;
 	}
 	if (conf.autoindex == "on") // =====> Autoindex on
 		return (build_index(conf, error), (void)0);
@@ -776,7 +763,7 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-int	extract_name(std::vector<std::string> & array, std::string & name)
+int	extract_name(std::vector<std::string> & array, std::string & name) // ATTENTION APPARTIENT PAS A REQUEST.HPP
 {
 	std::string	extract;
 	
@@ -796,7 +783,7 @@ int	extract_name(std::vector<std::string> & array, std::string & name)
 	return (0);
 }
 
-void	recursive_name(std::string & filename, std::string name, int count)
+void	recursive_name(std::string & filename, std::string name, int count)  // ATTENTION APPARTIENT PAS A REQUEST.HPP
 {
 	if (access(name.c_str(), F_OK) == -1)
 		filename = name;
@@ -900,7 +887,7 @@ void	Request::extract_body_upload(std::vector<std::string> & array)
 	build_array(array, str_body);
 }
 
-bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
+void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
 
 	// modifier nom si deja present
 	// ne pas changer contenu du ficher
@@ -909,30 +896,19 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 	if (content_type == "multipart/form-data")
 	{
 		extract_body_upload(array);
-		// std::cout << "Array[0]:\n" << array[0] << "\n" << "--" + boundary << "\nboundary" << "\n\n";
-		// std::cout << "Array[max]:\n" << array[array.size() - 2] << "\n" << "--" + boundary + "--" << "\nboundary" << "\n\n";
 		if (array[0] != "--" + boundary + "\r\n" || array[array.size() - 2] != "--" + boundary + "--\r\n")
-		{
-			// std::cout << array[0].size() << array[0] << std::endl;
-			// std::cout << ("--" + boundary).size() << "--" + boundary << std::endl;
-			// std::cout << array[array.size() - 2].size() << array[array.size() - 2] << std::endl;
-			// std::cout << ("--" + boundary + "--").size() << "--" + boundary + "--" << std::endl;
 			fill_significant_error("400", error, conf);
-		}
 	}	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
-	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data")) {
-		std::cout << static_cast<size_t>(content_length) << " et " << body.length() << std::endl;
-		fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-	}
-	std::cout << static_cast<size_t>(content_length) << " et " << body_deque.size() << std::endl;
+	if (content_length < 0 || (static_cast<size_t>(content_length) != body.length() && transfer_encoding != "chunked" && content_type != "multipart/form-data"))
+		fill_significant_error("400", error, conf);
 	if (content_type == "multipart/form-data") {
 		if (static_cast<size_t>(content_length) != body_deque.size())
-			fill_significant_error("400", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
+			fill_significant_error("400", error, conf);
 		if (method != "POST")
-			fill_significant_error("403", error, conf); // ATTENTION SIGNIFICANT ERROEUR MAIS CONNECTION PAS CLOSE
-		build_file(array);
+			fill_significant_error("403", error, conf);
+		build_file(array); // A DEPLACER
 	}
 	if (version != "HTTP/1.1")
 		fill_significant_error("405", error, conf);
@@ -940,7 +916,6 @@ bool	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		fill_significant_error("413", error, conf);
 	if (media.size() > 0 && !media_request_allowed())
 		fill_significant_error("415", error, conf);
-	return (true);
 }
 
 void	Request::recover_ip_socket() {
@@ -1015,7 +990,6 @@ void	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	version = extract_line(save_buffer, '\r');
 	host = extract_elem("Host:", "\r", save_buffer, "");
 	parse_host();
-	std::cout << "***************************************" << std::endl;
 	std::cout << title << "*********** REQUEST **********" << std::endl;
 	std::cout << title << method << " " << uri << " " << version << std::endl;
 	std::cout << "******************************" << reset << std::endl;
@@ -1093,11 +1067,8 @@ void	Request::parse_upload_body(std::string &body) {
 	for (std::string::iterator it = body.begin(); it != body.end(); it++) {
 		body_deque.push_back(*it);
 	}
-	std::cout << "body_deque.size()" << body_deque.size() << std::endl;
-	std::cout << "content_length" << content_length << std::endl;
-	if (body_deque.size() == static_cast<size_t>(content_length)) {
+	if (body_deque.size() == static_cast<size_t>(content_length))
 		status = RD_TO_RESPOND;
-	}
 	else
 		status = READING;
 }
@@ -1291,7 +1262,7 @@ void	Request::fill_error(std::string const &code, ErrorPages &error) {
 
 void	Request::fill_significant_error(std::string const &code, ErrorPages &error) {
 	error.fill_significant_error(response, code);
-	setStatus(CLOSE);
+	setStatus(ERROR);
 }
 
 void	Request::fill_error(std::string const &code, ErrorPages &error, t_conf &conf) {
@@ -1301,7 +1272,7 @@ void	Request::fill_error(std::string const &code, ErrorPages &error, t_conf &con
 
 void	Request::fill_significant_error(std::string const &code, ErrorPages &error, t_conf &conf) {
 	error.fill_significant_error(response, code, conf);
-	setStatus(CLOSE);
+	setStatus(ERROR);
 	throw (ServerException(""));
 }
 

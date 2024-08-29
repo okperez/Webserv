@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 12:16:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/29 14:42:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,9 +125,9 @@ class Request
 		void	parse_media(std::string &s);
 		void	cgi_parse_uri();
 		bool	media_request_allowed();
-		bool	check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error);
+		void	check_request(t_conf &conf, ErrorPages &error);
 		void	recover_ip_socket();
-		void	parse_first_line(/* in_addr_t s_addr, ErrorPages &error */);
+		void	parse_first_line();
 		bool	body_present();
 		int 	extract_chunked_body(std::string &s);
 		void	parse_chunk_body();
@@ -142,8 +142,6 @@ class Request
 		int		set_filename(std::vector<std::string> & array, std::string & filename);
 		void	remove_boundaries(std::deque<unsigned char> & copy);
 
-
-		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
         /* ***************************************************************** */

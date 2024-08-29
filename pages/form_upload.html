@@ -36,17 +36,17 @@
         document.getElementById('custom-file-upload').addEventListener('click', function() {
             document.getElementById('hide').click();
         });
-		document.getElementById('custom-file-upload2').addEventListener('click', function() {
-            document.getElementById('hide2').click();
-        });
+		// document.getElementById('custom-file-upload2').addEventListener('click', function() {
+        //     document.getElementById('hide2').click();
+        // });
 		document.getElementById('hide').addEventListener('change', function() {
             var fileName = document.getElementById('hide').files[0].name;
             document.getElementById('file-name').textContent = fileName;
         });
-		document.getElementById('hide2').addEventListener('change', function() {
-            var fileName = document.getElementById('hide2').files[0].name;
-            document.getElementById('file-name2').textContent = fileName;
-        });
+		// document.getElementById('hide2').addEventListener('change', function() {
+        //     var fileName = document.getElementById('hide2').files[0].name;
+        //     document.getElementById('file-name2').textContent = fileName;
+        // });
 		
     </script>
 </body>

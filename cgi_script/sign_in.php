@@ -1,9 +1,5 @@
 <?php
 
-while (1)
-{
-    ;
-}
 $file = file_get_contents('Data_user');
 if ($file != false && strlen($file) > 0)
 {

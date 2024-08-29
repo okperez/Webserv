@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 10:30:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/08/29 14:38:34 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,12 @@ class Server
 
 		Server(const Server & orig);
 		Server &operator=(Server & rhs);
+		bool	_bad_alloc;
+		const char *_err_alloc;
+		int			_ind_err_alloc;
+		bool		_rc_err_alloc;
+		std::deque<Request>::iterator	_it_err_alloc;
+		
 		
 		/* ***************************************************************** */
 		/* ************************* BFR LAUNCHING ************************* */
@@ -43,8 +49,10 @@ class Server
 		Media		auth_media;
 		std::vector<t_conf>	conf; // public si on n integre pas parsing dans classe
 		std::vector<Listen> server_fd; // a passer en private une fois good
-		std::vector<Request> requests; // a passer en private une fois good
+		std::deque<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
+
+		
 		
 		Server();
 		~Server(); // fds a free dans destructeur
@@ -73,6 +81,7 @@ class Server
 
 		void	read_request(int i, char *buffer, int read);
 		bool	request_response(int i);
+		void	no_event_request();
 		void	event_request();
 		
 		/* ***************************************************************** */
@@ -95,8 +104,9 @@ class Server
 		/* ***************************** ERROR ***************************** */
 		/* ***************************************************************** */
 
-		void	send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
-		void	handle_error_function(int socket, std::string const &code, const char *mess, ErrorPages &error);
+		void	bad_alloc_error(int i, std::deque<Request>::iterator *it);
+		void	send_error(std::deque<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
+		void	handle_error_function(int i, std::string const &code, const char *mess, ErrorPages &error);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
@@ -105,7 +115,7 @@ class Server
 		void	del_all();
 		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
-		void	close_and_erase(std::vector<Request>::iterator it);
+		void	close_and_erase(std::deque<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
 		void	handle_pending_requests();
