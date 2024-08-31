@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 14:42:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/31 11:30:13 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,14 +47,12 @@ class Request
 		std::string											host;      			// Header that specifies the server's host and port
 		std::string											port;      			// Header that describes the pport used
 		std::string   										agent;    			// Header that describes the client's user agent
-		std::map<std::string, std::vector<std::string> >	media;    			// Header that specifies which media types the client can accept
 		std::string											connection;    		// Header that specifies if we have to close the connection or keeping it alive
 		std::string											content_type;		// UTILISE??
 		std::string											transfer_encoding;	// for chunked request
 		int													content_length; 	// Header that specifies the length of the body
 		bool												miss_length;
 		std::string											body;
-		std::deque<unsigned char>							body_deque;
 		std::string											boundary;
 
 		// RESPONSE
@@ -86,6 +84,8 @@ class Request
 
 	public :
 
+		std::deque<unsigned char>							body_deque;
+		std::map<std::string, std::vector<std::string> >	media;    			// Header that specifies which media types the client can accept
 		Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);
 		~Request();

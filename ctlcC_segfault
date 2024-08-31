@@ -1,0 +1,325 @@
+Fail to write
+==27817== Syscall param poll(ufds.fd) points to unaddressable byte(s)
+==27817==    at 0x4C161D4: poll (poll.c:29)
+==27817==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==27817==    by 0x10D4EA: main (main.cpp:53)
+==27817==  Address 0x4e384e0 is 0 bytes inside a block of size 2,064 free'd
+==27817==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x1242C1: Server::handle_pending_requests() (Server.cpp:852)
+==27817==    by 0x12A144: close_server(Server*) (close_server.cpp:17)
+==27817==    by 0x12A1D5: garbagge_server(Server*, int) (close_server.cpp:28)
+==27817==    by 0x12A2E6: sighandler(int) (close_server.cpp:40)
+==27817==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==27817==    by 0x4C17291: write (write.c:26)
+==27817==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==27817==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==27817==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==27817==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==27817==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==  Block was alloc'd at
+==27817==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==27817==    by 0x10D4BD: main (main.cpp:52)
+==27817== 
+==27817== Syscall param poll(ufds.events) points to unaddressable byte(s)
+==27817==    at 0x4C161D4: poll (poll.c:29)
+==27817==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==27817==    by 0x10D4EA: main (main.cpp:53)
+==27817==  Address 0x4e384e4 is 4 bytes inside a block of size 2,064 free'd
+==27817==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x1242C1: Server::handle_pending_requests() (Server.cpp:852)
+==27817==    by 0x12A144: close_server(Server*) (close_server.cpp:17)
+==27817==    by 0x12A1D5: garbagge_server(Server*, int) (close_server.cpp:28)
+==27817==    by 0x12A2E6: sighandler(int) (close_server.cpp:40)
+==27817==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==27817==    by 0x4C17291: write (write.c:26)
+==27817==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==27817==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==27817==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==27817==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==27817==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==  Block was alloc'd at
+==27817==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==27817==    by 0x10D4BD: main (main.cpp:52)
+==27817== 
+==27817== Syscall param poll(ufds.revents) points to unaddressable byte(s)
+==27817==    at 0x4C161D4: poll (poll.c:29)
+==27817==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==27817==    by 0x10D4EA: main (main.cpp:53)
+==27817==  Address 0x4e384e6 is 6 bytes inside a block of size 2,064 free'd
+==27817==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x1242C1: Server::handle_pending_requests() (Server.cpp:852)
+==27817==    by 0x12A144: close_server(Server*) (close_server.cpp:17)
+==27817==    by 0x12A1D5: garbagge_server(Server*, int) (close_server.cpp:28)
+==27817==    by 0x12A2E6: sighandler(int) (close_server.cpp:40)
+==27817==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==27817==    by 0x4C17291: write (write.c:26)
+==27817==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==27817==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==27817==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==27817==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==27817==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==27817==  Block was alloc'd at
+==27817==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27817==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==27817==    by 0x10D4BD: main (main.cpp:52)
+==27817== 
+==27817== 
+==27817== More than 10000000 total errors detected.  I'm not reporting any more.
+==27817== Final error counts will be inaccurate.  Go fix your program!
+==27817== Rerun with --error-limit=no to disable this cutoff.  Note
+==27817== that errors may occur in your program without prior warning from
+==27817== Valgrind, because errors are no longer being displayed.
+==27817== 
+
+
+
+
+
+
+
+
+
+OU
+
+
+
+
+
+
+
+
+==36883== Invalid write of size 2
+==36883==    at 0x123455: Server::body_request_present(Request&, int, int) (Server.cpp:758)
+==36883==    by 0x120A73: Server::read_request(int, char*, int) (Server.cpp:310)
+==36883==    by 0x12236F: Server::event_request(int) (Server.cpp:557)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e385cc is 236 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Syscall param poll(ufds.fd) points to unaddressable byte(s)
+==36883==    at 0x4C161D4: poll (poll.c:29)
+==36883==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e384e0 is 0 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Syscall param poll(ufds.events) points to unaddressable byte(s)
+==36883==    at 0x4C161D4: poll (poll.c:29)
+==36883==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e384e4 is 4 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Syscall param poll(ufds.revents) points to unaddressable byte(s)
+==36883==    at 0x4C161D4: poll (poll.c:29)
+==36883==    by 0x11FF2A: Server::launch_server(int) (Server.cpp:189)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e384e6 is 6 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Invalid read of size 4
+==36883==    at 0x123FC5: Server::close_and_erase(std::_Deque_iterator<Request, Request&, Request*>) (Server.cpp:831)
+==36883==    by 0x121D59: Server::no_event_request(int) (Server.cpp:388)
+==36883==    by 0x12248A: Server::event_request(int) (Server.cpp:583)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e384e0 is 0 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Invalid read of size 4
+==36883==    at 0x122701: Server::close_connection(int) (Server.cpp:645)
+==36883==    by 0x124028: Server::close_and_erase(std::_Deque_iterator<Request, Request&, Request*>) (Server.cpp:832)
+==36883==    by 0x121D59: Server::no_event_request(int) (Server.cpp:388)
+==36883==    by 0x12248A: Server::event_request(int) (Server.cpp:583)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e38560 is 128 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Invalid read of size 4
+==36883==    at 0x12274C: Server::close_connection(int) (Server.cpp:646)
+==36883==    by 0x124028: Server::close_and_erase(std::_Deque_iterator<Request, Request&, Request*>) (Server.cpp:832)
+==36883==    by 0x121D59: Server::no_event_request(int) (Server.cpp:388)
+==36883==    by 0x12248A: Server::event_request(int) (Server.cpp:583)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e38560 is 128 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Invalid write of size 4
+==36883==    at 0x12276D: Server::close_connection(int) (Server.cpp:647)
+==36883==    by 0x124028: Server::close_and_erase(std::_Deque_iterator<Request, Request&, Request*>) (Server.cpp:832)
+==36883==    by 0x121D59: Server::no_event_request(int) (Server.cpp:388)
+==36883==    by 0x12248A: Server::event_request(int) (Server.cpp:583)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e38560 is 128 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== Invalid write of size 2
+==36883==    at 0x1227A9: Server::close_connection(int) (Server.cpp:649)
+==36883==    by 0x124028: Server::close_and_erase(std::_Deque_iterator<Request, Request&, Request*>) (Server.cpp:832)
+==36883==    by 0x121D59: Server::no_event_request(int) (Server.cpp:388)
+==36883==    by 0x12248A: Server::event_request(int) (Server.cpp:583)
+==36883==    by 0x120086: Server::launch_server(int) (Server.cpp:205)
+==36883==    by 0x10D4EA: main (main.cpp:53)
+==36883==  Address 0x4e38564 is 132 bytes inside a block of size 2,064 free'd
+==36883==    at 0x484995F: operator delete[](void*) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x124368: Server::handle_pending_requests() (Server.cpp:863)
+==36883==    by 0x12A255: close_server(Server*) (close_server.cpp:18)
+==36883==    by 0x12A318: garbagge_server(Server*, int) (close_server.cpp:34)
+==36883==    by 0x12A410: sighandler(int) (close_server.cpp:45)
+==36883==    by 0x4B3E98F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==36883==    by 0x4C17291: write (write.c:26)
+==36883==    by 0x4B8AEFC: _IO_file_write@@GLIBC_2.2.5 (fileops.c:1181)
+==36883==    by 0x4B89BC7: new_do_write (fileops.c:449)
+==36883==    by 0x4B89BC7: _IO_do_write@@GLIBC_2.2.5 (fileops.c:426)
+==36883==    by 0x4B8A4F2: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:784)
+==36883==    by 0x49B4849: std::ostream::put(char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==    by 0x49B4E62: std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.32)
+==36883==  Block was alloc'd at
+==36883==    at 0x4847203: operator new[](unsigned long) (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36883==    by 0x11FCBD: Server::create_fds() (Server.cpp:159)
+==36883==    by 0x10D4BD: main (main.cpp:52)
+==36883== 
+==36883== 
+==36883== More than 10000000 total errors detected.  I'm not reporting any more.
+==36883== Final error counts will be inaccurate.  Go fix your program!
+==36883== Rerun with --error-limit=no to disable this cutoff.  Note
+==36883== that errors may occur in your program without prior warning from
+==36883== Valgrind, because errors are no longer being displayed.
+==36883== 

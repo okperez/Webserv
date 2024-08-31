@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 17:17:13 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/31 13:28:00 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,9 +157,6 @@ void	Server::create_fds() {
 	size_t i = 0;
 	
 	fds = new pollfd[MAX_CONNECTION + server_fd.size()];
-	// ou max de co par serveur ? 
-	// fds = new pollfd[MAX_CONNECTION * server_fd.size() + server_fd.size()];
-	// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 	for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 		fds[i].fd = it->getFd();
 		it->setIndex(i);
@@ -182,13 +179,14 @@ void	Server::launch_server(int max_socket) {
 	
 	int ret;
 	
-	std::cout << "REVOIR MAX_CONNECTION : Est ce qu on le coderait pas plutot en dur dans server.hpp en attribut : ex: nb de socket server + un nb de connection possible pour les clients => tester avec siege " << std::endl;
-	std::cout << "Dans create_fds(): fds = new pollfd[MAX_CONNECTION + server_fd.size()];" << std::endl; 
-	std::cout << "Dans event_request: while max connection : -> il y a des sockets qu on ne regare jamais du coup!!!" << std::endl; 
+	
+	std::cout << "Si deque pour les request : 2 leaks, si vector : 0 +> OUBLIER LA GESTION BAD ALLOC : SI BAD ALLOC ON QUITTE SERVEUR\n" << std::endl;
+	std::cout << "VOIR SI ON THROW UN SERVER EXCEPTION OU REQUESTEXCEPTION EXIT DU COUP CAR PLUS BESOIN DANS HANDLING PENDING REQUEST\n" << std::endl;
+	std::cout << "Si ctrl-c avec siege : 1 leak de fd potentiel :\n";
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
 	while (1)
 	{
-		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend
+		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend le temps du timeout
 		ret = poll(fds, max_socket, 50);
 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
 			garbagge_server(NULL, PARENT);
@@ -205,7 +203,7 @@ void	Server::launch_server(int max_socket) {
 				_bad_alloc = false;
 				continue;
 			}
-			event_request();
+			event_request(max_socket - 1);
 		}
 		catch (std::bad_alloc const & e) {
 			std::cerr << e.what() << std::endl;
@@ -223,9 +221,13 @@ void	Server::launch_server(int max_socket) {
 			continue ;
 		}
 		catch (std::exception const & e) {
+			std::cout << "catch 0\n";
 			std::string err = e.what();
-			if (err == "exit")
-				throw ;
+			if (err == "exit") {
+				std::cout << "EXIT\n";
+				handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
+				exit(130) ;
+			}
 			else if (!err.empty())
 				std::cerr << e.what() << std::endl;
 			continue ;
@@ -276,6 +278,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 								fds[i].events = POLLOUT;
 						}
 						catch (std::exception const &e) {
+							std::cout << "catch 1\n";
 							std::string err = e.what();
 							if (err == "exit")
 								throw ;
@@ -295,41 +298,64 @@ void	Server::read_request(int i, char *buffer, int read) {
 				return ;
 			}
 		}
-		catch (std::bad_alloc) { bad_alloc_error(i, &it); throw ; }
-		catch (std::length_error) { bad_alloc_error(i, &it); throw ; }
-		catch (std::out_of_range) { bad_alloc_error(i, &it); throw ; }
+		catch (std::bad_alloc const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::length_error const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::out_of_range const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::exception const &e) {
+			std::cout << "catch 2\n";
+			throw ;
+		}
 	}
+	// sinon, creation requete :
 	try {
-		Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media/* , j */); // Attention , ne pas creer de request a chaque fois , il reste peut etre a lire ou il faut ecrire
+		Request 	request(buffer, read, fds[i].fd, this, &this->error, &this->auth_media);
 		body_request_present(request, read, i);
 		requests.push_back(request);
 	}
-	catch (std::bad_alloc) { _ind_err_alloc = i; throw ; }
-	catch (std::length_error) { _ind_err_alloc = i; throw ; }
-	catch (std::out_of_range) { _ind_err_alloc = i; throw ; }
+	catch (std::bad_alloc const &e) { _ind_err_alloc = i; throw ; }
+	catch (std::length_error const &e) { _ind_err_alloc = i; throw ; }
+	catch (std::out_of_range const &e) { _ind_err_alloc = i; throw ; }
+	catch (std::exception const &e) {
+			std::cout << "catch 3\n";
+		throw ;
+	}
 }
 
 bool	Server::request_response(int i) {
 	
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		try {
+			// envoi reponse a client
 			if (it->getSocket_fd() == fds[i].fd) {
-				if (it->getStatus() == ERROR || it->getStatus() == CLOSE) {
+				if (it->getStatus() == ERROR /* || it->getStatus() == CLOSE */) {
 					it->send_response(it->getSocket_fd());
 					fds[i].events = POLLIN;	
 					return (close_and_erase(it), true);
 				}
+				// if (it->getStatus() == CLOSE) {
+				// 	fds[i].events = POLLIN;	
+				// 	return (close_and_erase(it), true);
+				// }
+				// if (it->getStatus() == RD_TO_SEND) {
+				// 	it->send_response(it->getSocket_fd());
+				// 	fds[i].events = POLLIN;
+				// 	if (it->getConnection() == "close")
+				// 		return (close_and_erase(it), true);
+				// 	return (requests.erase(it), true);
+				// }
 				if (it->getStatus() == CLOSE) {
-					fds[i].events = POLLIN;	
+					fds[i].events = POLLIN;
 					return (close_and_erase(it), true);
 				}
 				if (it->getStatus() == RD_TO_SEND) {
 					it->send_response(it->getSocket_fd());
+					if (it->getConnection() == "close") {
+						return (it->setStatus(CLOSE), true);
+					}
 					fds[i].events = POLLIN;
-					if (it->getConnection() == "close")
-						return (close_and_erase(it), true);
 					return (requests.erase(it), true);
 				}
+				// construction reponse
 				struct sockaddr_storage name;
 				socklen_t namelen = sizeof(name);
 				if (getsockname(it->getSocket_fd(), (struct sockaddr *)&name, &namelen) == -1) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
@@ -343,69 +369,195 @@ bool	Server::request_response(int i) {
 				return (true);
 			}
 		}
-		catch (std::bad_alloc) {
-			_rc_err_alloc = true;
-			_ind_err_alloc = i;
-			_it_err_alloc = it;
-			throw ;
-		}
+		catch (std::bad_alloc const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::length_error const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::out_of_range const &e) { bad_alloc_error(i, &it); throw ; }
 	}
 	return (false);
 }
 
-void	Server::no_event_request() {
+void	Server::no_event_request(int max_socket) {
 	
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		// Cas ou read a lu la fin de la request et etait = taille du buffer
 		if ((it->getStatus() == READING && it->getTransfer_encoding() != "chunked")) {
-			for (int i = 0; i < MAX_CONNECTION; i++)
+			for (int i = 0; i <= max_socket; i++)
 				if (fds[i].fd == it->getSocket_fd())
 					fds[i].events = POLLOUT;
 			continue;
 		}
+		// pour check time out request et eviter eternal pending request
 		time_t now;
 		time(&now);
 		if (difftime(now, mktime(it->getT_creation())) > 10) {
 			it->fill_error("408", error);
-			it->send_response(it->getSocket_fd());
+			try {
+				it->send_response(it->getSocket_fd());
+			}
+			catch (std::exception const & e) {
+				std::cout << "catch 4\n ATTENTION PAS DE THROW si exit";
+				if (strcmp(e.what(), "Fail to write"))
+					throw;
+			}
 			return (close_and_erase(it), (void) 0);
 		}
 	}
 }
 
+// /* Called if there something to be read and handled in one of the fds */
+// void	Server::event_request(int max_socket) {
+	
+// 	static int i = 0;
+// 	static int e = max_socket;
+// 	// /* static  */int e = server_fd.size() + requests.size();
+// 	// std::cout << "e = " << e << std::endl;
+	
+// 	// std::cout << "EVENT_REQUEST\n";
+// 	while (1)
+// 	{
+// 		if (fds[i].revents & POLLOUT)
+// 		{
+// 			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
+// 			if (request_response(i)) {
+// 				e = i;
+// 				i = (i != max_socket) * (i + 1);
+// 				return;
+// 			}
+// 		}
+// 		else if (fds[i].revents & POLLIN)
+// 		{	
+// 			/* event_request sur socket listening for clients */
+// 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+// 				if (it->getFd() == fds[i].fd) {
+// 					if (new_connection(it->getFd(), max_socket)) { // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+// 						e = i;
+// 						i = (i != max_socket) * (i + 1);
+// 						return ;
+// 					}
+// 				}
+// 			}
+// 			/* event_request sur socket listening for request ready to be handled */
+// 			char buffer[BUFFER_SIZE] = {0};
+// 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
+// 			if (n_bytes < 0) {// NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+// 				if (i == e)
+// 					break;
+// 				if (i == max_socket) {
+// 					i = 0;
+// 					continue ;
+// 				}
+// 				i++;
+// 				continue;
+// 			}
+// 				// handle_error_function(i, "500", "Fail to read", error);
+// 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
+// 				for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+// 					if (it->getSocket_fd() == fds[i].fd) {
+// 						requests.erase(it);
+// 						break;			
+// 					}
+// 				}
+// 				close_connection(i);
+// 			}
+// 			else
+// 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+// 			e = i;
+// 			i = (i != max_socket) * (i + 1);
+// 			return ;
+// 		}
+// 		if (i == e)
+// 			break;
+// 		if (i == max_socket/*  && i != e */) {
+// 			i = 0;
+// 			continue;
+// 		}
+// 		// if (i == e)
+// 		// 	break;
+// 		i++;
+// 	}
+// 	i = 0;
+// 	e = max_socket;
+// 	no_event_request(max_socket);
+// }
+
 /* Called if there something to be read and handled in one of the fds */
-void	Server::event_request() {
+void	Server::event_request(int max_socket) {
 	
 	static int i = 0;
-	static int e = MAX_CONNECTION - 1;
-	int max_co = MAX_CONNECTION - 1;
+	static int e = max_socket;
+	int d = i;
+	// bool max_co = false;
+	// /* static  */int e = server_fd.size() + requests.size();
+	// std::cout << "e = " << e << std::endl;
 	
-	while (1)
-	{
-		if (fds[i].revents & POLLOUT)
-		{
-			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
-			if (request_response(i)) {
-				e = i;
-				i = (i != max_co) * (i + 1);
-				return;
-			}
-		}
-		else if (fds[i].revents & POLLIN)
+	while (1) {
+		// std::cout << "1ere boucle\n";
+		if (fds[i].revents & POLLIN)
 		{	
 			/* event_request sur socket listening for clients */
 			for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
 				if (it->getFd() == fds[i].fd) {
-					new_connection(it->getFd()); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-					e = i;
-					i = (i != max_co) * (i + 1);
-					return ;
+					if (new_connection(it->getFd(), max_socket)) { // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+						// e = i;
+						if (i != e)
+							i = (i != max_socket) * (i + 1);
+						break ;
+					}
+					// Si max co atteint une fois : i = e x quitter boucle while
+					i = e;
+					break;
 				}
 			}
+		}
+		if (i == e) {
+			// i = (i != max_socket) * (i + 1);
+			break;
+		}
+		if (i == max_socket/*  && i != e */) {
+			i = 0;
+			continue;
+		}
+		i++;
+	}
+	i = d;
+	while (1)
+	{
+		// std::cout << "2eme boucle\n";
+		// if (fds[i].revents & POLLOUT)
+		// {
+		// 	/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
+		// 	if (request_response(i)) {
+		// 		e = i;
+		// 		i = (i != max_socket) * (i + 1);
+		// 		return;
+		// 	}
+		// }
+		/* else */ if (fds[i].revents & POLLIN)
+		{	
+			// /* event_request sur socket listening for clients */
+			// for (std::vector<Listen>::iterator it = server_fd.begin(); it != server_fd.end(); it++) {
+			// 	if (it->getFd() == fds[i].fd) {
+			// 		if (new_connection(it->getFd(), max_socket)) { // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+			// 			e = i;
+			// 			i = (i != max_socket) * (i + 1);
+			// 			return ;
+			// 		}
+			// 	}
+			// }
 			/* event_request sur socket listening for request ready to be handled */
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
-			if (n_bytes < 0) // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
-				handle_error_function(i, "500", "Fail to read", error);
+			if (n_bytes < 0) {// NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
+				if (i == e)
+					break;
+				if (i == max_socket) {
+					i = 0;
+					continue ;
+				}
+				i++;
+				continue;
+			}
+				// handle_error_function(i, "500", "Fail to read", error);
 			if (!n_bytes) { // =====> LE CLIENT A INTERROMPU LA CONNECTION = (event) + (read == 0)
 				for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 					if (it->getSocket_fd() == fds[i].fd) {
@@ -418,19 +570,31 @@ void	Server::event_request() {
 			else
 				read_request(i, buffer, n_bytes); // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 			e = i;
-			i = (i != max_co) * (i + 1);
+			i = (i != max_socket) * (i + 1);
 			return ;
 		}
-		if (i == max_co && i != e) {
-			i = -1;
+		else if (fds[i].revents & POLLOUT)
+		{
+			/* au lieu de send mettre status puis ici condition si status pour send envoyer reponse*/
+			if (request_response(i)) {
+				e = i;
+				i = (i != max_socket) * (i + 1);
+				return;
+			}
 		}
 		if (i == e)
 			break;
+		if (i == max_socket/*  && i != e */) {
+			i = 0;
+			continue;
+		}
+		// if (i == e)
+		// 	break;
 		i++;
 	}
 	i = 0;
-	e = MAX_CONNECTION - 1;
-	no_event_request();
+	e = max_socket;
+	no_event_request(max_socket);
 }
 
 
@@ -441,7 +605,31 @@ void	Server::event_request() {
 
 // NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE ====> BLOC HANDLE CONNECTION 
 
-void	Server::new_connection(int server_fd) {
+// void	Server::new_connection(int server_fd) {
+// 	struct sockaddr_in client_addr;
+// 	int client_addr_len = sizeof(client_addr);
+	
+// 	// std::cout << "Client asked for connection." << std::endl;
+// 	// A VERIF SI TOUJOURS LE CAS OU NON : 
+// 		// he accept system call grabs the first connection request on the queue of pending connections (set up in listen) and creates a new socket for that connection.
+// 		// By default, socket operations are synchronous, or blocking, and accept will block until a connection is present on the queue.
+// 	int socket_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+// 	if (socket_fd < 0)
+// 		throw (ServerException("Client failed to connect."));
+// 	for (int i = 1; i < MAX_CONNECTION; i++) {
+// 		if (fds[i].fd == -1) {
+// 			fds[i].fd = socket_fd;
+// 			fds[i].events = POLLIN;
+// 			std::cout << "Client connected on socket " << socket_fd << "." << std::endl;
+// 			return ;
+// 		}
+// 	}
+// 	close(socket_fd);
+// 	std::cerr << "Maximum of connection reached." << std::endl;
+// 	std::cerr << "Connection on socket " << socket_fd << " closed." << std::endl;
+// }
+
+bool	Server::new_connection(int server_fd, int max_socket) {
 	struct sockaddr_in client_addr;
 	int client_addr_len = sizeof(client_addr);
 	
@@ -449,20 +637,21 @@ void	Server::new_connection(int server_fd) {
 	// A VERIF SI TOUJOURS LE CAS OU NON : 
 		// he accept system call grabs the first connection request on the queue of pending connections (set up in listen) and creates a new socket for that connection.
 		// By default, socket operations are synchronous, or blocking, and accept will block until a connection is present on the queue.
-	int socket_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-	if (socket_fd < 0)
-		throw (ServerException("Client failed to connect."));
-	for (int i = 1; i < MAX_CONNECTION; i++) {
-		if (fds[i].fd == -1) {
-			fds[i].fd = socket_fd;
+	// int socket_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+	// if (socket_fd < 0)
+	// 	throw (ServerException("Client failed to connect."));
+	for (int i = 0; i <= max_socket; i++) {
+		if (fds[i].fd < 0) {
+			fds[i].fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+			if (fds[i].fd < 0)
+				throw (ServerException("Client failed to connect."));
 			fds[i].events = POLLIN;
-			std::cout << "Client connected on socket " << socket_fd << "." << std::endl;
-			return ;
+			std::cout << "Client connected on socket " << fds[i].fd << "." << std::endl;
+			return (true);
 		}
 	}
-	close(socket_fd);
 	std::cerr << "Maximum of connection reached." << std::endl;
-	std::cerr << "Connection on socket " << socket_fd << " closed." << std::endl;
+	return (false);
 }
 
 void	Server::close_connection(int i) {
@@ -570,6 +759,7 @@ void	Server::body_request_present(Request &request, int read, int i) {
 			catch (std::exception const &e) {
 				std::string err = e.what();
 				std::cout << "hhh\n" ;
+				std::cout << "catch 5\n";
 				if (err == "exit")
 					throw;
 				fds[i].events = POLLOUT;
@@ -627,7 +817,7 @@ void	Server::del_all() {
 	auth_media.getTypes().clear();
 	std::vector<t_conf>().swap(conf); 
 	std::vector<Listen>().swap(server_fd); 
-	std::deque<Request>().swap(requests); 
+	std::deque<Request>().swap(requests);
 }
 
 void	Server::error_bfr_launch(int new_socket, struct addrinfo *res, const char *s) {
@@ -646,11 +836,9 @@ void	Server::error_bfr_launch() {
 }
 
 void	Server::close_and_erase(std::deque<Request>::iterator it) {
-	for (int i = 0; i < MAX_CONNECTION; i++) {
-		if (fds[i].fd == it->getSocket_fd()) {
-			// std::cout << "EVENT_REQUEST ERASE 1" << std::endl;
+	for (size_t i = 0; i < MAX_CONNECTION + server_fd.size(); i++) {
+		if (fds[i].fd == it->getSocket_fd())
 			return (requests.erase(it), close_connection(i), (void) 0);
-		}
 	}
 }
 
@@ -670,15 +858,30 @@ void	Server::close_requests(int &socket) {
 			return ;
 		}
 	}
-} 
+}
+
+bool	Server::handle_pending_requests_in_deque(int &socket) {
+	
+	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
+		if (socket == it->getSocket_fd()) {
+			close_requests(socket);
+			close_and_erase(it);
+			return (true);
+		}
+	}
+	return (false);
+}
+
 
 void	Server::handle_pending_requests() {
 	
 	if (fds) {
-		for (int i = 0; i < MAX_CONNECTION; i++) {
+		for (size_t i = 0; i < MAX_CONNECTION + server_fd.size(); i++) {
 			if (fds[i].fd > -1) {
-				close_requests(fds[i].fd);
-				close (fds[i].fd);
+				if (!handle_pending_requests_in_deque(fds[i].fd)) {
+					close_requests(fds[i].fd);
+					close (fds[i].fd);
+				}
 			}
 		}
 		delete[] fds;
@@ -688,7 +891,7 @@ void	Server::handle_pending_requests() {
 void	Server::close_child_sockets() {
 	
 	if (fds) {
-		for (int i = 0; i < MAX_CONNECTION; i++) {
+		for (size_t i = 0; i < MAX_CONNECTION + server_fd.size(); i++) {
 			if (fds[i].fd > -1) {
 				close (fds[i].fd);
 				fds[i].fd = -1;

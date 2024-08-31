@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/29 14:53:32 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/31 10:53:50 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,8 @@ void	Request::send_response(int socket_fd) {
 	
 	response.setContent_length();
 	std::string response_content = response.build_response();
-	int fd = write(socket_fd, response_content.c_str(), response_content.size());
+	// int fd = write(socket_fd, response_content.c_str(), response_content.size());
+	int fd = send(socket_fd, response_content.c_str(), response_content.size(), MSG_NOSIGNAL);
 	if (fd == -1) {
 		status = CLOSE;
 		throw(ServerException("Fail to write"));
@@ -1139,7 +1140,12 @@ void	Request::parse_headers() {
 	else {
 		miss_length = false;
 		try { content_length = ft_stoi(tmp); }
-		catch (std::exception & e) { content_length = -1; }
+		catch (std::exception & e) {
+			std::string err = e.what();
+			if (err == "exit")
+				throw;
+			content_length = -1;
+			}
 	}
 	handle_multi_length();
 	if (content_type.empty()) {

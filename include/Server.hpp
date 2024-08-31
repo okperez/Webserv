@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 14:38:34 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/31 13:26:41 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,14 +81,14 @@ class Server
 
 		void	read_request(int i, char *buffer, int read);
 		bool	request_response(int i);
-		void	no_event_request();
-		void	event_request();
+		void	no_event_request(int max_socket);
+		void	event_request(int max_socket);
 		
 		/* ***************************************************************** */
 		/* *********************** HANDLE CONNECTION *********************** */
 		/* ***************************************************************** */
 
-		void	new_connection(int server_fd);
+		bool	new_connection(int server_fd, int max_socket);
 		void	close_connection(int i);
 
 		/* ***************************************************************** */
@@ -118,6 +118,7 @@ class Server
 		void	close_and_erase(std::deque<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
+		bool	handle_pending_requests_in_deque(int &socket);
 		void	handle_pending_requests();
 		void	close_child_sockets();
 
