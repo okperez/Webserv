@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 14:13:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 14:47:53 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ static void	close_server(Server *server) {
 
 void	garbagge_server(Server *server, int rule) {
 	static Server *server_save;
+	(void) rule;
 
 	if (server) {
 		server_save = server;
@@ -32,11 +33,11 @@ void	garbagge_server(Server *server, int rule) {
 	}
 	std::cout << "garbagge server\n";
 	close_server(server_save);
-	if (rule == PARENT) {
-		throw (ServerException("exit"));
-	}
-	if (rule == CHILDREN)
-		exit(1);
+	// if (rule == PARENT) {
+	// 	throw (ServerException("exit"));
+	// }
+	// if (rule == CHILDREN)
+	// 	exit(1);
 }
 
 /* A TESTER : TOUS LES SIGNAUX */

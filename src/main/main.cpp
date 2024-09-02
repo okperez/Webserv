@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/09/02 14:21:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 14:45:17 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,8 +71,8 @@ int main(int argc, char **argv)
 			}
 			catch (std::exception const & e) {
 				std::string err = e.what();
-				std::cout << "main 1\n";
-				server.del_all();
+				std::cerr << "main 1\n";
+				// server.del_all();
 				
 				if (err == "exit")
 					return (130);
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 		}
 		catch (std::exception const & e) {
 			std::string err = e.what();
-				std::cout << "main 2\n";
+				std::cerr << "main 2\n";
 			if (err == "exit")
 				return (130);
 			else

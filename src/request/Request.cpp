@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 14:27:32 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 15:02:34 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -415,6 +415,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		fill_significant_error("500", *error, conf);
 	if (script_pid == 0)
 	{
+		signal(SIGINT, SIG_DFL);
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
@@ -433,6 +434,8 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		fill_significant_error("500", *error, conf);
 	if (timer_pid == 0)
 	{
+		signal(SIGINT, SIG_DFL);
+		
 		close(fd[0]);
 		close(fd[1]);
 		server->close_child_sockets();
