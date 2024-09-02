@@ -21,7 +21,7 @@ if (open(fh, $option,"Data_user"))
         print "Location: http://localhost:8080/sign_up.html\n";
     }
     else 
-    {              #gerer cas ou fname lname exist deja
+    {
         # while (my $String = <FH>)
         # {
         #     if($String =~ /${fname}/ || $String =~ /${lname}/) 
