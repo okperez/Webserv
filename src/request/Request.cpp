@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/31 10:53:50 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/02 10:27:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,8 +180,11 @@ void	Request::send_response(int socket_fd) {
 //  parse request from client and send back response 
 void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
 {
+	// std::cout << "Request::handle_request 0 \n";
 	check_request(conf, error);
+	// std::cout << "Request::handle_request 1 \n";
 	int i = check_exist_method();
+	// std::cout << "Request::handle_request 2 \n";
 	switch (i) {
 		case UNKNOWN : {
 			fill_significant_error("405", error, conf);
@@ -198,7 +201,9 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 			return ;
 		}
 		default : {
+			// std::cout << "Request::handle_request 3 \n";
 			std::string index = find_location(conf, error);
+			// std::cout << "Request::handle_request 4 \n";
 			return (build_response(conf, index, error), (void)0);
 		}
 	}
@@ -599,6 +604,7 @@ void	Request::delete_action(const char *target, int socket_fd, t_conf &conf, Err
 
 void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &location, ErrorPages &error) {
 	
+	// std::cout << "Request::build_response 0 \n";
 	if (location.empty()) {
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
@@ -896,9 +902,12 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	if (content_type == "multipart/form-data")
 	{
+		// std::cout << "Request::check_request 0\n";
 		extract_body_upload(array);
+		// std::cout << "Request::check_request 1\n";
 		if (array[0] != "--" + boundary + "\r\n" || array[array.size() - 2] != "--" + boundary + "--\r\n")
 			fill_significant_error("400", error, conf);
+		// std::cout << "Request::check_request 2\n";
 	}	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
@@ -917,6 +926,7 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		fill_significant_error("413", error, conf);
 	if (media.size() > 0 && !media_request_allowed())
 		fill_significant_error("415", error, conf);
+	// std::cout << "Request::check_request 3\n";
 }
 
 void	Request::recover_ip_socket() {

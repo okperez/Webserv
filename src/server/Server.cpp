@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/31 13:28:00 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/02 10:12:34 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,6 +274,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 						std::string tmp = buffer;
 						try {
 							int chunk = it->extract_chunked_body(tmp);
+							std::cout << "read_request 1 body = |" << it->getBody() << "|" << std::endl;
 							if (chunk == 0)
 								fds[i].events = POLLOUT;
 						}
@@ -292,6 +293,7 @@ void	Server::read_request(int i, char *buffer, int read) {
 					
 					it->addSave_buffer(buffer, read);
 					body_request_present(*it, read, i);
+					std::cout << "read_request 2 body = |" << it->getBody() << "|" << std::endl;
 					if (it->getContentType() == "multipart/form-data" && it->getStatus() == RD_TO_RESPOND)
 						fds[i].events = POLLOUT;
 				}
@@ -325,6 +327,7 @@ bool	Server::request_response(int i) {
 	
 	for (std::deque<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		try {
+			std::cout << "Server::request_response\n";
 			// envoi reponse a client
 			if (it->getSocket_fd() == fds[i].fd) {
 				if (it->getStatus() == ERROR /* || it->getStatus() == CLOSE */) {
@@ -362,7 +365,7 @@ bool	Server::request_response(int i) {
 					send_error(it, "500", "Fail getsockname", error);
 				struct sockaddr_in *socket = (struct sockaddr_in *)&name;
 				it->setIp_socket(socket->sin_addr.s_addr);
-				if (it->getTransfer_encoding() != "chunked" || it->getContentType() != "multipart/form-data")
+				if (it->getTransfer_encoding() != "chunked" && it->getContentType() != "multipart/form-data")
 					it->parse_body();
 				int i_conf = pick_server(*it);
 				it->handle_request(conf[i_conf], error);	
