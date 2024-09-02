@@ -3,20 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/31 13:08:47 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/02 14:13:00 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
 
 static void	close_server(Server *server) {
-	server->stop_listen(); // BLOQUE LES DEMANDE DE CONNECTION
-	server->handle_pending_requests(); // Envoie erreur 503 a toutes les connections acceptees ou requests en cours
-	server->del_all();
-	exit(1);
+	(void) server;
+	// server->stop_listen(); // BLOQUE LES DEMANDE DE CONNECTION
+	// server->handle_pending_requests(); // Envoie erreur 503 a toutes les connections acceptees ou requests en cours
+	// server->del_all();
+	std::cout<< "bfr throw\n";
+	server->ctrlC = true;
+	throw (ServerException("exit"));
+	// exit(1);
 }
 
 void	garbagge_server(Server *server, int rule) {

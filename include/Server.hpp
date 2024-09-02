@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 10:41:04 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 13:58:22 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ class Server
 		bool		_rc_err_alloc;
 		std::vector<Request>::iterator	_it_err_alloc;
 		
-		
 		/* ***************************************************************** */
 		/* ************************* BFR LAUNCHING ************************* */
 		/* ***************************************************************** */
@@ -51,6 +50,7 @@ class Server
 		std::vector<Listen> server_fd; // a passer en private une fois good
 		std::vector<Request> requests; // a passer en private une fois good
 		struct pollfd *fds; // a passer en private une fois good
+		bool 		ctrlC;
 
 		
 		
@@ -118,7 +118,7 @@ class Server
 		void	close_and_erase(std::vector<Request>::iterator it);
 		void	stop_listen();
 		void	close_requests(int &socket);
-		bool	handle_pending_requests_in_deque(int &socket);
+		bool	handle_pending_requests_in_vect(int &socket);
 		void	handle_pending_requests();
 		void	close_child_sockets();
 

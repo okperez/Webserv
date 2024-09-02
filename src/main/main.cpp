@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/08/22 10:02:02 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 14:21:37 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ int main(int argc, char **argv)
 				server.open_listen_socket();  	// NO LEAKS MEMMORY + FD OK
 				server.create_fds();   			// NO LEAKS MEMMORY + FD OK
 				server.launch_server(server.server_fd.size() + MAX_CONNECTION); // OK UNE FOIS LANCER ON RENTRE DANS CATCH QU AVEC CTRL+C OU FAIL DE POLL
+				std::cout << "main 0\n";
 				return (0);
 				}
 			catch (std::bad_alloc const & e) {
@@ -70,6 +71,9 @@ int main(int argc, char **argv)
 			}
 			catch (std::exception const & e) {
 				std::string err = e.what();
+				std::cout << "main 1\n";
+				server.del_all();
+				
 				if (err == "exit")
 					return (130);
 				else
@@ -91,6 +95,7 @@ int main(int argc, char **argv)
 		}
 		catch (std::exception const & e) {
 			std::string err = e.what();
+				std::cout << "main 2\n";
 			if (err == "exit")
 				return (130);
 			else
