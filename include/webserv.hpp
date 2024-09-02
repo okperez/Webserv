@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/08/31 10:23:04 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/02 15:48:57 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,7 @@ char		strback(std::string const & s);
 /* ********************************* CTRL+C ********************************* */
 
 void 			sighandler(int signal);
+void            sighandlerbis(int signal);
 void	        garbagge_server(Server *server, int rule);
 
 /* ************************************************************************** */

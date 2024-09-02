@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 14:15:12 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 16:02:50 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Server::Server() {
 	_err_alloc = tmp.data();
 	_rc_err_alloc = false;
 	ctrlC = false;
+	time_sigint = false;
 }
 
 Server::Server(const Server & orig) { (void) orig; }
@@ -43,6 +44,16 @@ Server &Server::operator=(Server & rhs) {
 /* ************************************************************************* */
 /* ******************************** Accessor ******************************* */
 /* ************************************************************************* */
+
+	bool	Server::getTimeSigint()
+	{
+		return (time_sigint);
+	}
+
+	void	Server::setTimeSigint()
+	{
+		time_sigint = true;
+	}
 
 
 /* ************************************************************************* */

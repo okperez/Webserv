@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 14:13:00 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 15:48:32 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,11 @@ static void	close_server(Server *server) {
 	// exit(1);
 }
 
+void	closeChild(Server *server)
+{
+	server->setTimeSigint();
+}
+
 void	garbagge_server(Server *server, int rule) {
 	static Server *server_save;
 
@@ -31,16 +36,23 @@ void	garbagge_server(Server *server, int rule) {
 		return ;
 	}
 	std::cout << "garbagge server\n";
-	close_server(server_save);
 	if (rule == PARENT) {
-		throw (ServerException("exit"));
+		close_server(server_save);
+		// throw (ServerException("exit"));
 	}
 	if (rule == CHILDREN)
-		exit(1);
+	{
+		closeChild(server_save);		
+	}
 }
 
 /* A TESTER : TOUS LES SIGNAUX */
 void sighandler(int signal) {
 	std::cout << std::endl << "Interruption of server due to signal " << signal << "." << std::endl;
 	garbagge_server(NULL, PARENT);
+}
+
+void sighandlerbis(int signal) {
+	std::cout << std::endl << "Interruption of server due to signal " << signal << "." << std::endl;
+	garbagge_server(NULL, CHILDREN);
 }

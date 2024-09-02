@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 14:27:32 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 16:07:56 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -410,11 +410,13 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 
 	if (pipe(fd) == -1)
 		fill_significant_error("500", *error, conf);
+	signal(SIGINT, SIG_IGN);
 	script_pid = fork();
 	if (script_pid == -1)
 		fill_significant_error("500", *error, conf);
 	if (script_pid == 0)
 	{
+		
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
@@ -433,14 +435,27 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		fill_significant_error("500", *error, conf);
 	if (timer_pid == 0)
 	{
+		signal(SIGINT, sighandlerbis);
 		close(fd[0]);
 		close(fd[1]);
 		server->close_child_sockets();
-		sleep(5);
-		deleteArgs(argv, envp);
-		delete [] server->fds;
-		server->del_all();
-		exit(0);
+		for (int time = 5; time > 0 && server->getTimeSigint() == false; time--)
+			sleep(1);
+		if (server->getTimeSigint() == false)
+		{
+		
+			deleteArgs(argv, envp);
+			delete [] server->fds;
+			server->del_all();
+			exit(0);
+		}
+		else
+		{
+			deleteArgs(argv, envp);
+			delete [] server->fds;
+			server->del_all();
+			exit(255);
+		}
 	}
 	while (1)
 	{
@@ -448,16 +463,39 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		if (pid == script_pid || pid == timer_pid)
 			break ;
 	}
+	signal(SIGINT, sighandler);
+	if (WIFEXITED(status))
+	{
+		exit_status = WEXITSTATUS(status);
+	}
+	// else if (WIFSIGNALED(status)) {
+	// 	exit_status = WTERMSIG(status);
+	// 	if (exit_status == 2) {
+	// 		throw (ServerException("exit"));
+	// 	}
+	// }
 	if (pid == timer_pid)
 	{
 		kill(script_pid, SIGKILL);
 		script_got_killed = true;
+		if (exit_status == 255)
+		{
+			close(fd[0]);
+			close(fd[1]);
+			deleteArgs(argv, envp);
+			throw ServerException("exit");
+		}
 	}
-	else 
+	else if (exit_status == 255)
+	{
 		kill(timer_pid, SIGKILL);
+		close(fd[0]);
+		close(fd[1]);
+		deleteArgs(argv, envp);
+		fill_significant_error("500", *error, conf);
+		return (0);
+	}
 	close(fd[1]);
-	if (WIFEXITED(status))
-		exit_status = WEXITSTATUS(status);
 	if (script_got_killed == true)
 	{
 		close(fd[0]);
