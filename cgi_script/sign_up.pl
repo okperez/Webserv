@@ -20,13 +20,24 @@ if (open(fh, $option,"Data_user"))
     {
         print "Location: http://localhost:8080/sign_up.html\n";
     }
-    else {              #gerer cas ou fname lname exist deja
+    else 
+    {              #gerer cas ou fname lname exist deja
+        # while (my $String = <FH>)
+        # {
+        #     if($String =~ /${fname}/ || $String =~ /${lname}/) 
+        #     { 
+        #         exit (0);
+        #     } 
+        # }
         print fh "----------------------------------------- USER -----------------------------------------\n\n";
 		print fh "fname${fname}\n";
 		print fh "lname${lname}\n\n";
-		close(fh);
 		print "Location: http://localhost:8080/sign_in.html\n";
 	}
+    @split = ();
+    $fname = undef;
+    $lname = undef;
+	close(fh);
 }
 else
 {

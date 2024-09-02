@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 14:42:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 15:49:46 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ class Request
 		Response	response;
 		
 		Server		*server;
-		ErrorPages		*error;
+		ErrorPages	*error;
 		Media		*auth_media;
 		int 		i_conf;
 		// size_t        lenght;

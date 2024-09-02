@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/29 14:53:32 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/29 16:19:01 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,7 +399,6 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int			fd[2];
 	int			rd;
 	char		buff[1024];
-	// std::string	store = "";
 	int			exit_status = 0;
 	bool		script_got_killed = false;
 
@@ -468,11 +467,9 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			if (rd < 1)
 				break ;
 			buff[rd] = '\0';
-			// store += buff;
 		}
 		close(fd[0]);
 		get_output(buff, conf);
-		// get_output(store.c_str(), conf);
 	}
 	else
 	{
@@ -521,10 +518,12 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 
 	str = ("./" + _target);
 	char const *pathname = str.c_str();
+	if (_target.empty())
+		fill_significant_error("400", *error, conf);
 	struct stat path_stat;
 	if (stat(pathname, &path_stat) == -1)
 		fill_significant_error("400", *error, conf);
-	std::ifstream	file(pathname, std::ifstream::in); // QU EST CE QUI se passe si pathname n existe pas ===> a tester
+	std::ifstream	file(pathname, std::ifstream::in);
 	if (!is_accessible(pathname) || is_empty(file))
 		fill_significant_error("500", *error, conf);
 	file.close();
@@ -779,7 +778,6 @@ int	extract_name(std::vector<std::string> & array, std::string & name) // ATTENT
 	if (extract == "")
 		return (-1);
 	name = extract.substr(1, extract.rfind('"') - 1);
-	std::cout << "FILENAME AFTER EXTRACTION = " << name << std::endl;
 	return (0);
 }
 
