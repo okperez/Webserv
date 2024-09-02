@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/02 09:31:01 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/02 12:38:10 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,6 @@ class Response
 		void						setBody(std::string const & s);
 		void						setBody(std::ifstream &file);
 		void						setCookie(std::string str);
-		std::vector<std::string>	getCookie(void);
 		void						setError(bool err);
 		bool						getError() ;
 

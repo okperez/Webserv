@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/07/10 11:25:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 12:20:00 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,10 +65,6 @@ void    handle_files(std::string str, t_conf & conf)
         str.erase(0, str.find(' ') + 1);
     }
     conf.files_vect.push_back(str.substr(0, str.find(';')));
-    // for (auto it = conf.files_vect.begin(); it != conf.files_vect.end(); it++)
-    // {
-    //     std::cout << *it << std::endl;
-    // }
 }
 
 void    set_flag(t_flag & flag)

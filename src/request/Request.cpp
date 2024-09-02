@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 11:09:08 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 12:35:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -531,7 +531,7 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
 		fill_significant_error("400", *error, conf);
 	std::ifstream	file(pathname, std::ifstream::in);
 	if (!is_accessible(pathname) || is_empty(file))
-		fill_significant_error("500", *error, conf);
+		fill_significant_error("400", *error, conf);
 	file.close();
 	check_extension(conf, pathname, index_loc);
 	char const * interpreter = define_ext(pathname);
@@ -900,10 +900,6 @@ void	Request::extract_body_upload(std::vector<std::string> & array)
 }
 
 void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
-
-	// modifier nom si deja present
-	// ne pas changer contenu du ficher
-	// std::vector<std::string>	array;
 
 	if (content_type == "multipart/form-data")
 	{
