@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 10:39:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 11:07:33 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -900,12 +900,9 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	if (content_type == "multipart/form-data")
 	{
-		// std::cout << "Request::check_request 0\n";
 		extract_body_upload(array);
-		// std::cout << "Request::check_request 1\n";
 		if (array[0] != "--" + boundary + "\r\n" || array[array.size() - 2] != "--" + boundary + "--\r\n")
 			fill_significant_error("400", error, conf);
-		// std::cout << "Request::check_request 2\n";
 	}	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
