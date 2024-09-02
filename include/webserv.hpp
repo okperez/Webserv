@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/08/29 14:38:36 by galambey         ###   ########.fr       */
+/*   Updated: 2024/08/31 10:23:04 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 # include "ServerException.hpp"
 # include "Media.hpp"
 
-# define MAX_CONNECTION	30
+# define MAX_CONNECTION	255
 # define BUFFER_SIZE	1000
 
 typedef struct s_flag

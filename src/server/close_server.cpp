@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 10:35:26 by garance          ###   ########.fr       */
+/*   Updated: 2024/08/31 13:08:47 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,9 @@
 
 static void	close_server(Server *server) {
 	server->stop_listen(); // BLOQUE LES DEMANDE DE CONNECTION
-	server->handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
-	throw (ServerException("exit"));
+	server->handle_pending_requests(); // Envoie erreur 503 a toutes les connections acceptees ou requests en cours
+	server->del_all();
+	exit(1);
 }
 
 void	garbagge_server(Server *server, int rule) {
@@ -25,9 +26,11 @@ void	garbagge_server(Server *server, int rule) {
 		server_save = server;
 		return ;
 	}
+	std::cout << "garbagge server\n";
 	close_server(server_save);
-	if (rule == PARENT)
+	if (rule == PARENT) {
 		throw (ServerException("exit"));
+	}
 	if (rule == CHILDREN)
 		exit(1);
 }
