@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 15:48:32 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 16:12:51 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ void	closeChild(Server *server)
 
 void	garbagge_server(Server *server, int rule) {
 	static Server *server_save;
+	(void) rule;
 
 	if (server) {
 		server_save = server;

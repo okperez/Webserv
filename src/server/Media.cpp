@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/08/29 11:49:02 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 17:26:22 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Media::Media() {
     types["text"].push_back("plain");
     types["text"].push_back("*");
     types["application"].push_back("octet-stream"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    // types["application"].push_back("jpg"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
     types["*"].push_back("*");
 }
 

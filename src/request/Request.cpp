@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 16:07:56 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 16:40:54 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,6 +171,8 @@ void	Request::send_response(int socket_fd) {
 	std::string response_content = response.build_response();
 	// int fd = write(socket_fd, response_content.c_str(), response_content.size());
 	int fd = send(socket_fd, response_content.c_str(), response_content.size(), MSG_NOSIGNAL);
+	if (fd == 0)
+		std::cout << "A IMPLEMENTER\n";
 	if (fd == -1) {
 		status = CLOSE;
 		throw(ServerException("Fail to write"));
@@ -416,7 +418,6 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		fill_significant_error("500", *error, conf);
 	if (script_pid == 0)
 	{
-		
 		dup2(fd[1], 1);
 		close(fd[0]);
 		close(fd[1]);
