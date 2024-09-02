@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 10:41:52 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 14:15:12 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ Server::Server() {
 	_bad_alloc = false;
 	_err_alloc = tmp.data();
 	_rc_err_alloc = false;
+	ctrlC = false;
 }
 
 Server::Server(const Server & orig) { (void) orig; }
@@ -175,6 +176,66 @@ void	Server::create_fds() {
 /* ******************************* LAUNCHING ******************************* */
 /* ************************************************************************* */
 
+// void	Server::launch_server(int max_socket) {
+	
+// 	int ret;
+	
+	
+// 	std::cout << "VOIR SI ON THROW UN SERVER EXCEPTION OU REQUESTEXCEPTION EXIT DU COUP CAR PLUS BESOIN DANS HANDLING PENDING REQUEST\n" << std::endl;
+// 	std::cout << "Si ctrl-c avec siege : 1 leak de fd potentiel :\n";
+// 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
+// 	while (1)
+// 	{
+// 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend le temps du timeout
+// 		ret = poll(fds, max_socket, 50);
+// 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
+// 			garbagge_server(NULL, PARENT);
+// 			throw(ServerException("Failed to poll."));
+// 		}
+// 		try {
+// 			if (_bad_alloc) {
+// 				write(fds[_ind_err_alloc].fd, _err_alloc, strlen(_err_alloc));
+// 				if (_rc_err_alloc)
+// 					close_and_erase(_it_err_alloc);
+// 				else
+// 					close_connection(_ind_err_alloc);
+// 				_rc_err_alloc = false;
+// 				_bad_alloc = false;
+// 				continue;
+// 			}
+// 			event_request(max_socket - 1);
+// 		}
+// 		catch (std::bad_alloc const & e) {
+// 			std::cerr << e.what() << std::endl;
+// 			_bad_alloc = true;
+// 			continue ;
+// 		}
+// 		catch (std::length_error const & e) {
+// 			std::cerr << e.what() << std::endl;
+// 			_bad_alloc = true;
+// 			continue ;
+// 		}
+// 		catch (std::out_of_range const & e) {
+// 			std::cerr << e.what() << std::endl;
+// 			_bad_alloc = true;
+// 			continue ;
+// 		}
+// 		catch (std::exception const & e) {
+// 			std::cout << "catch 0\n";
+// 			std::string err = e.what();
+// 			if (err == "exit") {
+// 				std::cout << "EXIT\n";
+// 				// handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
+// 				throw;
+// 				exit(130) ;
+// 			}
+// 			else if (!err.empty())
+// 				std::cerr << e.what() << std::endl;
+// 			continue ;
+// 		}
+// 	}
+// }
+
 void	Server::launch_server(int max_socket) {
 	
 	int ret;
@@ -183,10 +244,15 @@ void	Server::launch_server(int max_socket) {
 	std::cout << "VOIR SI ON THROW UN SERVER EXCEPTION OU REQUESTEXCEPTION EXIT DU COUP CAR PLUS BESOIN DANS HANDLING PENDING REQUEST\n" << std::endl;
 	std::cout << "Si ctrl-c avec siege : 1 leak de fd potentiel :\n";
 	std::cout << "		- SECU OVERFLOW INT" << std::endl;
+	try {
 	while (1)
 	{
 		// Check si changement dans les fds (events/revents lies au fd(socket)) => si oui passe sinon attend le temps du timeout
 		ret = poll(fds, max_socket, 50);
+		if (ctrlC) {
+			std::cout << "ctrlc\n";
+			throw(ServerException("exit"));
+		}
 		if (ret < 0) { // SI FAIL : NO LEAKS MEMORY + FD ===> TEST OK
 			garbagge_server(NULL, PARENT);
 			throw(ServerException("Failed to poll."));
@@ -224,12 +290,31 @@ void	Server::launch_server(int max_socket) {
 			std::string err = e.what();
 			if (err == "exit") {
 				std::cout << "EXIT\n";
-				handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
+				// handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
+				throw;
 				exit(130) ;
 			}
 			else if (!err.empty())
 				std::cerr << e.what() << std::endl;
 			continue ;
+		}
+	}
+	}
+	catch (std::exception const & e) {
+		std::cout << "catch 00\n";
+		std::string err = e.what();
+		if (err == "exit") {
+			std::cout << "EXIT\n";
+			// handle_pending_requests(); // Envoie erreur 500 a toutes les connections acceptees ou requests en cours
+			stop_listen(); // BLOQUE LES DEMANDE DE CONNECTION
+			handle_pending_requests(); // Envoie erreur 503 a toutes les connections acceptees ou requests en cours
+			std::cout << "EXIT\n";
+			throw;
+			exit(130) ;
+		}
+		else if (!err.empty()) {
+			std::cout << "ERR" << err << std::endl;
+			std::cerr << e.what() << std::endl;
 		}
 	}
 }
@@ -374,6 +459,9 @@ bool	Server::request_response(int i) {
 		catch (std::bad_alloc const &e) { bad_alloc_error(i, &it); throw ; }
 		catch (std::length_error const &e) { bad_alloc_error(i, &it); throw ; }
 		catch (std::out_of_range const &e) { bad_alloc_error(i, &it); throw ; }
+		catch (std::exception const &e) {
+			std::cout << "catch 4\n";
+			throw ;}
 	}
 	return (false);
 }
@@ -659,7 +747,8 @@ bool	Server::new_connection(int server_fd, int max_socket) {
 void	Server::close_connection(int i) {
 
 	std::cout << "Connection on socket " << fds[i].fd << " closed." << std::endl;
-	close(fds[i].fd);
+	if (fds[i].fd > -1)
+		close(fds[i].fd);
 	fds[i].fd = -1;
 	fds[i].revents = 0;
 	fds[i].events = 0;
@@ -818,7 +907,13 @@ void	Server::del_all() {
 	error.del_all();
 	auth_media.getTypes().clear();
 	std::vector<t_conf>().swap(conf); 
-	std::vector<Listen>().swap(server_fd); 
+	std::vector<Listen>().swap(server_fd);
+	// for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++)
+	// 	{
+	// std::cout << "hey0" << std::endl;
+
+	// 		it->del_all();}
+	// std::cout << "hey" << std::endl;
 	std::vector<Request>().swap(requests);
 }
 
@@ -862,7 +957,7 @@ void	Server::close_requests(int &socket) {
 	}
 }
 
-bool	Server::handle_pending_requests_in_deque(int &socket) {
+bool	Server::handle_pending_requests_in_vect(int &socket) {
 	
 	for (std::vector<Request>::iterator it = requests.begin(); it != requests.end(); it++) {
 		if (socket == it->getSocket_fd()) {
@@ -880,7 +975,7 @@ void	Server::handle_pending_requests() {
 	if (fds) {
 		for (size_t i = 0; i < MAX_CONNECTION + server_fd.size(); i++) {
 			if (fds[i].fd > -1) {
-				if (!handle_pending_requests_in_deque(fds[i].fd)) {
+				if (!handle_pending_requests_in_vect(fds[i].fd)) {
 					close_requests(fds[i].fd);
 					close (fds[i].fd);
 				}

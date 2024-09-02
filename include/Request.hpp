@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 10:56:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 12:05:47 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,9 @@ class Request
 		std::string											body;
 		std::string											boundary;
 		std::vector<std::string>	array_upload;
-
+		std::vector<unsigned char> 	copy_upload;
+		std::string str_body;
+		std::string	sub;
 		// RESPONSE
 		Response	response;
 		
@@ -85,7 +87,7 @@ class Request
 
 	public :
 
-		std::deque<unsigned char>							body_deque;
+		std::vector<unsigned char>							body_deque;
 		std::map<std::string, std::vector<std::string> >	media;    			// Header that specifies which media types the client can accept
 		Request(char const *buffer, int read, int socket, Server *src_server, ErrorPages *src_error, Media *src_auth_media/* , int id */);
 		Request(const Request & orig);
@@ -138,11 +140,14 @@ class Request
 		void	extract_boundary();
 		void	parse_headers();
 		void	parse_request();
-		void	extract_body_upload(std::vector<std::string> & array);
-		void	build_file(std::vector<std::string> & array);
-		int		set_filename(std::vector<std::string> & array, std::string & filename);
-		void	remove_boundaries(std::deque<unsigned char> & copy);
-
+		void	extract_body_upload(/* std::vector<std::string> & array */);
+		void	build_array(/* std::vector<std::string> & array, std::string & str_body */);
+		void	build_file(/* std::vector<std::string> & array */);
+		int		set_filename(/* std::vector<std::string> & array,  */std::string & filename);
+		void	remove_boundaries(std::vector<unsigned char> & copy);
+		int		extract_name(/* std::vector<std::string> & array,  */std::string & name);
+		void	recursive_name(std::string & filename, std::string name, int count);
+		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
@@ -239,6 +244,7 @@ class Request
 		/* ***************************************************************** */	
 		
 		void	handle_pending_requests(ErrorPages & error, int &socket);
+		void	del_all();
 
 		/* ************************************************************************* */	
 		/* ******************************** A EFFACER ****************************** */

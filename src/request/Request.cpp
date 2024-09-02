@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 11:09:08 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 12:07:35 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -610,7 +610,7 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 			redirection(conf.ret, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> upload
 		else if (content_type == "multipart/form-data")
-			build_file(array_upload); // A DEPLACER
+			build_file(/* array_upload */); // A DEPLACER
 		// 	=====> Request is a directory (end with a "/")
 		else if (is_dir(_target))
 			uri_directory(conf, error);
@@ -627,7 +627,7 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
 		// 	=====> upload
 		else if (content_type == "multipart/form-data")
-			build_file(array_upload); // A DEPLACER
+			build_file(/* array_upload */); // A DEPLACER
 		// 	=====> Request is a directory (end with a "/")		
 		else if (is_dir(_target))
 			uri_directory(conf, location, error);
@@ -775,11 +775,11 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-int	extract_name(std::vector<std::string> & array, std::string & name) // ATTENTION APPARTIENT PAS A REQUEST.HPP
+int	Request::extract_name(/* std::vector<std::string> & array,  */std::string & name) // ATTENTION APPARTIENT PAS A REQUEST.HPP
 {
 	std::string	extract;
 	
-	for (std::vector<std::string>::iterator it = array.begin(); it != array.end(); it++)
+	for (std::vector<std::string>::iterator it = array_upload.begin(); it != array_upload.end(); it++)
 	{
 		if ((*it).find("Content-Disposition: form-data") != (*it).npos && (*it).find("filename=") != (*it).npos)
 		{
@@ -794,7 +794,7 @@ int	extract_name(std::vector<std::string> & array, std::string & name) // ATTENT
 	return (0);
 }
 
-void	recursive_name(std::string & filename, std::string name, int count)  // ATTENTION APPARTIENT PAS A REQUEST.HPP
+void	Request::recursive_name(std::string & filename, std::string name, int count)  // ATTENTION APPARTIENT PAS A REQUEST.HPP
 {
 	if (access(name.c_str(), F_OK) == -1)
 		filename = name;
@@ -812,11 +812,11 @@ void	recursive_name(std::string & filename, std::string name, int count)  // ATT
 	}
 }
 
-int	Request::set_filename(std::vector<std::string> & array, std::string & filename)
+int	Request::set_filename(/* std::vector<std::string> & array,  */std::string & filename)
 {
 	std::string	name;
 	int			count = 0;
-	if (extract_name(array, name) != -1)
+	if (extract_name(/* array_upload,  */name) != -1)
 	{
 		recursive_name(filename, name, count);
 	}
@@ -825,14 +825,14 @@ int	Request::set_filename(std::vector<std::string> & array, std::string & filena
 	return (0);
 }
 
-void	Request::remove_boundaries(std::deque<unsigned char> & copy)
+void	Request::remove_boundaries(std::vector<unsigned char> & copy)
 {
 	std::vector<std::string> vec;
 	std::string str = "";
 	int			count = 0;
-	std::deque<unsigned char>::iterator start = body_deque.begin();
-	std::deque<unsigned char>::iterator end;
-	for (std::deque<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
+	std::vector<unsigned char>::iterator start = body_deque.begin();
+	std::vector<unsigned char>::iterator end;
+	for (std::vector<unsigned char>::iterator it = body_deque.begin(); it != body_deque.end(); it++)
 	{
 		str += *it;
 		if (*it == '\n')
@@ -849,7 +849,7 @@ void	Request::remove_boundaries(std::deque<unsigned char> & copy)
 				start = it + 1;
 			else
 			{
-				for (std::deque<unsigned char>::iterator its = start; its != end; its++)
+				for (std::vector<unsigned char>::iterator its = start; its != end; its++)
 					copy.push_back(*its);
 				start = it;
 			}
@@ -859,47 +859,46 @@ void	Request::remove_boundaries(std::deque<unsigned char> & copy)
 	}
 }
 
-void	Request::build_file(std::vector<std::string> & array)
+void	Request::build_file(/* std::vector<std::string> & array */)
 {
 	std::string	filename;
 	std::string end = "--" + boundary + "--\n";
-	std::deque<unsigned char> copy;
-	if (set_filename(array, filename) != -1)
+	std::vector<unsigned char> copy;
+	if (set_filename(/* array,  */filename) != -1)
 	{
 		std::ofstream file(filename.c_str(), std::ofstream::out);
 		remove_boundaries(copy);
-		for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
+		for (std::vector<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
 			file << (*it);
 	}
 	response.setStatus("204", *error);
 }
 
-void	build_array(std::vector<std::string> & array, std::string & str_body)
+void	Request::build_array()
 {
 	while (1)
 	{
-		std::string	sub = str_body.substr(0, str_body.find('\n') + 1);
-		array.push_back(sub);
+		sub = str_body.substr(0, str_body.find('\n') + 1);
+		array_upload.push_back(sub);
 		str_body.erase(0, str_body.find('\n') + 1);
 		if (str_body.find('\n') == str_body.npos)
 		{
-			array.push_back(str_body);
+			array_upload.push_back(str_body);
 			break ;
 		}
 	}
 }
 
-void	Request::extract_body_upload(std::vector<std::string> & array)
+void	Request::extract_body_upload()
 {
-	std::string	str_body = "";
-	std::deque<unsigned char> copy = body_deque;
+	copy_upload = body_deque;
 
-	for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
+	for (std::vector<unsigned char>::iterator it = copy_upload.begin(); it != copy_upload.end(); it++)
 		str_body += (*it);	
-	build_array(array, str_body);
+	build_array();
 }
 
-void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) {
+void	Request::check_request(t_conf &conf, ErrorPages &error) {
 
 	// modifier nom si deja present
 	// ne pas changer contenu du ficher
@@ -907,7 +906,7 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	if (content_type == "multipart/form-data")
 	{
-		extract_body_upload(array_upload);
+		extract_body_upload(/* array_upload */);
 		if (array_upload[0] != "--" + boundary + "\r\n" || array_upload[array_upload.size() - 2] != "--" + boundary + "--\r\n")
 			fill_significant_error("400", error, conf);
 	}	
@@ -1296,6 +1295,13 @@ void	Request::fill_significant_error(std::string const &code, ErrorPages &error,
 /* ********************************* CLOSE ********************************* */
 /* ************************************************************************* */	
 
+void	Request::del_all() {
+	
+	// array_upload.clear();
+	std::vector<std::string>().swap(array_upload);
+	std::vector<unsigned char>().swap(copy_upload);
+}
+
 void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	
 	response.reinitBody();
@@ -1304,6 +1310,7 @@ void	Request::handle_pending_requests(ErrorPages & error, int & socket) {
 	else
 		error.fill_error(response, "503");
 	send_response(socket);
+	del_all();
 }
 
 /* ************************************************************************* */	
