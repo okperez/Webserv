@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 11:05:19 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/02 11:09:08 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -907,12 +907,9 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	if (content_type == "multipart/form-data")
 	{
-		// std::cout << "Request::check_request 0\n";
 		extract_body_upload(array_upload);
-		// std::cout << "Request::check_request 1\n";
 		if (array_upload[0] != "--" + boundary + "\r\n" || array_upload[array_upload.size() - 2] != "--" + boundary + "--\r\n")
 			fill_significant_error("400", error, conf);
-		// std::cout << "Request::check_request 2\n";
 	}	
 	if (miss_length && !body.empty() && transfer_encoding != "chunked")
 		fill_significant_error("411", error, conf);
@@ -923,7 +920,6 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 			fill_significant_error("400", error, conf);
 		if (method != "POST")
 			fill_significant_error("403", error, conf);
-		// build_file(array_upload); // A DEPLACER
 	}
 	if (version != "HTTP/1.1")
 		fill_significant_error("405", error, conf);
@@ -931,7 +927,6 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 		fill_significant_error("413", error, conf);
 	if (media.size() > 0 && !media_request_allowed())
 		fill_significant_error("415", error, conf);
-	// std::cout << "Request::check_request 3\n";
 }
 
 void	Request::recover_ip_socket() {
