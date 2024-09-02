@@ -22,19 +22,18 @@ if (open(fh, $option,"Data_user"))
     }
     else 
     {
-        # while (my $String = <FH>)
-        # {
-        #     if($String =~ /${fname}/ || $String =~ /${lname}/) 
-        #     { 
-        #         exit (0);
-        #     } 
-        # }
+        while (my $String = <FH>)
+        {
+            if($String =~ /${fname}/ || $String =~ /${lname}/) 
+            { 
+                exit (0);
+            } 
+        }
         print fh "----------------------------------------- USER -----------------------------------------\n\n";
 		print fh "fname${fname}\n";
 		print fh "lname${lname}\n\n";
 		print "Location: http://localhost:8080/sign_in.html\n";
 	}
-    @split = ();
     $fname = undef;
     $lname = undef;
 	close(fh);
@@ -43,3 +42,4 @@ else
 {
     print "1";
 }
+@split = ();

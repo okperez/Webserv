@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 10:39:25 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 10:56:19 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ class Request
 		bool												miss_length;
 		std::string											body;
 		std::string											boundary;
+		std::vector<std::string>	array_upload;
 
 		// RESPONSE
 		Response	response;

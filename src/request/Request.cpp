@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 10:39:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/02 11:05:19 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -608,6 +608,9 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 		// 	=====> Server has a return
 		if (!conf.ret.empty())
 			redirection(conf.ret, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
+		// 	=====> upload
+		else if (content_type == "multipart/form-data")
+			build_file(array_upload); // A DEPLACER
 		// 	=====> Request is a directory (end with a "/")
 		else if (is_dir(_target))
 			uri_directory(conf, error);
@@ -622,6 +625,9 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 		std::map<std::string, std::string>::iterator it = conf.location[location].find("return");
 		if (it != conf.location[location].end())
 			redirection(it->second, error, location, conf); // A FAIRE : GERER CAS D ERREUR >> TESTER PARSING CONF RETURN
+		// 	=====> upload
+		else if (content_type == "multipart/form-data")
+			build_file(array_upload); // A DEPLACER
 		// 	=====> Request is a directory (end with a "/")		
 		else if (is_dir(_target))
 			uri_directory(conf, location, error);
@@ -865,6 +871,7 @@ void	Request::build_file(std::vector<std::string> & array)
 		for (std::deque<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
 			file << (*it);
 	}
+	response.setStatus("204", *error);
 }
 
 void	build_array(std::vector<std::string> & array, std::string & str_body)
@@ -896,14 +903,14 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 
 	// modifier nom si deja present
 	// ne pas changer contenu du ficher
-	std::vector<std::string>	array;
+	// std::vector<std::string>	array;
 
 	if (content_type == "multipart/form-data")
 	{
 		// std::cout << "Request::check_request 0\n";
-		extract_body_upload(array);
+		extract_body_upload(array_upload);
 		// std::cout << "Request::check_request 1\n";
-		if (array[0] != "--" + boundary + "\r\n" || array[array.size() - 2] != "--" + boundary + "--\r\n")
+		if (array_upload[0] != "--" + boundary + "\r\n" || array_upload[array_upload.size() - 2] != "--" + boundary + "--\r\n")
 			fill_significant_error("400", error, conf);
 		// std::cout << "Request::check_request 2\n";
 	}	
@@ -916,7 +923,7 @@ void	Request::check_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error
 			fill_significant_error("400", error, conf);
 		if (method != "POST")
 			fill_significant_error("403", error, conf);
-		build_file(array); // A DEPLACER
+		// build_file(array_upload); // A DEPLACER
 	}
 	if (version != "HTTP/1.1")
 		fill_significant_error("405", error, conf);
