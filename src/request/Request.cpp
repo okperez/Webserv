@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/03 15:31:50 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 16:27:45 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -811,7 +811,7 @@ bool	Request::media_request_allowed() {
 	return (false);
 }
 
-int	Request::extract_name(/* std::vector<std::string> & array,  */std::string & name) // ATTENTION APPARTIENT PAS A REQUEST.HPP
+int	Request::extract_name(std::string & name)
 {
 	std::string	extract;
 	
@@ -830,31 +830,32 @@ int	Request::extract_name(/* std::vector<std::string> & array,  */std::string & 
 	return (0);
 }
 
-void	Request::recursive_name(std::string & filename, std::string name, int count)  // ATTENTION APPARTIENT PAS A REQUEST.HPP
+void	Request::recursive_name(std::string & file_path, std::string name, int count) 
 {
-	if (access(name.c_str(), F_OK) == -1)
-		filename = name;
+	std::string	path = "./pages/upload_dir/" + name;
+	if (access(path.c_str(), F_OK) == -1)
+		file_path = path;
 	else
 	{
 		char c = ++count + '0';
 		std::string ext = "()";
 		if (count < 2)
-			recursive_name(filename, name.insert(name.rfind('.'), ext.insert(1, 1, c)), count);
+			recursive_name(file_path, name.insert(name.rfind('.'), ext.insert(1, 1, c)), count);
 		else
 		{
 			name[name.rfind('.') - 2] = c;
-			recursive_name(filename, name, count);
+			recursive_name(file_path, name, count);
 		}
 	}
 }
 
-int	Request::set_filename(/* std::vector<std::string> & array,  */std::string & filename)
+int	Request::set_filename(std::string & file_path)
 {
 	std::string	name;
 	int			count = 0;
-	if (extract_name(/* array_upload,  */name) != -1)
+	if (extract_name(name) != -1)
 	{
-		recursive_name(filename, name, count);
+		recursive_name(file_path, name, count);
 	}
 	else
 		return (-1);
@@ -895,14 +896,14 @@ void	Request::remove_boundaries(std::vector<unsigned char> & copy)
 	}
 }
 
-void	Request::build_file(/* std::vector<std::string> & array */)
+void	Request::build_file()
 {
-	std::string	filename;
+	std::string	file_path;
 	std::string end = "--" + boundary + "--\n";
 	std::vector<unsigned char> copy;
-	if (set_filename(/* array,  */filename) != -1)
+	if (set_filename(file_path) != -1)
 	{
-		std::ofstream file(filename.c_str(), std::ofstream::out);
+		std::ofstream file(file_path.c_str(), std::ofstream::out);
 		remove_boundaries(copy);
 		for (std::vector<unsigned char>::iterator it = copy.begin(); it != copy.end(); it++)
 			file << (*it);
