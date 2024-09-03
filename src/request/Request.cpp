@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/03 16:27:45 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/03 17:19:18 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -412,6 +412,9 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	int			exit_status = 0;
 	bool		script_got_killed = false;
 
+	// std::ifstream cgi(".cgi_output");
+	// int fd_cgi = open(".cgi_output", O_CREAT);
+	// fd[1] = fd_cgi;
 	if (pipe(fd) == -1)
 		fill_significant_error("500", *error, conf);
 	signal(SIGINT, SIG_IGN);
@@ -509,6 +512,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 				break ;
 			buff[rd] = '\0';
 		}
+		// buff << fd[1];
 		close(fd[0]);
 		get_output(buff, conf, argv, envp);
 	}
