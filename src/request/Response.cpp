@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 12:42:01 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 16:59:07 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,8 +128,8 @@ std::string Response::build_response()
 		response += (*it) + delim;
 	if (!_location.empty())
 		response += "Location: " + _location + delim;
-	if (!_content_type.empty())
-		response += "Content-Type: " + _content_type + delim;
+	// if (!_content_type.empty())
+	// 	response += "Content-Type: " + _content_type + delim;
 	if (!_connection.empty())
 		response += "Connection: " + _connection + delim;
 	response += "Content-Length: " + _content_length + delim + delim;
