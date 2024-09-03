@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 17:29:30 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 12:42:01 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ void	Response::setStatus(std::string const & code, ErrorPages &error) {
 bool	Response::setContent_type(std::string const &type) {
 	
 	_content_type = auth_media->match_type(type);
-	std::cout << "REVOIR CONTENT_TYPE POUR RECUP IMG JPG< XPM, ... ajouter dans media?\n"; 
+	// std::cout << "REVOIR CONTENT_TYPE POUR RECUP IMG JPG< XPM, ... ajouter dans media?\n"; 
 	if (_content_type.empty())
 		return (false);
 	return (true);

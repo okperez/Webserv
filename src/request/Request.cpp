@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 16:40:54 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 15:27:10 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,11 +171,10 @@ void	Request::send_response(int socket_fd) {
 	std::string response_content = response.build_response();
 	// int fd = write(socket_fd, response_content.c_str(), response_content.size());
 	int fd = send(socket_fd, response_content.c_str(), response_content.size(), MSG_NOSIGNAL);
-	if (fd == 0)
-		std::cout << "A IMPLEMENTER\n";
-	if (fd == -1) {
+	if (fd <= 0) {
 		status = CLOSE;
-		throw(ServerException("Fail to write"));
+		if (fd < -1)
+			throw(ServerException("Fail to write"));
 	}
 }
 
@@ -686,11 +685,12 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 
 bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
 	
-	std::ifstream     file;
+	// std::ifstream     file;
 	
-	file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
-	if (file.is_open()) {
-		response.setBody(file);
+	_file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
+	if (_file.is_open()) {
+		response.setBody(_file);
+		_file.close();
 		response.setStatus("200", " OK");
 		std::string	type = extract_extension(target);
 		if (type.empty())
@@ -1333,8 +1333,10 @@ void	Request::fill_significant_error(std::string const &code, ErrorPages &error,
 void	Request::del_all() {
 	
 	// array_upload.clear();
+	_file.close();
 	std::vector<std::string>().swap(array_upload);
 	std::vector<unsigned char>().swap(copy_upload);
+	media.clear();
 }
 
 void	Request::handle_pending_requests(ErrorPages & error, int & socket) {

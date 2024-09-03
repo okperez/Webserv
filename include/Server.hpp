@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 15:46:34 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/03 14:05:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,8 @@ class Server
 
 		void	read_request(int i, char *buffer, int read);
 		bool	request_response(int i);
-		void	no_event_request(int max_socket);
-		void	event_request(int max_socket);
+		void	no_event_request(size_t max_socket);
+		void	event_request(size_t max_socket);
 		
 		/* ***************************************************************** */
 		/* *********************** HANDLE CONNECTION *********************** */
@@ -110,7 +110,7 @@ class Server
 
 		void	bad_alloc_error(int i, std::vector<Request>::iterator *it);
 		void	send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
-		void	handle_error_function(int i, std::string const &code, const char *mess, ErrorPages &error);
+		void	handle_error_function(int i);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
@@ -121,8 +121,7 @@ class Server
 		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
 		void	close_and_erase(std::vector<Request>::iterator it);
 		void	stop_listen();
-		void	close_requests(int &socket);
-		bool	handle_pending_requests_in_vect(int &socket);
+		void	handle_pending_requests_in_vect(int &socket);
 		void	handle_pending_requests();
 		void	close_child_sockets();
 

@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 12:05:47 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 14:30:02 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,7 @@ class Request
 		// utils
 		
 		std::string	str;
+		std::ifstream     _file;
 		
 		Request();
 		
