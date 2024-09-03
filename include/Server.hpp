@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 14:05:11 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 15:39:35 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,7 @@ class Server
 		/* ***************************************************************** */
 
 		bool	new_connection(int server_fd, int max_socket);
+		void	new_connection(size_t max_socket);
 		void	close_connection(int i);
 
 		/* ***************************************************************** */
