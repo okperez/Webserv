@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 14:02:31 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 16:59:07 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 17:56:11 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,16 +85,28 @@ void	Response::setConnectiontoclose() {
 	_connection = "close";
 }
 
-void	Response::setBody(std::string const & s) {
-	_body += s;	
+size_t	Response::setBody(std::string const & s) {
+	_body += s;
+	return (s.length()); // VERIF SI N AJOUTE PAS DE \0
 }
 
 void	Response::reinitBody() {
 	_body = "";	
 }
 
-void	Response::setBody(std::ifstream &file) {
-	std::getline(file, _body, '\0');
+size_t	Response::setBody(std::ifstream &file) {
+	
+	std::string	tmp;
+	size_t		length = 0;
+	
+	while (1) {
+		std::getline(file, tmp, '\0');
+		_body.append(tmp.data(), tmp.length()); // VERIF SI ECRASE PAS \0
+		length += tmp.length();
+		tmp.clear();
+		if (file.eof())
+			return (length);
+	}
 }
 
 void	Response::setCookie(std::string str) {
@@ -113,7 +125,7 @@ bool	Response::getError() {
 /* ******************************** Actions ******************************** */
 /* ************************************************************************* */
 
-std::string Response::build_response()
+std::string Response::build_response(size_t *body_len)
 {
 	std::string title = "\e[36m";
 	std::string reset = "\e[0m";
@@ -124,6 +136,7 @@ std::string Response::build_response()
 	std::cout << response;
 	std::cout << "******************************" << reset << std::endl;
 
+	size_t	tmp;
 	for (std::vector<std::string>::iterator it = _cookie.begin(); it != _cookie.end(); it++)
 		response += (*it) + delim;
 	if (!_location.empty())
@@ -133,9 +146,11 @@ std::string Response::build_response()
 	if (!_connection.empty())
 		response += "Connection: " + _connection + delim;
 	response += "Content-Length: " + _content_length + delim + delim;
+	tmp = response.size();
 	if (!_body.empty())
-		response += _body;
+		response.append(_body, *body_len);
 	response += "\r\n";
+	*body_len += tmp + 2;
 	return (response);
 }
 

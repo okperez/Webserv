@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 15:32:05 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 17:42:57 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ class Request
 		std::string	sub;
 		// RESPONSE
 		Response	response;
+		size_t												_body_len;
 		
 		Server		*server;
 		ErrorPages	*error;

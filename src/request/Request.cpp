@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/03 17:19:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/03 17:56:46 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ Request::Request(char const *buffer, int read, int socket, Server *src_server, E
 	if (buffer)
 		save_buffer.append(buffer, read);
 	i_conf = -1;
+	_body_len = 0;
 	status = NEW;
 }
 
@@ -74,6 +75,7 @@ Request &Request::operator=(Request const & rhs) {
 	t_creation = rhs.t_creation;
 	boundary = rhs.boundary;
 	body_deque = rhs.body_deque;
+	_body_len = rhs._body_len;
 	return (*this); 
 }
 
@@ -168,9 +170,13 @@ void	Request::addSave_buffer(/* const */ char *buffer, int end) {
 void	Request::send_response(int socket_fd) {
 	
 	response.setContent_length();
-	std::string response_content = response.build_response();
+	std::string response_content = response.build_response(&_body_len);
 	// int fd = write(socket_fd, response_content.c_str(), response_content.size());
-	int fd = send(socket_fd, response_content.c_str(), response_content.size(), MSG_NOSIGNAL);
+	// int fd = send(socket_fd, response_content.c_str(), response_content.size(), MSG_NOSIGNAL);
+	int fd = send(socket_fd, response_content.c_str(), _body_len, MSG_NOSIGNAL);
+	std::cout << "fd = " << fd << std::endl;
+	std::cout << "response_content.size() = " << response_content.size() << std::endl;
+	std::cout << "response_content.c_str() = " << response_content.c_str() << std::endl;
 	if (fd <= 0) {
 		status = CLOSE;
 		if (fd < -1)
@@ -687,19 +693,21 @@ void	Request::build_response(/* int socket_fd, */ t_conf &conf, std::string &loc
 bool	Request::open_targetfile(std::string & target, ErrorPages & error, t_conf &conf) {
 	
 	// std::ifstream     file;
+	(void) error;
+	(void) conf;
 	
 	_file.open(target.data()); // OK NO LEAK + MEMMORY ET ERROR SET SELON ERRNO
 	if (_file.is_open()) {
-		response.setBody(_file);
+		_body_len = response.setBody(_file);
 		_file.close();
 		response.setStatus("200", " OK");
 		std::string	type = extract_extension(target);
 		if (type.empty())
 			type = "octet-stream";
-		if (!response.setContent_type(type)) {
-			response.reinitBody();
-			error.fill_error(response, "406", conf);
-		}
+		// if (!response.setContent_type(type)) {
+		// 	response.reinitBody();
+		// 	error.fill_error(response, "406", conf);
+		// }
 		return (true);
 	}
 	return (false);
@@ -755,7 +763,7 @@ void	Request::build_index(t_conf &conf, ErrorPages &error) {
 	
 	if (!tmp)
 		return (fill_error_errno(conf, error), (void) 0);
-	response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
+	_body_len += response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
 	while (1) {
 		directory = readdir(tmp);
 		if (!directory) // OK NO LEAKS MEMMORY + FD
@@ -765,15 +773,15 @@ void	Request::build_index(t_conf &conf, ErrorPages &error) {
 			continue;
 		if (static_cast<int>(directory->d_type) == 4) // =====> Si le lien est un dir = 4 si html =8
 			link += "/";
-		response.setBody("<p><a href=\"");
-		response.setBody(link);
-		response.setBody("\">");
-		response.setBody(directory->d_name);
-		response.setBody("</a></p>\n");
+		_body_len += response.setBody("<p><a href=\"");
+		_body_len += response.setBody(link);
+		_body_len += response.setBody("\">");
+		_body_len += response.setBody(directory->d_name);
+		_body_len += response.setBody("</a></p>\n");
 	}
 	closedir(tmp);
-	response.setBody("</body>");
-	response.setBody("</html>");
+	_body_len += response.setBody("</body>");
+	_body_len += response.setBody("</html>");
 	response.setStatus("200", " OK");
 	response.setContent_type("html"); // Type ok : l'index auto genere est html
 }

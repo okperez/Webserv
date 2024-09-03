@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 12:38:10 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/03 17:54:02 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,13 +50,13 @@ class Response
 		void						setLocation(std::string const & s);
 		void						setConnectiontoclose();
 		void						reinitBody();
-		void						setBody(std::string const & s);
-		void						setBody(std::ifstream &file);
+		size_t						setBody(std::string const & s);
+		size_t						setBody(std::ifstream &file);
 		void						setCookie(std::string str);
 		void						setError(bool err);
 		bool						getError() ;
 
-		std::string build_response();
+		std::string build_response(size_t *body_len);
 
 		//A EFFACER
 		void print();
