@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/09/02 15:48:57 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/03 15:01:44 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 
 # define MAX_CONNECTION	255
 # define BUFFER_SIZE	1000
+# define DFLT_BODY_SIZE "100000"
 
 typedef struct s_flag
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 16:40:54 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 13:57:17 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,13 +358,16 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
-void	Request::get_output(/*const */char *buff, t_conf &conf)
+void	Request::get_output(/*const */char *buff, t_conf &conf, char *const argv[], char *const envp[])
 {
 	int	flag = 0;
 	std::string str = buff;
 	std::cout << "str = " << str << std::endl;
 	if (str == "1")
-		fill_significant_error("500", *error, conf);
+	{
+		deleteArgs(argv, envp);
+		fill_significant_error("400", *error, conf);
+	}
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -469,12 +472,6 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	{
 		exit_status = WEXITSTATUS(status);
 	}
-	// else if (WIFSIGNALED(status)) {
-	// 	exit_status = WTERMSIG(status);
-	// 	if (exit_status == 2) {
-	// 		throw (ServerException("exit"));
-	// 	}
-	// }
 	if (pid == timer_pid)
 	{
 		kill(script_pid, SIGKILL);
@@ -514,7 +511,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			buff[rd] = '\0';
 		}
 		close(fd[0]);
-		get_output(buff, conf);
+		get_output(buff, conf, argv, envp);
 	}
 	else
 	{
@@ -1030,6 +1027,7 @@ void	Request::parse_first_line(/* in_addr_t s_addr, ErrorPages &error */) {
 	
 	std::string title = "\e[34m";
 	std::string reset = "\e[0m";
+	std::cout << "BUFF = " << save_buffer << std::endl;
 	method = extract_line(save_buffer, ' ');
 	uri = extract_line(save_buffer, ' ');
 	version = extract_line(save_buffer, '\r');

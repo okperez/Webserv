@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_content.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/07/15 12:42:37 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 14:57:27 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ void    check_if_missing(t_conf & conf, std::list<std::string> & cnf_file)
     if (conf.ipv4_port.size() == 0)
         throw ConfFileException ("Error: missing port number");
     if (conf.max_body_size.empty())
-        throw ConfFileException ("Error: missing body size number");
+        conf.max_body_size = DFLT_BODY_SIZE;
     if (conf.root_dir.empty())
         check_for_root(conf.location);
     if (conf.server_name.empty())

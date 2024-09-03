@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 17:45:57 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 14:58:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,10 +252,7 @@ void	Server::launch_server(int max_socket) {
 	int ret;
 	
 	std::cout << "Orlando\n";
-	std::cout << "PARSER HOST\n";
-	std::cout << "AC SIGN UP JUSTE POST DOIT MARCHER\n";
 	std::cout << "Limit the client body (use: curl -X POST -H Content-Type: plain/text --data BODY IS HERE write something shorter or longer than body limit).\n";
-	std::cout << "=> ne pas imposer un limit client body mais si absent en mettre un par default\n";
 	std::cout << "Garance\n";
 	std::cout << "read -> rcve + FD  SEND CHECKER\n";
 	std::cout << "UPLOAD => CONTENT TYPE : GAGA SI AUTRE CHOSE VOIR AVEC ORLANDO\n";

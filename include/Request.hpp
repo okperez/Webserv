@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 12:05:47 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 12:43:41 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -201,7 +201,7 @@ class Request
 		int				exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf);
 		bool			is_accessible(char const *uri);
 		void			check_extension(t_conf & conf, std::string uri, std::string & index_loc);
-		void			get_output(char *buff, t_conf &conf);
+		void			get_output(char *buff, t_conf &conf, char *const argv[], char *const envp[]);
 		// void			get_output(const char *buff, t_conf &conf);
 
 		/* ***************************************************************** */

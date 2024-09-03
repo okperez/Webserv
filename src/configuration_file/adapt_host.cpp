@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   adapt_host.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:08:19 by operez            #+#    #+#             */
-/*   Updated: 2024/07/09 11:49:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 12:44:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,18 +24,24 @@ std::string	int_to_str(int n) {
 void	adapt_host(std::string &s) {
 	
 	int n;
-	char c;
+	unsigned char c;
 	
 	if (s == "localhost")
 		return ;
 	std::istringstream iss(s);
 	s = "";
-	for (int j = 0; j < 4; j++) {
+	for (int j = 0; j < 4; j++)
+	{
+		n = -1;
 		iss >> n;
 		if (n < 0 || n > 255)
 			throw (ConfFileException("Not a valid host"));
 		s += int_to_str(n);
-		if (j < 3) {
+		if (j < 3)
+		{
+			c = -1;
+			if (iss.eof())
+				throw (ConfFileException("Not a valid host"));
 			iss >> c;
 			if (c != '.')
 				throw (ConfFileException("Not a valid host"));
@@ -55,10 +61,11 @@ void        handle_host(std::vector<t_conf> & conf)
 {
     for(std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++)
     {
-	if (!it->host.empty())
-		str_tolower(it->host); 
-	if (!it->server_name.empty())
-		str_tolower(it->server_name);
-	strtovect(it->files, it->files_vect, " ");
+		if (!it->host.empty())
+			str_tolower(it->host); 
+		if (!it->server_name.empty())
+			str_tolower(it->server_name);
+		strtovect(it->files, it->files_vect, " ");
+		adapt_host((*it).host);
     }
 }
