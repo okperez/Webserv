@@ -6,7 +6,7 @@
 /*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 15:31:56 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/03 16:40:41 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,8 +101,8 @@ void	Server::listen_socket(int new_socket, int port, struct addrinfo *res) {
 	}
 	/* To set up non blocking listen socket */
 	
-	// if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
-	// 	error_bfr_launch(new_socket, res, "Failed to fcntl");
+	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) == -1)
+		error_bfr_launch(new_socket, res, "Failed to fcntl");
 }
 
 struct addrinfo	*Server::get_addr_info(char *data, int new_socket) {
@@ -253,9 +253,7 @@ void	Server::launch_server(int max_socket) {
 	int ret;
 	
 	std::cout << "Orlando\n";
-	std::cout << "Limit the client body (use: curl -X POST -H Content-Type: plain/text --data BODY IS HERE write something shorter or longer than body limit).\n";
 	std::cout << "Garance\n";
-	std::cout << "read -> rcve + FD  SEND CHECKER\n";
 	std::cout << "REVOIR CONTENT_TYPE POUR RECUP IMG JPG< XPM, ... ajouter dans media?\n"; 
 	std::cout << "UPLOAD => CONTENT TYPE : GAGA SI AUTRE CHOSE VOIR AVEC ORLANDO\n";
 	std::cout << "VOIR SI ON THROW UN SERVER EXCEPTION OU REQUESTEXCEPTION EXIT DU COUP CAR PLUS BESOIN DANS HANDLING PENDING REQUEST\n" << std::endl;
@@ -278,17 +276,8 @@ void	Server::launch_server(int max_socket) {
 			throw(ServerException("Failed to poll."));
 		}
 		try {
-			// if (_bad_alloc) {
-			// 	write(fds[_ind_err_alloc].fd, _err_alloc, strlen(_err_alloc));
-			// 	if (_rc_err_alloc)
-			// 		close_and_erase(_it_err_alloc);
-			// 	else
-			// 		close_connection(_ind_err_alloc);
-			// 	_rc_err_alloc = false;
-			// 	_bad_alloc = false;
-			// 	continue;
-			// }
 			event_request(max_socket - 1);
+			new_connection(max_socket - 1);
 		}
 		// catch (std::bad_alloc const & e) {
 		// 	std::cerr << "catch 0\n";
@@ -598,10 +587,7 @@ void	Server::no_event_request(size_t max_socket) {
 // }
 
 /* Called if there something to be read and handled in one of the fds */
-void	Server::event_request(size_t max_socket) {
-	
-	static size_t i = server_fd.size();
-	static size_t e = max_socket;
+void	Server::new_connection(size_t max_socket) {
 	
 	for (size_t j = 0; j < server_fd.size(); j++) {
 		if (fds[j].revents & POLLIN)
@@ -618,6 +604,13 @@ void	Server::event_request(size_t max_socket) {
 			}
 		}
 	}
+}
+
+void	Server::event_request(size_t max_socket) {
+	
+	static size_t i = server_fd.size();
+	static size_t e = max_socket;
+	
 	while (1)
 	{
 		if (fds[i].revents & POLLIN /* && i >= server_fd.size() */)
@@ -625,9 +618,6 @@ void	Server::event_request(size_t max_socket) {
 			char buffer[BUFFER_SIZE] = {0};
 			// int n_bytes = read(fds[i].fd, buffer, BUFFER_SIZE - 1);
 			int n_bytes = recv(fds[i].fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-			// MSG_DONTWAIT
-			// Activer les opérations non bloquantes. Si l'opération devait bloquer, l'appel échouera avec l'erreur EAGAIN 
-			// (on peut aussi activer ce comportement avec l'option O_NONBLOCK de la fonction F_SETFL de fcntl(2)). 
 			if (n_bytes < 0) {// NO LEAKS MEMMORY + FD  && SI FAIL SERVEUR CONTINUE
 				e = i;
 				i = (i < max_socket) * (i + 1) + (i >= max_socket) * (server_fd.size());
@@ -720,6 +710,10 @@ bool	Server::new_connection(int server_fd, int max_socket) {
 			fds[i].fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
 			if (fds[i].fd < 0)
 				throw (ServerException("Client failed to connect."));
+			if (fcntl(fds[i].fd, F_SETFL, O_NONBLOCK) == -1) {
+				close_connection(i);
+				throw (ServerException("Client failed to connect."));
+			}
 			fds[i].events = POLLIN;
 			std::cout << "Client connected on socket " << fds[i].fd << "." << std::endl;
 			return (true);
