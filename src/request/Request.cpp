@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/03 17:19:18 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/04 16:32:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,12 +357,12 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
-void	Request::get_output(/*const */char *buff, t_conf &conf, char *const argv[], char *const envp[])
+void	Request::get_output(const char *buff, t_conf &conf, char *const argv[], char *const envp[])
 {
 	int	flag = 0;
 	std::string str = buff;
 	std::cout << "str = " << str << std::endl;
-	if (str == "1")
+	if (str == "1" || str.empty())
 	{
 		deleteArgs(argv, envp);
 		fill_significant_error("400", *error, conf);
@@ -400,22 +400,145 @@ void	Request::get_output(/*const */char *buff, t_conf &conf, char *const argv[],
 	response.setContent_type("html");
 }
 
+// void	Request::setTimerProcess(char *const argv[], char *const envp[], int & timer_pid, t_conf &conf, int & fd, std::ofstream & cgi)
+// {
+	
+// 	timer_pid = fork();
+// 	if (timer_pid == -1)
+// 		fill_significant_error("500", *error, conf);
+// 	if (timer_pid == 0)
+// 	{
+// 		signal(SIGINT, sighandlerbis);
+// 		close(fd);
+// 		cgi.close();
+// 		server->close_child_sockets();
+// 		for (int time = 5; time > 0 && server->getTimeSigint() == false; time--)
+// 			sleep(1);
+// 		if (server->getTimeSigint() == false)
+// 		{
+// 			deleteArgs(argv, envp);
+// 			delete [] server->fds;
+// 			server->del_all();
+// 			exit(0);
+// 		}
+// 		else
+// 		{
+// 			deleteArgs(argv, envp);
+// 			delete [] server->fds;
+// 			server->del_all();
+// 			exit(255);
+// 		}
+// 	}
+	
+// }
+
+// void	Request::setScriptProcess(char const *pathname, char *const argv[], char *const envp[], int & script_pid, t_conf &conf, int & fd, std::ofstream & cgi)
+// {
+	
+// 	script_pid = fork();
+// 	if (script_pid == -1)
+// 		fill_significant_error("500", *error, conf);
+// 	if (script_pid == 0)
+// 	{
+// 		dup2(fd, 1);
+// 		int	copy_out = dup(STDOUT_FILENO);
+// 		cgi.close();
+// 		close(fd);
+// 		close(copy_out);
+// 		server->close_child_sockets();
+// 		if (execve(pathname, argv, envp) != 0)
+// 		{
+// 			deleteArgs(argv, envp);
+// 			delete [] server->fds;
+// 			server->del_all();
+// 			exit (1);
+// 		}
+// 	}
+// }
+// void		Request::pidOutput(int & pid, int & status, int & script_pid, int & timer_pid)
+// {
+// 	while (1)
+// 	{
+// 		pid = waitpid(WAIT_ANY, &status, 0);
+// 		if (pid == script_pid || pid == timer_pid)
+// 			break ;
+// 	}
+// }
+// int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
+// {
+// 	int			pid = 0;
+// 	int			status;
+// 	int			timer_pid = 0;
+// 	int			script_pid = 0;
+// 	int			exit_status = 0;
+// 	bool		script_got_killed = false;
+
+// 	std::ofstream cgi("tmp");
+// 	int fd_cgi = open("tmp", O_RDWR|O_CREAT|O_TRUNC, 0666);
+// 	if (fd_cgi == -1)
+// 		fill_significant_error("500", *error, conf);
+// 	signal(SIGINT, SIG_IGN);
+// 	setScriptProcess(pathname, argv, envp, script_pid, conf, fd_cgi, cgi);
+// 	setTimerProcess(argv, envp, script_pid, conf, fd_cgi, cgi);
+// 	pidOutput(pid, status, timer_pid, script_pid);
+// 	signal(SIGINT, sighandler);
+// 	close(fd_cgi);
+// 	cgi.close();
+// 	if (WIFEXITED(status))
+// 		exit_status = WEXITSTATUS(status);
+// 	if (pid == timer_pid)
+// 	{
+// 		kill(script_pid, SIGKILL);
+// 		script_got_killed = true;
+// 		if (exit_status == 255)
+// 		{
+// 			close(fd_cgi);
+// 			deleteArgs(argv, envp);
+// 			throw ServerException("exit");
+// 		}
+// 	}
+// 	else if (exit_status == 255)
+// 	{
+// 		deleteArgs(argv, envp);
+// 		fill_significant_error("500", *error, conf);
+// 		return (0);
+// 	}
+// 	if (script_got_killed == true)
+// 	{
+// 		deleteArgs(argv, envp);
+// 		fill_significant_error("500", *error, conf);
+// 		return (0);
+// 	}
+// 	kill(timer_pid, SIGKILL);
+// 	if (exit_status == 0)
+// 	{
+// 		std::ifstream 	fd_cgi2("tmp");
+// 		std::string 	buff;
+
+// 		std::getline(fd_cgi2, buff);
+// 		fd_cgi2.close();
+// 		get_output(buff.c_str(), conf, argv, envp);
+// 	}
+// 	else
+// 	{
+// 		deleteArgs(argv, envp);
+// 		fill_significant_error("500", *error, conf);
+// 	}
+// 	return (0);
+// }
+
 int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
 {
 	int			script_pid;
 	int			timer_pid;
 	int			pid = 0;
 	int			status;
-	int			fd[2];
-	int			rd;
-	char		buff[1024];
 	int			exit_status = 0;
 	bool		script_got_killed = false;
 
-	// std::ifstream cgi(".cgi_output");
-	// int fd_cgi = open(".cgi_output", O_CREAT);
-	// fd[1] = fd_cgi;
-	if (pipe(fd) == -1)
+	std::ofstream cgi("tmp");
+	int fd_cgi = open("tmp", O_RDWR|O_CREAT|O_TRUNC, 0666);
+	if (fd_cgi == -1)
 		fill_significant_error("500", *error, conf);
 	signal(SIGINT, SIG_IGN);
 	script_pid = fork();
@@ -423,11 +546,12 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		fill_significant_error("500", *error, conf);
 	if (script_pid == 0)
 	{
-		dup2(fd[1], 1);
-		close(fd[0]);
-		close(fd[1]);
+		dup2(fd_cgi, 1);
+		int	copy_out = dup(STDOUT_FILENO);
+		cgi.close();
+		close(fd_cgi);
+		close(copy_out);
 		server->close_child_sockets();
-		std::cerr << "pathname" << std::endl << pathname << std::endl;
 		if (execve(pathname, argv, envp) != 0)
 		{
 			deleteArgs(argv, envp);
@@ -442,14 +566,13 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 	if (timer_pid == 0)
 	{
 		signal(SIGINT, sighandlerbis);
-		close(fd[0]);
-		close(fd[1]);
+		close(fd_cgi);
+		cgi.close();
 		server->close_child_sockets();
 		for (int time = 5; time > 0 && server->getTimeSigint() == false; time--)
 			sleep(1);
 		if (server->getTimeSigint() == false)
 		{
-		
 			deleteArgs(argv, envp);
 			delete [] server->fds;
 			server->del_all();
@@ -469,56 +592,46 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		if (pid == script_pid || pid == timer_pid)
 			break ;
 	}
+	close(fd_cgi);
+	cgi.close();
 	signal(SIGINT, sighandler);
 	if (WIFEXITED(status))
-	{
 		exit_status = WEXITSTATUS(status);
-	}
 	if (pid == timer_pid)
 	{
 		kill(script_pid, SIGKILL);
 		script_got_killed = true;
 		if (exit_status == 255)
 		{
-			close(fd[0]);
-			close(fd[1]);
+			close(fd_cgi);
 			deleteArgs(argv, envp);
 			throw ServerException("exit");
 		}
 	}
 	else if (exit_status == 255)
 	{
-		kill(timer_pid, SIGKILL);
-		close(fd[0]);
-		close(fd[1]);
 		deleteArgs(argv, envp);
 		fill_significant_error("500", *error, conf);
 		return (0);
 	}
-	close(fd[1]);
 	if (script_got_killed == true)
 	{
-		close(fd[0]);
 		deleteArgs(argv, envp);
 		fill_significant_error("500", *error, conf);
 		return (0);
 	}
+	kill(timer_pid, SIGKILL);
 	if (exit_status == 0)
 	{
-		while (1)
-		{
-			rd = read(fd[0], buff, sizeof(buff) - 1);
-			if (rd < 1)
-				break ;
-			buff[rd] = '\0';
-		}
-		// buff << fd[1];
-		close(fd[0]);
-		get_output(buff, conf, argv, envp);
+		std::ifstream 	fd_cgi2("tmp");
+		std::string 	buff;
+
+		std::getline(fd_cgi2, buff);
+		fd_cgi2.close();
+		get_output(buff.c_str(), conf, argv, envp);
 	}
 	else
 	{
-		close(fd[0]);
 		deleteArgs(argv, envp);
 		fill_significant_error("500", *error, conf);
 	}
