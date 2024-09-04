@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/04 15:22:23 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/04 17:44:50 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,7 +206,7 @@ class Request
 		void			setScriptProcess(char const *pathname, char *const argv[], char *const envp[], int & script_pid, t_conf &conf, int & fd, std::ofstream & cgi);
 		void			setTimerProcess(char *const argv[], char *const envp[], int & timer_pid, t_conf &conf, int & fd, std::ofstream & cgi);
 
-		void			pidOutput(int & pid, int & status, int & script_pid, int & timer_pid);
+		void			waitPidOutput(int & pid, int & status, int & script_pid, int & timer_pid);
 
 		/* ***************************************************************** */
 		/* **************************** Cookies **************************** */
