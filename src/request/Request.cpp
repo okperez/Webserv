@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/04 16:32:07 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/04 17:31:53 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -361,7 +361,7 @@ void	Request::get_output(const char *buff, t_conf &conf, char *const argv[], cha
 {
 	int	flag = 0;
 	std::string str = buff;
-	std::cout << "str = " << str << std::endl;
+	// std::cout << "\n\n" << "Size = " << str.size() << "\n" << "BUFF = " << str << "\n\n" << std::endl;
 	if (str == "1" || str.empty())
 	{
 		deleteArgs(argv, envp);
@@ -626,7 +626,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		std::ifstream 	fd_cgi2("tmp");
 		std::string 	buff;
 
-		std::getline(fd_cgi2, buff);
+		std::getline(fd_cgi2, buff, '\0');
 		fd_cgi2.close();
 		get_output(buff.c_str(), conf, argv, envp);
 	}

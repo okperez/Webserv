@@ -1,0 +1,3 @@
+Set-Cookie: fname=Orlando; path=/sign_in.html;
+Set-Cookie: lname=Perez; path=/sign_in.html;
+<!DOCTYPE html><html><head><title>Welcome</title><link rel="stylesheet" type="text/css" href="/session.css"></head><body><div id="center"><h1>Welcome Orlando</div></h1></body></html>
