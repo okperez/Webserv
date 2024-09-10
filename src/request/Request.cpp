@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/06 16:31:43 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/10 09:56:41 by galambey         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/webserv.hpp"
-#include <sys/stat.h>
+// #include <sys/stat.h>
 /* ************************************************************************* */
 /* ************************ Constructor & Destructor *********************** */
 /* ************************************************************************* */
@@ -169,7 +169,7 @@ void	Request::send_response(int const &socket_fd) {
 }
 
 //  parse request from client and send back response 
-void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &error) // return necessaire?
+void  Request::handle_request(t_conf &conf, ErrorPages &error)
 {
 	check_request(conf, error);
 	int i = check_exist_method();
@@ -202,7 +202,6 @@ void  Request::handle_request(/* int socket_fd,  */t_conf &conf, ErrorPages &err
 /*
 Recherche pour la location de la plus precise a la moins precise dans le serveur
 */
-// PENSER A TESTER SI / TOUJOURS AVEC CURL DANS REQUETE COMME POUR HTTP
 std::string Request::look_if_location(std::string &uri, t_conf & conf) {
 
 	std::map< std::string, std::map<std::string, std::string> >::iterator it;
@@ -722,7 +721,6 @@ void	Request::build_index(t_conf &conf, std::string location, ErrorPages &error)
 	DIR *tmp = opendir(_target.data());
 	dirent *directory;
 	
-	std::cerr << "TEST\n";
 	if (!tmp)
 		return (fill_error_errno(conf, error), (void) 0);
 	_body_len += _response.setBody("<!DOCTYPE html>\n<html>\n<head>\n<title>Index</title>\n</head>\n<body>\n<h3>Index</h3>\n");
@@ -1030,7 +1028,6 @@ bool		Request::body_present() {
 	return (false);
 }
 
-// TESTER AVEC MAX INT + 1 OU MIN INT -1
 int	Request::ft_shextodec(std::string & s) {
 	
 	std::istringstream iss(s);
