@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   close_server.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 15:50:27 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/02 16:12:51 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/05 14:30:54 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ static void	close_server(Server *server) {
 	// server->handle_pending_requests(); // Envoie erreur 503 a toutes les connections acceptees ou requests en cours
 	// server->del_all();
 	std::cout<< "bfr throw\n";
-	server->ctrlC = true;
+	server->setCtrlC();
 	throw (ServerException("exit"));
 	// exit(1);
 }

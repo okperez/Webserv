@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 11:01:35 by garance           #+#    #+#             */
-/*   Updated: 2024/07/18 13:47:05 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/06 15:22:22 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,7 @@ void	strtomap(std::string s, std::map<std::string, std::vector<std::string> > & 
 		
 		
 		found2 = tmp.find(delimmap);
-		if (found2 == 0)
-			std::cout << "A IMPLEMENTER" << std::endl;
-		else if (found2 == std::string::npos)
-			std::cout << "A IMPLEMENTER" << std::endl;
-		else {
+		if (found2 != 0 && found2 != std::string::npos) {
 			index = tmp.substr(0, found2);
 			content = tmp.substr(found2 + delimmap.length());
 			map[index].push_back(content);

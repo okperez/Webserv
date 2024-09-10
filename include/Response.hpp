@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 13:46:10 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 17:54:02 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/05 16:02:01 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,40 +26,39 @@ class Response
 		std::string 						_connection;
 		std::string 						_body;
 		std::vector<std::string>			_cookie;
-		bool								_error;
-		Media								*auth_media;
+		Media								*_auth_media;
 		
-		Response(const Response & orig);
+		Response(const Response &orig);
 		
-		bool	is_allowed_type(std::string const &index, std::string const  &content);
+		bool		is_allowed_type(std::string const &index, std::string const  &content);
 		
 	public :
 		Response();
 		~Response();
-		Response &operator=(Response const & rhs);
+		Response &operator=(Response const &rhs);
 
 		/* ***************************************************************** */
 		/* **************************** Accessor *************************** */
 		/* ***************************************************************** */
 
-		void						setAuthmedia(Media *auth_media);
-		void						setStatus(std::string const & code, std::string const & tittle);
-		void						setStatus(std::string const & code, ErrorPages &error);
-		bool						setContent_type(std::string const & s);
-		void						setContent_length();
-		void						setLocation(std::string const & s);
-		void						setConnectiontoclose();
-		void						reinitBody();
-		size_t						setBody(std::string const & s);
-		size_t						setBody(std::ifstream &file);
-		void						setCookie(std::string str);
-		void						setError(bool err);
-		bool						getError() ;
+		void		setAuthmedia(Media *auth_media);
+		void		setStatus(std::string const &code, std::string const &tittle);
+		void		setStatus(std::string const &code, ErrorPages &error);
+		void		setContent_type(std::string const &s);
+		void		setContent_length();
+		void		setLocation(std::string const &s);
+		void		setConnectiontoclose();
+		void		reinitBody();
+		size_t		setBody(std::string const &s);
+		size_t		setBody(std::ifstream &file);
+		void		setCookie(std::string const &str);
 
-		std::string build_response(size_t *body_len);
-
-		//A EFFACER
-		void print();
+		/* ***************************************************************** */
+        /* **************************** Actions **************************** */
+        /* ***************************************************************** */
+        
+		std::string build_response(size_t &body_len);
+		void 		print_first_line(std::string const &response) const;
 		
 } ;
 

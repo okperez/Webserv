@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 17:50:17 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/03 15:39:35 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/05 15:48:19 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,109 +22,106 @@ typedef struct s_conf t_conf;
 
 class Server
 {
-	private : 
-		ErrorPages 	error;
-
+	private :
+		std::vector<Listen> 			_server_fd; 	// Vector of server's sockets(reading on gateways)
+		std::vector<Request> 			_requests;  	// Vector with all pending requests
+		ErrorPages 						_error;			// Object with http codes and handling the error pages and redirections
+		bool							_time_sigint;	// Time out for CGI
+		Media							_auth_media;	// Object with Allowed Content types in the server
+		struct pollfd 					*_fds;			// Array of struct containing the sockets that poll use manage I/O multiplexing
+		bool 							_ctrlC;			// = true if SigInt happened
+		
 		Server(const Server & orig);
 		Server &operator=(Server & rhs);
-		bool	_bad_alloc;
-		const char *_err_alloc;
-		int			_ind_err_alloc;
-		bool		_rc_err_alloc;
-		std::vector<Request>::iterator	_it_err_alloc;
-		bool		time_sigint;
 		
 		/* ***************************************************************** */
 		/* ************************* BFR LAUNCHING ************************* */
 		/* ***************************************************************** */
 		
-		struct addrinfo	*get_addr_info(char *data, int new_socket);
-		bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host, int i);
-		// bool	check_port_binding(std::vector<Listen> &server_fd, std::string &port, std::string &host);
-		void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port, struct addrinfo *res);
-		// void	bind_socket(int new_socket, struct sockaddr_in &server_addr, int port);
-		void	listen_socket(int new_socket, int port, struct addrinfo *res);
+		bool			check_port_binding(std::string const &port, std::string const &host, int const i);
+		void			bind_socket(int const new_socket, struct sockaddr_in &server_addr, int const port, struct addrinfo *res);
+		void			listen_socket(int const new_socket, int const port, struct addrinfo *res);
+		struct addrinfo	*get_addr_info(const char *data, int const new_socket);
 		
-	public :
-		Media		auth_media;
-		std::vector<t_conf>	conf; // public si on n integre pas parsing dans classe
-		std::vector<Listen> server_fd; // a passer en private une fois good
-		std::vector<Request> requests; // a passer en private une fois good
-		struct pollfd *fds; // a passer en private une fois good
-		bool 		ctrlC;
-
-		
-		
-		Server();
-		~Server(); // fds a free dans destructeur
-
-		/* ***************************************************************** */
-		/* **************************** Accessor *************************** */
-		/* ***************************************************************** */
-
-			bool	getTimeSigint();
-			void	setTimeSigint();
-
-		/* ***************************************************************** */
-		/* ************************* BFR LAUNCHING ************************* */
-		/* ***************************************************************** */
-		
-		void	open_listen_socket();
-		void	create_fds();
-		
-		/* ***************************************************************** */
-		/* *************************** LAUNCHING *************************** */
-		/* ***************************************************************** */
-
-		void	launch_server(int max_socket);
-
-		
-		/* ***************************************************************** */
+				/* ***************************************************************** */
 		/* **************************** EVENTS ***************************** */
 		/* ***************************************************************** */
 
-		void	read_request(int i, char *buffer, int read);
-		bool	request_response(int i);
-		void	no_event_request(size_t max_socket);
-		void	event_request(size_t max_socket);
+		void			read_request(int const i, char const *buffer, int const read);
+		bool			request_response(int const i);
+		void			no_event_request(size_t const max_socket);
+		void			event_request(size_t const max_socket);
 		
 		/* ***************************************************************** */
 		/* *********************** HANDLE CONNECTION *********************** */
 		/* ***************************************************************** */
 
-		bool	new_connection(int server_fd, int max_socket);
-		void	new_connection(size_t max_socket);
-		void	close_connection(int i);
+		void			new_connection(size_t const max_socket);
+		bool			new_connection(int const server_fd, int const max_socket);
+		void			close_connection(int const i);
 
 		/* ***************************************************************** */
 		/* **************************** REQUEST **************************** */
 		/* ***************************************************************** */
 		
-		int		is_host(std::string host, std::string port, std::string socket_host);
-		int		unique_match(std::string &port, std::string &socket_ip, std::vector<int> & tmp);
-		int		pick_server(Request &request);
-		void	body_request_present(Request &request, int read, int i);
+		int				unique_match(std::string const &port, std::string const &socket_ip, std::vector<int> & tmp);
+		int				is_host(std::string const &host, std::string const &port, std::string const &socket_host);
+		int				pick_server(Request &request);
+		void			body_request_present(Request &request, int read, int i);
 
 		/* ***************************************************************** */
 		/* ***************************** ERROR ***************************** */
 		/* ***************************************************************** */
 
-		void	bad_alloc_error(int i, std::vector<Request>::iterator *it);
-		void	send_error(std::vector<Request>::iterator it, std::string const &code, const char *mess, ErrorPages &error);
-		void	handle_error_function(int i);
+		void			send_error(std::vector<Request>::iterator &it, std::string const &code, const char *mess, ErrorPages &error);
+		void			handle_error_function(int const i);
 
 		/* ***************************************************************** */
 		/* ***************************** CLOSE ***************************** */
 		/* ***************************************************************** */	
 		
-		void	del_all();
-		void	error_bfr_launch(int new_socket, struct addrinfo *res, const char *s);
-		void	error_bfr_launch(); // POUR MAIN UNNIQUEMENT
-		void	close_and_erase(std::vector<Request>::iterator it);
-		void	stop_listen();
-		void	handle_pending_requests_in_vect(int &socket);
-		void	handle_pending_requests();
-		void	close_child_sockets();
+		void			error_bfr_launch(int const new_socket, struct addrinfo *res, const char *s);
+		void			close_and_erase(std::vector<Request>::iterator &it);
+		void			stop_listen();
+		void			handle_pending_requests_in_vect(int const &socket);
+		void			handle_pending_requests();
+
+	public :
+		std::vector<t_conf>	conf; 	// Vector containing the differents servers configuration
+		
+		Server();
+		~Server();
+
+		/* ***************************************************************** */
+		/* **************************** Accessor *************************** */
+		/* ***************************************************************** */
+
+		struct pollfd 	*getFds() const;
+		size_t			getServer_fd_size() const;
+		void			setCtrlC();
+		bool			getTimeSigint() const;
+		void			setTimeSigint();
+
+		/* ***************************************************************** */
+		/* ************************* BFR LAUNCHING ************************* */
+		/* ***************************************************************** */
+		
+		void			open_listen_socket();
+		void			create_fds();
+		
+		/* ***************************************************************** */
+		/* *************************** LAUNCHING *************************** */
+		/* ***************************************************************** */
+
+		void			launch_server(int const max_socket);
+		
+		/* ***************************************************************** */
+		/* ***************************** CLOSE ***************************** */
+		/* ***************************************************************** */	
+		
+		void			del_all();
+		void			error_bfr_launch(); // POUR MAIN UNNIQUEMENT
+		void			close_child_sockets();
 
 } ;
 

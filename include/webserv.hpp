@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/09/03 15:01:44 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/06 15:05:02 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,13 +36,13 @@ typedef struct s_conf
 {
   std::vector<std::string>                                  ipv4_port;
   std::vector<std::string>                                  ipv6_port;
-  std::string												max_body_size; // A EFFACER UNE FOIS PASSER EN INT
-  int														limit_body_size; // max_body_size en int, une fois ok effacer
+  std::string												max_body_size;
+  int														limit_body_size;
   std::string												host;
   std::string                                               server_name;
   std::string                                               root_dir;
-  std::string                                               files;  // A EFFACER UNE FOIS PASSER EN VECTEUR // A Transformer en vecteur de string : il peut y en avoir plusieurs, une fois ok effacer
-  std::vector<std::string>                                  files_vect; // A Transformer en vecteur de string : il peut y en avoir plusieurs
+  std::string                                               files;
+  std::vector<std::string>                                  files_vect;
   std::string                                               autoindex;
   std::string                                               ret; // return
   std::map<std::string, std::map<std::string, std::string> >location;
@@ -96,6 +96,9 @@ void        clear_space(std::string & type);
 std::string extract_type(std::string buff);
 std::string extract_index(std::string buff);
 void	    str_tolower(std::string & s);
+void	    setExtensions(std::map<std::string, char const *> &extensions);
+void	    deleteArgs(char *const argv[], char *const envp[]);
+void	    deleteArr(char *const env[], int index);
 
 /* ********************************** UTILS ********************************* */
 void	    strtomap(std::string s, std::map<std::string, std::vector<std::string> > & map, std::string const & delimstr, std::string const & delimmap);

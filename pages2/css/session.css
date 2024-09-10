@@ -1,0 +1,149 @@
+html, body, #center {
+	height:100%;
+}
+
+body {
+	background-color: rgb(2, 18, 39);
+}
+
+/* ************************************************************************* */
+/* ******************************** POSITION ******************************* */
+/* ************************************************************************* */
+
+#center, #div1, #div2, #div3 {
+	display:flex;
+	flex-direction: column;
+}
+
+#center {
+	justify-content:center;
+	align-items: center;
+	width:100%;
+}
+
+#div1 {
+	padding: 5px 15px;
+	row-gap: 20px;
+	width:fit-content;
+}
+
+#div2 {
+	margin-top: -5%;
+	row-gap: 40px;
+}
+
+#div3 {
+	row-gap: 5px;
+}
+
+/* ************************************************************************* */
+/* ********************************* POLICE ******************************** */
+/* ************************************************************************* */
+
+h1, h2, #text , #champs , #remember, #file-name, #file-name2, #size2, #button1, #button2, #custom-file-upload, #custom-file-upload2 {
+	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
+	color: rgb(255, 255, 255);
+}
+
+#size1, #size4 {
+	font-size: 200%;
+}
+
+#size2 {
+	font-size: 300%;
+}
+
+#size3 {
+	font-size: 270%;
+}
+
+/* #size4 {
+	font-size: 200%;
+} */
+
+/* ************************************************************************* */
+/* ********************************** COLOR ******************************** */
+/* ************************************************************************* */
+
+a:link, a:visited {
+	color: rgb(10, 155, 252);
+}
+
+a:hover {
+	color: rgb(40, 99, 138);
+}
+
+
+#custom-file-upload:hover, #custom-file-upload2:hover, #button1:hover, #button2:hover, #button3:hover:hover {
+    background-color: rgb(40, 99, 138);
+}
+
+#button1, #button2, #custom-file-upload, #custom-file-upload2, #champs, #fname, #lname {
+	background-color: rgb(10, 155, 252);
+	border-color: rgb(255, 255, 255);
+	border-radius: 5%;
+}
+
+/* ************************************************************************* */
+/* ********************************* BUTTON ******************************** */
+/* ************************************************************************* */
+
+#button1, #button2, #custom-file-upload, #custom-file-upload2 {
+	border-radius: 5%;
+}
+
+#button1
+{
+	align-items: center;
+	padding: 5px 15px;
+	width :100%;
+}
+
+#button2
+{
+	padding: 5px 15px;
+	width :100%;
+}
+
+#button2, #custom-file-upload, #custom-file-upload2 {
+	border-width: 0.05cm;
+	font-size: 20px;
+}
+
+#button1
+{
+	display: block;
+  	margin-left: auto;
+  	margin-right: 40%;
+	font-size: 50px;
+	border-top-left-radius: 20%;
+	border-bottom-right-radius: 20%;
+}
+
+/* ************************************************************************* */
+/* ********************************** OTHER ******************************** */
+/* ************************************************************************* */
+
+#custom-file-upload, #custom-file-upload2 {
+    padding: 3px 10px;
+}
+
+#text , #lname , #fname, #remember {
+	font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
+	color: rgb(255, 255, 255);
+}
+
+#lname {
+	border-width: 0.05cm;
+}
+
+#hide, #hide2 {
+    display: none; /* Hide the default file input */
+}
+
+#custom-file-upload, #custom-file-upload2 {
+    border: 1px solid #FFFFFF;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 4px;
+}

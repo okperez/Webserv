@@ -6,7 +6,7 @@
 /*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/07/11 09:03:12 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/05 15:15:30 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,14 @@ class Listen
 {
 	private : 
 		const int			_fd; // socket_server
-		int					index;
+		int					_index;
 		std::vector<int>	_i_conf; // index du fichier conf => determiner quel serveur
 		const std::string	_port;
 		const in_addr_t		_s_addr;
 		const std::string 	_host;
 	
 		Listen();
-		Listen &operator=(Listen & rhs);
+		Listen &operator=(Listen const & rhs);
 		
 	public :
 		Listen(const Listen & orig);
@@ -44,13 +44,14 @@ class Listen
 		std::string			getPort() const;
 		in_addr_t			getS_addr() const;
 		std::string			getHost() const;
+		void				addIconf(int const i);
 		
-		void	addIconf(int i);
-		
+		/* ***************************************************************** */
+		/* **************************** Close **************************** */
+		/* ***************************************************************** */
+
 		void	close_fd();
 
-		void	printlisten(); //A EFFACER
-		
 } ;
 
 #endif

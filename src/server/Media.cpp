@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/02 17:26:22 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/05 16:04:03 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,15 @@
 /* ************************************************************************* */
 
 Media::Media() {
-    types["text"].push_back("html");
-    types["text"].push_back("css");
-    types["text"].push_back("plain");
-    types["text"].push_back("*");
-    types["application"].push_back("octet-stream"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
-    // types["application"].push_back("jpg"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
-    types["*"].push_back("*");
+    _types["text"].push_back("html");
+    _types["text"].push_back("css");
+    _types["text"].push_back("plain");
+    _types["text"].push_back("*");
+    _types["application"].push_back("octet-stream"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    _types["image"].push_back("jpeg"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    _types["image"].push_back("png"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    _types["image"].push_back("xpm"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    _types["*"].push_back("*");
 }
 
 Media::Media(const Media & orig) { (void) orig; }
@@ -52,7 +54,7 @@ Media &Media::operator=(Media & rhs) {
 
 bool	Media::is_allow(std::string const &index, std::string const &content) {
 	
-	for (std::map<std::string, std::vector<std::string> >::iterator it = types.begin() ; it != types.end(); it++) {
+	for (std::map<std::string, std::vector<std::string> >::iterator it = _types.begin() ; it != _types.end(); it++) {
 		if (it->first == index) {
 			for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++)
 				if (*jt == content)
@@ -64,13 +66,13 @@ bool	Media::is_allow(std::string const &index, std::string const &content) {
 
 std::map<std::string, std::vector<std::string> >	& Media::getTypes()
 {
-	return (types);
+	return (_types);
 }
 
 
 std::string	Media::match_type(std::string const &type) {
 	
-	for (std::map<std::string, std::vector<std::string> >::iterator it = types.begin(); it != types.end(); it++) {
+	for (std::map<std::string, std::vector<std::string> >::iterator it = _types.begin(); it != _types.end(); it++) {
 		for (std::vector<std::string>::iterator jt = it->second.begin(); jt != it->second.end(); jt++) {
 			if (*jt == type)
 				return (it->first + "/" + *jt);

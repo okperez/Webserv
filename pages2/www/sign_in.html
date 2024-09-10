@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign_in</title>
+    <link rel="stylesheet" type="text/css" href="/session.css">
+</head>
+<body>
+	<div id="center">
+		<form id="div2" action="cgi-bin/sign_in.php" method="POST">
+			<div>
+				<h1 id="size2">Sign In</h1>
+			</div>
+			<div id="div3">
+				<label id="text" for="fname">First name :</label><br>
+				<input id="fname" type = "text"  name="fname"><br><br>
+				<label id="text" for="lname">Last Name :</label><br>
+				<input id="lname" type = "password" name="lname"><br><br>
+				<script>
+					function getCookie(cname) {
+					  var cookies = ` ${document.cookie}`.split(";");
+					  for (var i = 0; i < cookies.length; i++)
+					  {
+						var val = cookies[i].split("=");
+						if (val[0] == ` ${cname}`) {
+						  return val[1];
+						}
+					  }
+					  return "";
+					}
+					var fname = getCookie('fname');
+					var lname = getCookie('lname');
+					document.getElementById('fname').value = fname;
+					document.getElementById('lname').value = lname;
+				</script>
+				<label id="remember">
+				<input type="checkbox" name="rememberMe"> Remember Me </label><br><br><br>
+			</div>
+			<div>
+				<input id="button2" type="submit" value="Submit">
+			</div>
+		</form>
+	</div>
+</body>
+</html>

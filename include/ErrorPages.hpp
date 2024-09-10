@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ErrorPages.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 10:38:51 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/04 14:21:54 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,16 @@ class Response;
 class ErrorPages
 {
 	private : 
-		std::map<std::string, std::string> map_error;
+		std::map<std::string, std::string> _map_error;
 	
 		ErrorPages(const ErrorPages & orig);
 		ErrorPages &operator=(ErrorPages & rhs);
+		
+		/* ***************************************************************** */
+        /* **************************** Actions **************************** */
+        /* ***************************************************************** */
+        
+		void	err_not_found(Response &response, std::string const &code);
 		
 	public :
 		ErrorPages();
@@ -34,20 +40,17 @@ class ErrorPages
 		/* **************************** Accessor *************************** */
 		/* ***************************************************************** */
 
-	std::string	get_message(std::string const & code);
+		std::string	get_message(std::string const & code);
 		
         /* ***************************************************************** */
         /* **************************** Actions **************************** */
         /* ***************************************************************** */
         
-		void	err_not_found(Response &response, std::string &code);
-		void	fill_significant_error(Response &response, std::string code, t_conf &conf);
-        void	fill_error(Response &response, std::string code, t_conf &conf);
-		void	fill_significant_error(Response &response, std::string code);
-        void	fill_error(Response &response, std::string code);
+		void	fill_significant_error(Response &response, std::string const code, t_conf &conf);
+        void	fill_error(Response &response, std::string const code, t_conf &conf);
+		void	fill_significant_error(Response &response, std::string const code);
+        void	fill_error(Response &response, std::string const code);
 		void	fill_redir(Response &response, std::string const &code, std::string const &redir);
-        // void	err_not_found(std::string &body, std::string &code);
-        // void	fill_error(std::string &body, std::string &response, std::string code, t_conf &conf);
 		void	del_all();
 } ;
 

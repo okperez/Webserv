@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/08/29 11:48:48 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/04 13:58:18 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ typedef struct s_conf t_conf;
 class Media
 {
 	private : 
-		std::map<std::string, std::vector<std::string> > types;
+		std::map<std::string, std::vector<std::string> > _types;
 	
 		Media(const Media & orig);
 		Media &operator=(Media & rhs);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/09/02 16:13:16 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/05 17:09:19 by garance          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@ int main(int argc, char **argv)
 			Server server;
 			try {
 				garbagge_server(&server, 2);
-				// std::vector<t_conf>	conf;
 				signal(SIGINT, sighandler);
 				if (handle_conf_file(argv[1], server.conf) == -1)
 					return (1);
@@ -48,10 +47,9 @@ int main(int argc, char **argv)
 				
 				/* ********************************* */
 				
-				server.open_listen_socket();  	// NO LEAKS MEMMORY + FD OK
-				server.create_fds();   			// NO LEAKS MEMMORY + FD OK
-				server.launch_server(server.server_fd.size() + MAX_CONNECTION); // OK UNE FOIS LANCER ON RENTRE DANS CATCH QU AVEC CTRL+C OU FAIL DE POLL
-				std::cout << "main 0\n";
+				server.open_listen_socket();
+				server.create_fds();
+				server.launch_server(server.getServer_fd_size() + MAX_CONNECTION);
 				return (0);
 				}
 			catch (std::bad_alloc const & e) {
@@ -71,9 +69,6 @@ int main(int argc, char **argv)
 			}
 			catch (std::exception const & e) {
 				std::string err = e.what();
-				std::cerr << "main 1\n";
-				// server.del_all();
-				
 				if (err == "exit")
 					return (130);
 				else
@@ -95,7 +90,6 @@ int main(int argc, char **argv)
 		}
 		catch (std::exception const & e) {
 			std::string err = e.what();
-				std::cerr << "main 2\n";
 			if (err == "exit")
 				return (130);
 			else
