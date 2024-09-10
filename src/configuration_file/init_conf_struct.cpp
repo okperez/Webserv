@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/14 10:37:23 by operez            #+#    #+#             */
-/*   Updated: 2024/09/02 12:20:00 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:09:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,8 @@ void    set_flag(t_flag & flag)
 void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
 {
     int i = 0;
+    int count_name = 0;
+    int count_host = 0;
 
     set_flag(conf.flag);
     for (std::list<std::string>::iterator it = cnf_file.begin(); it != cnf_file.end(); it++)
@@ -97,11 +99,23 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
         else if ((*it).find("index ")!= (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
             handle_files((*it), conf);
         else if ((*it).find("server_name ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
-            conf.server_name = extract_conf(*it, ';');
+        {
+            if (count_name == 0)
+                conf.server_name = extract_conf(*it, ';');
+            else
+                throw ConfFileException ("Error: multiple server names");
+            count_name++;
+        }
         else if ((*it).find("autoindex ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
             conf.autoindex = extract_conf(*it, ';');
         else if ((*it).find("host ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
-            conf.host = extract_conf(*it, ';');
+        {
+            if (count_host == 0)
+                conf.host = extract_conf(*it, ';');
+            else
+                throw ConfFileException ("Error: multiple host");
+            count_host++;
+        }
         else if ((*it).find("return ") != (*it).npos && conf.flag.loc == 0 && conf.flag.err_pgs == 0)
             handle_return((*it), conf);
         else
@@ -112,4 +126,3 @@ void    set_conf_struct(std::list<std::string> & cnf_file, t_conf & conf)
     handle_err_pgs(cnf_file, conf);
 }
 
-// si host absent host = 0.0.0.0

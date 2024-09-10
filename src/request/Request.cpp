@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/04 18:09:22 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:13:38 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -316,6 +316,7 @@ int	Request::check_exist_method() {
 	std::string	method[3] = {"GET", "POST", "DELETE"};
 	int i;
 	
+	
 	for (i = 0; i < 3; i++) {
 		if (this->method == method[i])
 			break;
@@ -361,12 +362,13 @@ void	Request::get_output(const char *buff, t_conf &conf, char *const argv[], cha
 {
 	int	flag = 0;
 	std::string str = buff;
-	// std::cout << "\n\n" << "Size = " << str.size() << "\n" << "BUFF = " << str << "\n\n" << std::endl;
+	std::cout << "\n\n" << "Size = " << str.size() << "\n" << "BUFF = " << str << "\n\n" << std::endl;
 	if (str == "1" || str.empty())
 	{
 		deleteArgs(argv, envp);
 		fill_significant_error("400", *error, conf);
 	}
+
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -495,6 +497,7 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		{
 			close(fd_cgi);
 			deleteArgs(argv, envp);
+			std::remove("tmp");
 			throw ServerException("exit");
 		}
 	}
@@ -505,12 +508,14 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 		std::ifstream 	fd_cgi2("tmp");
 		std::string 	buff;
 		std::getline(fd_cgi2, buff, '\0');
+		std::remove("tmp");
 		fd_cgi2.close();
 		get_output(buff.c_str(), conf, argv, envp);
 		deleteArgs(argv, envp);
 	}
 	else
 	{
+		std::remove("tmp");
 		deleteArgs(argv, envp);
 		fill_significant_error("400", *error, conf);
 	}
@@ -796,6 +801,7 @@ void	Request::redirection(std::string const &ret, ErrorPages &error, std::string
 /* ******************************** Parsing ******************************** */
 /* ************************************************************************* */
 
+
 bool	Request::media_request_allowed() {
 	
 	for (std::map<std::string, std::vector<std::string> >::iterator it=media.begin() ; it != media.end(); it++) {
@@ -805,6 +811,10 @@ bool	Request::media_request_allowed() {
 	}
 	return (false);
 }
+
+/* ************************************************************************* */
+/* ******************************** Upload ********************************* */
+/* ************************************************************************* */
 
 int	Request::extract_name(std::string & name)
 {
