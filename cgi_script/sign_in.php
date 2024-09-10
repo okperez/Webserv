@@ -1,5 +1,10 @@
 <?php
 
+// while (1)
+// {
+//     ;
+// }
+
 $file = file_get_contents('Data_user');
 if (getenv("REQUEST_METHOD") != "POST")
 {

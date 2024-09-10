@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:03:27 by operez            #+#    #+#             */
-/*   Updated: 2024/09/06 15:05:02 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/10 11:34:34 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ void        check_returns(std::vector<t_conf> & conf);
 
 void        clear_space(std::string & type);
 bool        is_equal(t_conf & conf1, t_conf & conf2);
-void        print_all_struct(std::vector<t_conf> & conf, int count);
 std::string clear_str(std::list<std::string> cnf_file);
 bool        is_allow_methods(std::string str);
 int         print_error(char const *str);

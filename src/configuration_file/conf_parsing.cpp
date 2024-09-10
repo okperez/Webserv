@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/09/03 11:21:57 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:40:23 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,19 @@ int     handle_conf_file(char *argv, std::vector<t_conf> & conf)
         return (-1);
     }
     handle_host(conf);
+    for (std::vector<t_conf>::iterator it = conf.begin(); it != conf.end(); it++)
+    {
+		if (it->host.empty())
+			it->host = "0.0.0.0";
+		try
+        {
+			it->limit_body_size = ft_stoi(it->max_body_size) ;
+		}
+		catch (std::exception const & e)
+        {
+			throw (ConfFileException("Error: body size isn't a number"));
+		}
+	}
     check_returns(conf);
-    // print_all_struct(conf, server_nbr);
     return (0);
 }

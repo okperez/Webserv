@@ -1,7 +1,4 @@
-GET /session.css HTTP/1.1
+GET    /session.css HTTP/1.1
 Host: 127.0.0.1:8080
 Accept: text,/xhtml+xml,application/xml,image/avif,image/webp,image/png,image/svg+xml,*/*
-Content-Length: 3
-
-aaa
 

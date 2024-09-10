@@ -1,3 +1,9 @@
+# while (1)
+# {
+#     ;
+# }
+
+
 if (%ENV{'REQUEST_METHOD'} eq "POST")
 {
     @split = split('&', %ENV{'QUERY_STRING'});

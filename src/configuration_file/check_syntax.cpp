@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:58:30 by operez            #+#    #+#             */
-/*   Updated: 2024/08/23 15:31:52 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:33:54 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ void	check_outside_bracket(std::string str)
 			break ;
 		std::string extract = str.substr(0, str.find('{'));
 		erase_content(str, '{');
-		// std::cout << "Extracted sequence =\n" << extract << std::endl;
 		if (extract == "" || extract.find("server") != extract.npos
 			|| extract.find("location/") != extract.npos || extract.find("error_page") != extract.npos
 			|| extract.find("location=") != extract.npos)

@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/21 14:22:22 by operez            #+#    #+#             */
-/*   Updated: 2024/09/02 12:19:41 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:34:55 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ void    err_pgs_to_conf(std::list<std::string> & err_pgs, t_conf & conf)
         pair.second = extract_conf(*it, ';');
         conf.err_pgs.insert(make_pair(pair.first, pair.second));
     }
-    std::cout << std::endl;
 }
 
 std::list<std::string>  extract_bloc_err_pgs(std::list<std::string>::iterator begin)

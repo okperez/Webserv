@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/10 09:56:41 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:35:07 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,6 +298,7 @@ int	Request::check_exist_method() {
 	std::string	method[3] = {"GET", "POST", "DELETE"};
 	int i;
 	
+	
 	for (i = 0; i < 3; i++) {
 		if (this->_method == method[i])
 			break;
@@ -339,16 +340,16 @@ char**	Request::set_env(t_conf & conf)
 	return (env);
 }
 
-void	Request::get_output(/*const */char *buff, t_conf &conf, char *const argv[], char *const envp[])
+void	Request::get_output(const char *buff, t_conf &conf, char *const argv[], char *const envp[])
 {
 	int	flag = 0;
 	std::string str = buff;
-
-	if (str == "1")
+	if (str == "1" || str.empty())
 	{
 		deleteArgs(argv, envp);
 		fill_significant_error("400", *_error, conf);
 	}
+
 	while (1)
 	{
 		size_t pos_cookie = str.find(("Set-Cookie:"));
@@ -382,56 +383,22 @@ void	Request::get_output(/*const */char *buff, t_conf &conf, char *const argv[],
 	_response.setContent_type("html");
 }
 
-int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
+void	Request::setTimerProcess(char *const argv[], char *const envp[], int & timer_pid, t_conf &conf, int & fd, std::ofstream & cgi)
 {
-	int			script_pid;
-	int			timer_pid;
-	int			pid = 0;
-	int			status;
-	int			fd[2];
-	int			rd;
-	char		buff[1024];
-	int			exit_status = 0;
-	bool		script_got_killed = false;
-
-	// std::ifstream cgi(".cgi_output");
-	// int fd_cgi = open(".cgi_output", O_CREAT);
-	// fd[1] = fd_cgi;
-	if (pipe(fd) == -1)
-		fill_significant_error("500", *_error, conf);
-	signal(SIGINT, SIG_IGN);
-	script_pid = fork();
-	if (script_pid == -1)
-		fill_significant_error("500", *_error, conf);
-	if (script_pid == 0)
-	{
-		dup2(fd[1], 1);
-		close(fd[0]);
-		close(fd[1]);
-		_server->close_child_sockets();
-		std::cerr << "pathname" << std::endl << pathname << std::endl;
-		if (execve(pathname, argv, envp) != 0)
-		{
-			deleteArgs(argv, envp);
-			delete [] _server->getFds();
-			_server->del_all();
-			exit (1);
-		}
-	}
+	
 	timer_pid = fork();
 	if (timer_pid == -1)
 		fill_significant_error("500", *_error, conf);
 	if (timer_pid == 0)
 	{
 		signal(SIGINT, sighandlerbis);
-		close(fd[0]);
-		close(fd[1]);
+		close(fd);
+		cgi.close();
 		_server->close_child_sockets();
 		for (int time = 5; time > 0 && _server->getTimeSigint() == false; time--)
 			sleep(1);
 		if (_server->getTimeSigint() == false)
 		{
-		
 			deleteArgs(argv, envp);
 			delete [] _server->getFds();
 			_server->del_all();
@@ -445,64 +412,93 @@ int	Request::exec_script(char const *pathname, char *const argv[], char *const e
 			exit(255);
 		}
 	}
+	
+}
+
+void	Request::setScriptProcess(char const *pathname, char *const argv[], char *const envp[], int & script_pid, t_conf &conf, int & fd, std::ofstream & cgi)
+{
+	
+	script_pid = fork();
+	if (script_pid == -1)
+		fill_significant_error("500", *_error, conf);
+	if (script_pid == 0)
+	{
+		dup2(fd, 1);
+		int	copy_out = dup(STDOUT_FILENO);
+		cgi.close();
+		close(fd);
+		close(copy_out);
+		_server->close_child_sockets();
+		if (execve(pathname, argv, envp) != 0)
+		{
+			deleteArgs(argv, envp);
+			delete [] _server->getFds();
+			_server->del_all();
+			exit (1);
+		}
+	}
+}
+void		Request::waitPidOutput(int & pid, int & status, int & script_pid, int & timer_pid)
+{
 	while (1)
 	{
 		pid = waitpid(WAIT_ANY, &status, 0);
 		if (pid == script_pid || pid == timer_pid)
 			break ;
 	}
+}
+
+int	Request::exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf)
+{
+	int			script_pid;
+	int			timer_pid;
+	int			pid = 0;
+	int			status;
+	int			exit_status = 0;
+	bool		script_got_killed = false;
+
+	std::ofstream cgi("tmp");
+	int fd_cgi = open("tmp", O_RDWR|O_CREAT|O_TRUNC, 0666);
+	if (fd_cgi == -1)
+		fill_significant_error("500", *_error, conf);
+	signal(SIGINT, SIG_IGN);
+	setScriptProcess(pathname, argv, envp, script_pid, conf, fd_cgi, cgi);
+	setTimerProcess(argv, envp, timer_pid, conf, fd_cgi, cgi);
+	waitPidOutput(pid, status, script_pid, timer_pid);
+	close(fd_cgi);
+	cgi.close();
 	signal(SIGINT, sighandler);
 	if (WIFEXITED(status))
-	{
 		exit_status = WEXITSTATUS(status);
-	}
 	if (pid == timer_pid)
 	{
 		kill(script_pid, SIGKILL);
 		script_got_killed = true;
 		if (exit_status == 255)
 		{
-			close(fd[0]);
-			close(fd[1]);
+			close(fd_cgi);
 			deleteArgs(argv, envp);
+			std::remove("tmp");
 			throw ServerException("exit");
 		}
 	}
-	else if (exit_status == 255)
-	{
+	else
 		kill(timer_pid, SIGKILL);
-		close(fd[0]);
-		close(fd[1]);
-		deleteArgs(argv, envp);
-		fill_significant_error("500", *_error, conf);
-		return (0);
-	}
-	close(fd[1]);
-	if (script_got_killed == true)
-	{
-		close(fd[0]);
-		deleteArgs(argv, envp);
-		fill_significant_error("500", *_error, conf);
-		return (0);
-	}
 	if (exit_status == 0)
 	{
-		while (1)
-		{
-			rd = read(fd[0], buff, sizeof(buff) - 1);
-			if (rd < 1)
-				break ;
-			buff[rd] = '\0';
-		}
-		// buff << fd[1];
-		close(fd[0]);
-		get_output(buff, conf, argv, envp);
+		std::ifstream 	fd_cgi2("tmp");
+		std::string 	buff;
+		std::getline(fd_cgi2, buff, '\0');
+		std::remove("tmp");
+		fd_cgi2.close();
+		get_output(buff.c_str(), conf, argv, envp);
+		deleteArgs(argv, envp);
 	}
 	else
 	{
-		close(fd[0]);
+		std::remove("tmp");
 		deleteArgs(argv, envp);
-		fill_significant_error("500", *_error, conf);
+		fill_significant_error("400", *_error, conf);
 	}
 	return (0);
 }
@@ -524,7 +520,6 @@ bool	Request::is_accessible(char const *pathname)
 {
 	struct stat path_stat;
 	stat(pathname, &path_stat);
-	// SECU stat if == -1 ?
 	if (access(pathname, X_OK) == -1)
 		return false;
 	return S_ISREG(path_stat.st_mode);
@@ -562,7 +557,6 @@ void    		Request::handle_cgi(t_conf & conf, std::string & index_loc)
     argv[1] = (char *) pathname;
     argv[2] = NULL;
 	exec_script(argv[0], argv, env, conf);
-	deleteArgs(argv, env);
 }
 
 bool Request::is_empty(std::ifstream& pFile)
@@ -647,10 +641,7 @@ void	Request::build_response(t_conf &conf, std::string &location, ErrorPages &er
 			uri_directory(conf, location, error);
 		//  =====> Request isn't a directory
 		else if (conf.location[location].find("cgi_extension") != conf.location[location].end())
-		{
-			std::cout << "ENTER IN CGI" << std::endl;
 			handle_cgi(conf, location);
-		}
 		else
 			if (!open_targetfile(_target))
 				fill_error_errno(conf, error);
@@ -774,6 +765,7 @@ void	Request::redirection(std::string const &ret, ErrorPages &error, std::string
 /* ******************************** Parsing ******************************** */
 /* ************************************************************************* */
 
+
 bool	Request::media_request_allowed() {
 	
 	for (std::map<std::string, std::vector<std::string> >::iterator it=_media.begin() ; it != _media.end(); it++) {
@@ -783,6 +775,10 @@ bool	Request::media_request_allowed() {
 	}
 	return (false);
 }
+
+/* ************************************************************************* */
+/* ******************************** Upload ********************************* */
+/* ************************************************************************* */
 
 int	Request::extract_name(std::string & name)
 {
@@ -886,7 +882,6 @@ void	Request::build_file()
 			file << (*it);
 			i++;
 		}
-		std::cout << "length of untitled .jpeg = " << i << std::endl;
 	}
 	_response.setStatus("204", *_error);
 }

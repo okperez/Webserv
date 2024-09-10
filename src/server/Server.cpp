@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:43:55 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/06 15:22:58 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/10 11:37:25 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,10 +200,6 @@ void	Server::launch_server(int const max_socket) {
 	
 	int ret;
 	
-	std::cout << "Voir avec Orlando\n";
-	std::cout << "Fichier de conf : si deux fois host ou deux fois server_name ca marche, on devrait pas limiter a 1 ces mots cles par server?\n";
-	std::cout << "Garance\n";
-	std::cout << "ET FINITO APRES CA!!!!!!!!!!!!!!\n";
 	try {
 		while (1)
 		{
@@ -285,7 +281,6 @@ void	Server::read_request(int const i, char const *buffer, int const read) {
 								_fds[i].events = POLLOUT;
 						}
 						catch (std::exception const &e) {
-							std::cout << "catch 1\n";
 							std::string err = e.what();
 							if (err == "exit")
 								throw ;
@@ -367,8 +362,7 @@ void	Server::no_event_request(size_t const max_socket) {
 				it->send_response(it->getSocket_fd());
 			}
 			catch (std::exception const & e) {
-				std::cout << "catch 4\n ATTENTION PAS DE THROW si exit";
-				if (strcmp(e.what(), "Fail to write"))
+				if (strcmp(e.what(), "Fail to write") || strcmp(e.what(), "exit"))
 					throw;
 			}
 			return (close_and_erase(it), (void) 0);
@@ -383,7 +377,7 @@ void	Server::event_request(size_t const max_socket) {
 	
 	while (1)
 	{
-		if (_fds[i].revents & POLLIN /* && i >= _server_fd.size() */)
+		if (_fds[i].revents & POLLIN)
 		{	
 			char buffer[BUFFER_SIZE] = {0};
 			int n_bytes = read(_fds[i].fd, buffer, BUFFER_SIZE - 1);
@@ -619,7 +613,6 @@ void	Server::handle_error_function(int const i) {
 			_fds[i].events = POLLOUT;
 			return;
 		}
-			// return (close_and_erase(it), (void)0);
 	}
 	for (std::vector<Listen>::iterator it = _server_fd.begin(); it != _server_fd.end(); it++) {
 		if (_fds[i].fd == it->getFd())

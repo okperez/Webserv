@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Media.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/29 09:18:45 by garance           #+#    #+#             */
-/*   Updated: 2024/09/05 16:04:03 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/10 11:29:25 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Media::Media() {
     _types["text"].push_back("*");
     _types["application"].push_back("octet-stream"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
     _types["image"].push_back("jpeg"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
+    _types["image"].push_back("jpg"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
     _types["image"].push_back("png"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
     _types["image"].push_back("xpm"); // DIT AU NAVIGATEUR DE NE PAS ESSAYER DE LE TRAITER MAIS DE LE TELECHARGER
     _types["*"].push_back("*");

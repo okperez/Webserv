@@ -6,7 +6,7 @@
 /*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 16:07:39 by operez            #+#    #+#             */
-/*   Updated: 2024/09/03 14:57:27 by operez           ###   ########.fr       */
+/*   Updated: 2024/09/10 11:33:49 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,6 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
         if (valid_loc.find(arg) == valid_loc.npos)
         {
             
-            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in location");
         }
     }
@@ -109,7 +108,6 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
     {
         if (error_page.find(arg) == error_page.npos)
         {
-            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in error_page");
         }
     }
@@ -117,7 +115,6 @@ void    check_if_valid(std::string str, int loc, int err_pgs)
     {
         if (valid_server.find(arg) == valid_server.npos)
         {
-            std::cout << "Invalid arg = " << arg << std::endl;                  // A EFFACER
             throw ConfFileException ("Error: invalid argument in server");
         }
     }

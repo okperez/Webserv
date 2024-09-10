@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: galambey <galambey@student.42.fr>          +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:23:55 by operez            #+#    #+#             */
-/*   Updated: 2024/09/10 09:41:33 by galambey         ###   ########.fr       */
+/*   Updated: 2024/09/10 11:39:19 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,16 +24,7 @@ int main(int argc, char **argv)
 					return (1);
 				
 				// E/A  A RAJOUTER DANS PARSING => VOIR AVEC ORLANDO : QU EST CE QU ON FAIT SI HOST N EXISTE PAS? ON LE DEFINIT PAR DEFAULT OU ON RENVOIE UNE ERREUR?
-				for (std::vector<t_conf>::iterator it =server.conf.begin(); it != server.conf.end(); it++) {
-					if (it->host.empty())
-						it->host = "0.0.0.0";
-					try {
-						it->limit_body_size = ft_stoi(it->max_body_size) ;
-					}
-					catch (std::exception const & e) {
-						throw (ConfFileException("Error: body size isn't a number"));
-					}
-				}
+				
 				server.open_listen_socket();
 				server.create_fds();
 				server.launch_server(server.getServer_fd_size() + MAX_CONNECTION);

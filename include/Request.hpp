@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: garance <garance@student.42.fr>            +#+  +:+       +#+        */
+/*   By: operez <operez@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/28 15:39:47 by galambey          #+#    #+#             */
-/*   Updated: 2024/09/06 16:16:37 by garance          ###   ########.fr       */
+/*   Updated: 2024/09/10 11:19:45 by operez           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,16 +157,14 @@ class Request
 		int			exec_script(char const *pathname, char *const argv[], char *const envp[], t_conf &conf);
 		bool		is_accessible(char const *uri);
 		void		check_extension(t_conf & conf, std::string uri, std::string & index_loc);
-		void		get_output(char *buff, t_conf &conf, char *const argv[], char *const envp[]);
-		// void			get_output(const char *buff, t_conf &conf);
+		void		get_output(const char *buff, t_conf &conf, char *const argv[], char *const envp[]);
+		void		setScriptProcess(char const *pathname, char *const argv[], char *const envp[], int & script_pid, t_conf &conf, int & fd, std::ofstream & cgi);
+		void		setTimerProcess(char *const argv[], char *const envp[], int & timer_pid, t_conf &conf, int & fd, std::ofstream & cgi);
+		void		waitPidOutput(int & pid, int & status, int & script_pid, int & timer_pid);
 
 		/* ***************************************************************** */
 		/* **************************** Cookies **************************** */
 		/* ***************************************************************** */
-		void		handle_cookies(void);
-		void		setSession(void);
-		void		create_data_file(void);
-		void		setTimestamp(std::ofstream & data);
 
 		/* ***************************************************************** */
 		/* ***************************** Utils ***************************** */
