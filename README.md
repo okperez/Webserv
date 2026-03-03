@@ -37,4 +37,4 @@ Un serveur HTTP/1.1 écrit en C++98, capable de gérer plusieurs connexions simu
         allow_methods GET POST;
         cgi_ext .py;
     }
-}
+    }
