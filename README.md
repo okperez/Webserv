@@ -1,6 +1,8 @@
 🌐 Aperçu
 
 Un serveur HTTP/1.1 écrit en C++98, capable de gérer plusieurs connexions simultanées sans jamais bloquer, grâce à l'utilisation de l'I/O Multiplexing.
+
+
 ✨ Fonctionnalités
 
     Non-Blocking: Utilisation de select() (ou poll/epoll) pour une gestion asynchrone des sockets.
